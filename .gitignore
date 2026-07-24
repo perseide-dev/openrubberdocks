@@ -1,0 +1,57 @@
+# =========================
+# Dependencias
+# =========================
+node_modules/
+.pnp
+.pnp.js
+
+# =========================
+# Builds y Compilados
+# =========================
+# Frontend (React/Vite)
+/frontend/dist/
+/frontend/dist-ssr/
+# Backend (NestJS)
+/backend/dist/
+/backend/.nest/
+build/
+
+# =========================
+# Variables de Entorno
+# =========================
+.env
+.env.local
+.env.*.local
+*.env
+
+# =========================
+# Logs y Testing
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.nyc_output/
+
+# =========================
+# Docker y Volúmenes Locales
+# =========================
+# Ignora las carpetas donde montes tus bases de datos de docker-compose
+docker-data/
+db-data/
+postgres-data/
+
+# =========================
+# OS y Editores
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# Archivos temporales de Neovim
+*.swp
+*.swo
+*~

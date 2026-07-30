@@ -7,13 +7,13 @@ dotenv.config();
 
 export const dataSourceOptions: DataSourceOptions & SeederOptions = {
     type: 'postgres',
-    username: process.env.DB_USERNAME,
+    username: process.env.BD_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: parseInt(process.env.DB_PORT || "5432", 10),
     host: process.env.DB_HOST,
     entities: [
-        'dist/api/**/*.entity{.ts,.js}',
+        'dist/modules/**/*.entity{.ts,.js}',
     ],
     migrations: ['dist/database/migrations/*{.ts,.js}'],
     seeds: ['dist/database/seeds/*{.ts,.js}'],
@@ -27,5 +27,3 @@ export const dataSourceOptions: DataSourceOptions & SeederOptions = {
 
 const dataSource = new DataSource(dataSourceOptions);
 export default dataSource;
-
-dataSource.initialize();

@@ -17,16 +17,19 @@ class EnviromentVariables {
     @IsString()
     DB_NAME: string;
 
+    @IsString()
+    DB_SYNCHRONIZE: boolean;
+
 }
 
 export function validate(config: Record<string, unknown>) {
     const validateConfig = plainToInstance(
         EnviromentVariables,
         config,
-        { enableImplicitConversion: true},
+        { enableImplicitConversion: true },
     );
-    const errors = validateSync(validateConfig, {skipMissingProperties: false}); 
-    if (errors.length > 0){
+    const errors = validateSync(validateConfig, { skipMissingProperties: false });
+    if (errors.length > 0) {
         throw new Error(errors.toString());
     }
     return validateConfig;

@@ -7,7 +7,7 @@ export interface JsonApiResource<T> {
 }
 
 export interface JsonApiResponse<T> {
-    data: JsonApiResource<T> | JsonApiResource<T>[]
+    data: JsonApiResource<T> | JsonApiResource<T>[] | null
     included?: JsonApiResource<any>[]
     meta?: Record<string, any>
     links?: Record<string, string>

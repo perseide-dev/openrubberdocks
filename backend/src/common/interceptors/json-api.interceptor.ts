@@ -11,12 +11,10 @@ export class JsonApiInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<JsonApiResponse<any>> {
     return next.handle().pipe(
       map((data) => {
-        // Si no hay datos (ej. un DELETE), retornamos vacío o meta
         if (!data) return { data: null };
 
         const isArray = Array.isArray(data);
         const formatResource = (item: any) => {
-          // Extraemos el ID y dejamos el resto como atributos
           const { id, ...attributes } = item;
           return {
             type: this.resourceType,

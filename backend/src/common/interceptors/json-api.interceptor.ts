@@ -5,7 +5,6 @@ import { JsonApiResponse } from '@commonInterface/json-api.interface'
 
 @Injectable()
 export class JsonApiInterceptor implements NestInterceptor {
-  // Recibimos el 'type' del recurso (ej. 'users', 'posts') al instanciar el interceptor
   constructor(private readonly resourceType: string) { }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<JsonApiResponse<any>> {

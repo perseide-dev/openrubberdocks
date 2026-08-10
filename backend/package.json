@@ -90,6 +90,12 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@common/(.*)$": "<rootDir>/common/$1",
+      "^@commonDecorators/(.*)$": "<rootDir>/common/decorators/$1",
+      "^@commonExceptions/(.*)$": "<rootDir>/common/exceptions/$1",
+      "^@commonGuards/(.*)$": "<rootDir>/common/guards/$1",
+      "^@commonInterceptors/(.*)$": "<rootDir>/common/interceptors/$1",
+      "^@commonInterface/(.*)$": "<rootDir>/common/interface/$1",
+      "^@commonUtils/(.*)$": "<rootDir>/common/utils/$1",
       "^@config/(.*)$": "<rootDir>/config/$1",
       "^@database/(.*)$": "<rootDir>/database/$1",
       "^@modules/(.*)$": "<rootDir>/modules/$1"

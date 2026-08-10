@@ -16,6 +16,12 @@
     "baseUrl": "./",
     "paths": {
       "@common/*": ["src/common/*"],
+      "@commonDecorators/*": ["src/common/decorators/*"],
+      "@commonExceptions/*": ["src/common/exceptions/*"],
+      "@commonGuards/*": ["src/common/guards/*"],
+      "@commonInterceptors/*": ["src/common/interceptors/*"],
+      "@commonInterface/*": ["src/common/interface/*"],
+      "@commonUtils/*": ["src/common/utils/*"],
       "@config/*": ["src/config/*"],
       "@database/*": ["src/database/*"],
       "@modules/*": ["src/modules/*"]

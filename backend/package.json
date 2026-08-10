@@ -89,7 +89,9 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
+      
       "^@common/(.*)$": "<rootDir>/common/$1",
+      "^@commonPipes/(.*)$": "<rootDir>/common/pipes/$1",
       "^@commonDecorators/(.*)$": "<rootDir>/common/decorators/$1",
       "^@commonExceptions/(.*)$": "<rootDir>/common/exceptions/$1",
       "^@commonGuards/(.*)$": "<rootDir>/common/guards/$1",

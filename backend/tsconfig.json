@@ -16,6 +16,7 @@
     "baseUrl": "./",
     "paths": {
       "@common/*": ["src/common/*"],
+      "@commonPipes/*": ["src/common/pipes/*"],
       "@commonDecorators/*": ["src/common/decorators/*"],
       "@commonExceptions/*": ["src/common/exceptions/*"],
       "@commonGuards/*": ["src/common/guards/*"],

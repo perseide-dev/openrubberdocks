@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsNumber, IsString, validateSync } from 'class-validator';
+import { IsNumber, IsString, IsBoolean, validateSync } from 'class-validator';
 
 class EnviromentVariables {
     @IsString()
@@ -17,7 +17,7 @@ class EnviromentVariables {
     @IsString()
     DB_NAME: string;
 
-    @IsString()
+    @IsBoolean()
     DB_SYNCHRONIZE: boolean;
 
 }

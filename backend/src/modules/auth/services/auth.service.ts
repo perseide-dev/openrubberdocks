@@ -8,12 +8,14 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && user.password && (await bcrypt.compare(pass, user.password))) {
-      const { password, hashedRefreshToken, ...result } = user;
+      const result = { ...user };
+      delete result.password;
+      delete result.hashedRefreshToken;
       return result;
     }
     return null;
@@ -21,7 +23,7 @@ export class AuthService {
 
   async generateTokens(userId: string, email: string) {
     const payload = { sub: userId, email };
-    
+
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret',
@@ -64,7 +66,7 @@ export class AuthService {
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     return tokens;
   }
-  
+
   async logout(userId: string) {
     await this.usersService.updateRefreshToken(userId, null);
   }

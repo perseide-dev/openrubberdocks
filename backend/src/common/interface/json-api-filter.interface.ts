@@ -9,7 +9,7 @@ export type FilterOperator =
     | 'orEq'       // Exact joint search
     | 'splitLike'  // Split search: Splits the string by a character and performs a partial search for each segment in its respective column
     | 'splitEq';   // Exact separate search
-º
+
 export interface JsonApiFilter {
     fields: string[];
     operator: FilterOperator;

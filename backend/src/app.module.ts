@@ -4,6 +4,8 @@ import { validate } from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './config/typeorm.config';
 
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -11,7 +13,9 @@ import { dataSourceOptions } from './config/typeorm.config';
     ConfigModule.forRoot({
       validate,
       isGlobal: true
-    })
+    }),
+    AuthModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],

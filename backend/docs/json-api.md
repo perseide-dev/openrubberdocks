@@ -1,28 +1,28 @@
-# Implementación de JSON:API
+# JSON:API Implementation
 
-Esta documentación describe cómo está implementado el estándar [JSON:API](https://jsonapi.org/) en el backend del proyecto. El objetivo es garantizar que todas las peticiones, respuestas y errores sigan una estructura coherente a través del uso de herramientas nativas de NestJS (Interfaces, Interceptores, Filtros, Pipes y Decoradores).
+This documentation describes how the [JSON:API](https://jsonapi.org/) standard is implemented in the project's backend. The goal is to ensure that all requests, responses, and errors follow a coherent structure using native NestJS tools (Interfaces, Interceptors, Filters, Pipes, and Decorators).
 
-## Componentes
+## Components
 
 ### 1. Interfaces
-**Archivo:** `src/common/interface/json-api.interface.ts`
+**File:** `src/common/interface/json-api.interface.ts`
 
-Definen los tipos de datos principales para asegurar el cumplimiento del tipado estricto en las respuestas de la aplicación.
-- `JsonApiResource<T>`: Define la estructura de un recurso individual. Incluye las propiedades `type`, `id` y agrupa el resto de campos en `attributes`. Puede incluir `relationships` y `links`.
-- `JsonApiResponse<T>`: Define el envoltorio principal de la respuesta que contiene el nodo `data` (que puede ser un recurso, un array de recursos o `null`), junto con metadatos opcionales como `included`, `meta`, `links` y la versión de `jsonapi`.
+These define the main data types to ensure strict typing in the application's responses.
+- `JsonApiResource<T>`: Defines the structure of an individual resource. It includes the `type` and `id` properties and groups the rest of the fields inside `attributes`. It can also include `relationships` and `links`.
+- `JsonApiResponse<T>`: Defines the main response wrapper containing the `data` node (which can be a single resource, an array of resources, or `null`), along with optional metadata like `included`, `meta`, `links`, and the `jsonapi` version.
 
-### 2. Interceptor de Respuestas (`JsonApiInterceptor`)
-**Archivo:** `src/common/interceptors/json-api.interceptor.ts`
+### 2. Response Interceptor (`JsonApiInterceptor`)
+**File:** `src/common/interceptors/json-api.interceptor.ts`
 
-Intercepta la respuesta final enviada desde el controlador hacia el cliente y la formatea según la especificación JSON:API, procesando dinámicamente las relaciones.
-- Recibe el `resourceType` en su constructor para asignar correctamente la propiedad `type` del recurso principal (ej. `'users'`, `'posts'`).
-- Detecta si los datos son un arreglo o un objeto singular.
-- Extrae la propiedad `id` de cada objeto y ubica los campos regulares dentro de `attributes`.
-- **Motor de Relaciones:** Si detecta que alguna propiedad del objeto es a su vez un objeto (o un array de objetos) que contenga un `id`, automáticamente lo mueve al bloque `relationships` con su respectivo `type` y `id`.
-- **Sideloading automático:** Los objetos relacionados se añaden de forma única en el arreglo raíz `included`, previniendo ciclos de referencias o datos duplicados.
-- Maneja correctamente respuestas vacías (útil para operaciones como `DELETE`) retornando `{ data: null }`.
+Intercepts the final response sent from the controller to the client and formats it according to the JSON:API specification, processing relationships dynamically.
+- Receives the `resourceType` in its constructor to correctly assign the `type` property of the main resource (e.g., `'users'`, `'posts'`).
+- Detects if the data is an array or a single object.
+- Extracts the `id` property of each object and places the regular fields inside `attributes`.
+- **Relations Engine:** If it detects that any property of the object is in turn an object (or an array of objects) containing an `id`, it automatically moves it to the `relationships` block with its respective `type` and `id`.
+- **Automatic Sideloading:** Related objects are added uniquely into the root `included` array, preventing reference cycles or duplicated data.
+- Correctly handles empty responses (useful for operations like `DELETE`) returning `{ data: null }`.
 
-**Ejemplo de uso:**
+**Usage Example:**
 ```typescript
 @UseInterceptors(new JsonApiInterceptor('users'))
 @Get()
@@ -31,28 +31,28 @@ findAll() {
 }
 ```
 
-### 3. Filtro de Excepciones (`JsonApiExceptionFilter`)
-**Archivo:** `src/common/exceptions/json-api-exception.filter.ts`
+### 3. Exception Filter (`JsonApiExceptionFilter`)
+**File:** `src/common/exceptions/json-api-exception.filter.ts`
 
-Se encarga de atrapar las excepciones no manejadas y las de tipo HTTP, transformándolas al estándar JSON:API en la propiedad `errors`.
-- Genera respuestas que contienen un arreglo de errores con las propiedades `status`, `title` y `detail`.
-- Tiene una integración especial con `class-validator`: si ocurren varios errores de validación, los extrae y mapea individualmente para que el cliente reciba el detalle exacto de los campos que fallaron.
-- Está configurado de forma global en `main.ts` (`app.useGlobalFilters(...)`).
+Responsible for catching unhandled exceptions and HTTP exceptions, transforming them to the JSON:API standard within the `errors` property.
+- Generates responses containing an array of errors with the properties `status`, `title`, and `detail`.
+- Has a special integration with `class-validator`: if multiple validation errors occur, it extracts and maps them individually so the client receives the exact details of the failed fields.
+- Configured globally in `main.ts` (`app.useGlobalFilters(...)`).
 
-### 4. Pipe de Deserialización (`JsonApiDeserializePipe`)
-**Archivo:** `src/common/pipes/json-api-deserialize.pipe.ts`
+### 4. Deserialization Pipe (`JsonApiDeserializePipe`)
+**File:** `src/common/pipes/json-api-deserialize.pipe.ts`
 
-Se encarga de recibir el payload del cliente (que viene en formato JSON:API) y "aplanarlo" o convertirlo en un DTO convencional para que el backend trabaje de forma cómoda.
-- Valida que la carga útil tenga la estructura básica (`data` y `data.attributes`).
-- Extrae `id` y `attributes` reconstruyendo el objeto original.
-- Lanza excepciones tipo `BadRequestException` (que luego son procesadas por el filtro) si la estructura no es correcta.
+Responsible for receiving the client's payload (in JSON:API format) and "flattening" it or converting it into a standard DTO so the backend can work with it comfortably.
+- Validates that the payload has the basic structure (`data` and `data.attributes`).
+- Extracts `id` and `attributes`, reconstructing the original object.
+- Throws `BadRequestException` (which is later processed by the filter) if the structure is incorrect.
 
-### 5. Decorador Personalizado de Body (`@JsonApiBody()`)
-**Archivo:** `src/common/decorators/json-api-body.decorator.ts`
+### 5. Custom Body Decorator (`@JsonApiBody()`)
+**File:** `src/common/decorators/json-api-body.decorator.ts`
 
-Un helper para simplificar los controladores. Esencialmente combina el uso de `@Body()` de NestJS junto con el `JsonApiDeserializePipe`. 
+A helper to simplify controllers. It essentially combines the use of NestJS's `@Body()` along with the `JsonApiDeserializePipe`. 
 
-**Ejemplo de uso:**
+**Usage Example:**
 ```typescript
 @Post()
 create(@JsonApiBody() createDto: CreateUserDto) {
@@ -60,73 +60,73 @@ create(@JsonApiBody() createDto: CreateUserDto) {
 }
 ```
 
-### 6. Decorador Personalizado de Consultas (`@JsonApiQuery()`)
-**Archivo:** `src/common/decorators/json-api-query.decorator.ts`
+### 6. Custom Query Decorator (`@JsonApiQuery()`)
+**File:** `src/common/decorators/json-api-query.decorator.ts`
 
-Se encarga de extraer y procesar los parámetros de consulta específicos de JSON:API desde la URL, como el parámetro `include`.
-- Parsea el string separado por comas (ej. `?include=category,author`) transformándolo en un array de strings (ej. `['category', 'author']`).
-- Permite inyectar las opciones directamente al método del controlador para pasarlas posteriormente a los servicios u ORM y resolver qué relaciones deben incluirse desde la base de datos.
+Extracts and processes JSON:API specific query parameters from the URL, such as the `include` parameter.
+- Parses the comma-separated string (e.g., `?include=category,author`) transforming it into an array of strings (e.g., `['category', 'author']`).
+- Allows injecting the options directly into the controller's method to later pass them to the services or ORM to resolve which relationships should be included from the database.
 
-**Ejemplo de uso:**
+**Usage Example:**
 ```typescript
 @Get()
 findAll(@JsonApiQuery() query: JsonApiQueryOptions) {
-  // query.relations contendrá un array si se envía el parámetro 'include'
+  // query.relations will contain an array if the 'include' parameter is sent
   return this.usersService.findAll({ relations: query.relations });
 }
 ```
 
-## Resumen del Flujo de Datos
+## Data Flow Summary
 
-1. **Entrada (Request):** 
-   - En peticiones con datos (`POST`/`PATCH`), el cliente envía el JSON:API. El decorador `@JsonApiBody()` lo transforma a un DTO estándar.
-   - En consultas (`GET`), el decorador `@JsonApiQuery()` lee los parámetros `include` de la URL para determinar relaciones.
-2. **Procesamiento y Validación:** 
-   Se usan los servicios y DTOs para la validación (con `class-validator`). Si ocurre algún fallo, el `JsonApiExceptionFilter` se asegura de estructurar el error bajo el nodo `errors`.
-3. **Salida (Response):** 
-   El controlador responde con un objeto normal que contiene entidades relacionadas anidadas. El `JsonApiInterceptor` toma este objeto, lo formatea agregándole `type`, separa las entidades hijas colocándolas como referencias en `relationships` e inyectándolas en la raíz bajo `included`, asegurando así un JSON 100% compatible.
+1. **Input (Request):** 
+   - In requests with data (`POST`/`PATCH`), the client sends the JSON:API. The `@JsonApiBody()` decorator transforms it into a standard DTO.
+   - In queries (`GET`), the `@JsonApiQuery()` decorator reads the `include` parameters from the URL to determine relationships.
+2. **Processing and Validation:** 
+   Services and DTOs are used for validation (with `class-validator`). If any failure occurs, the `JsonApiExceptionFilter` ensures the error is structured under the `errors` node.
+3. **Output (Response):** 
+   The controller responds with a regular object containing nested related entities. The `JsonApiInterceptor` takes this object, formats it by adding `type`, separates the child entities by placing them as references in `relationships`, and injects them into the root under `included`, thus ensuring a 100% compliant JSON.
 
-## Casos de Uso del Motor de Relaciones
+## Relations Engine Use Cases
 
-Al combinar el interceptor modificado (`JsonApiInterceptor`) y el extractor de queries (`@JsonApiQuery`), el backend es capaz de estructurar dinámicamente recursos complejos utilizando "Sideloading".
+By combining the modified interceptor (`JsonApiInterceptor`) and the query extractor (`@JsonApiQuery`), the backend is able to dynamically structure complex resources using "Sideloading".
 
-### Obtener un recurso e incluir sus relaciones
+### Fetching a resource and including its relations
 
 **Request:**
 ```http
 GET /articles/1?include=author,comments
 ```
 
-**Flujo en Controlador / Servicio:**
+**Flow in Controller / Service:**
 ```typescript
 @UseInterceptors(new JsonApiInterceptor('articles'))
 @Get(':id')
 findOne(@Param('id') id: string, @JsonApiQuery() query: JsonApiQueryOptions) {
-  // Aquí le indicamos al ORM que además recupere 'author' y 'comments'
-  // Esto retornará un objeto anidado normal en Javascript.
+  // Here we instruct the ORM to also retrieve 'author' and 'comments'
+  // This will return a regular nested Javascript object.
   return this.articleService.findOne(id, { relations: query.relations });
 }
 ```
 
-**Objeto Devuelto por el Servicio (Antes del Interceptor):**
+**Object Returned by the Service (Before Interceptor):**
 ```json
 {
   "id": 1,
-  "title": "Introducción a JSON:API",
-  "content": "Contenido del post...",
+  "title": "Introduction to JSON:API",
+  "content": "Post content...",
   "author": {
     "id": 42,
     "name": "Jane Doe",
     "email": "jane@example.com"
   },
   "comments": [
-    { "id": 101, "text": "Excelente artículo" },
-    { "id": 102, "text": "Me ayudó mucho" }
+    { "id": 101, "text": "Excellent article" },
+    { "id": 102, "text": "Helped me a lot" }
   ]
 }
 ```
 
-**Respuesta HTTP Final (Luego del Interceptor):**
+**Final HTTP Response (After Interceptor):**
 ```json
 {
   "jsonapi": { "version": "1.0" },
@@ -134,8 +134,8 @@ findOne(@Param('id') id: string, @JsonApiQuery() query: JsonApiQueryOptions) {
     "type": "articles",
     "id": "1",
     "attributes": {
-      "title": "Introducción a JSON:API",
-      "content": "Contenido del post..."
+      "title": "Introduction to JSON:API",
+      "content": "Post content..."
     },
     "relationships": {
       "author": {
@@ -162,17 +162,17 @@ findOne(@Param('id') id: string, @JsonApiQuery() query: JsonApiQueryOptions) {
       "type": "comments",
       "id": "101",
       "attributes": {
-        "text": "Excelente artículo"
+        "text": "Excellent article"
       }
     },
     {
       "type": "comments",
       "id": "102",
       "attributes": {
-        "text": "Me ayudó mucho"
+        "text": "Helped me a lot"
       }
     }
   ]
 }
 ```
-Como se aprecia en la respuesta, el interceptor extrae correctamente las entidades `author` y `comments` de los atributos del documento principal, y las empaqueta en `included`. Además, las enlaza mediante el uso de `relationships` dentro de `data`, garantizando el cumplimiento de la norma y evitando envío redundante de información.
+As shown in the response, the interceptor correctly extracts the `author` and `comments` entities from the main document's attributes, and packages them in `included`. Additionally, it links them through the use of `relationships` inside `data`, ensuring compliance with the standard and avoiding redundant data transmission.

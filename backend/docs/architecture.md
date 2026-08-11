@@ -16,7 +16,7 @@ For a scalable and maintainable project in NestJS, the industry standard leans t
 │   │   └── utils/          # Pure helper functions
 │   │
 │   ├── config/             # Configuration and environment variables
-│   │   ├── env.validation.ts # Schema validation (ej. Joi or Zod)
+│   │   ├── env.validation.ts # Schema validation (e.g., Joi or Zod)
 │   │   └── typeorm.config.ts # Database configuration
 │   │
 │   ├── database/           # Files unrelated to business logic
@@ -31,7 +31,7 @@ For a scalable and maintainable project in NestJS, the industry standard leans t
 │   │       ├── dto/        # Data Transfer Objects (with class-validator)
 │   │       │   ├── create-user.dto.ts
 │   │       │   └── update-user.dto.ts
-│   │       ├── entities/   # Modelos ORM (Clases de TypeORM)
+│   │       ├── entities/   # ORM Models (TypeORM Classes)
 │   │       │   └── user.entity.ts
 │   │       ├── repositories/ # Repository pattern (Optional, if DB logic is complex)
 │   │       ├── services/   # Business logic

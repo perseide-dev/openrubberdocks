@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Generated, BeforeInsert } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Generated, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { UserType } from '@moduleUsers/enums/users.enum';
 import * as bcrypt from 'bcrypt';
 
@@ -37,9 +37,10 @@ export class User {
   updatedAt: Date;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
-    // Only hash if password is provided and not already hashed
-    if (this.password) {
+    // Verificamos si hay password y si NO está ya hasheada (bcrypt produce strings que empiezan por $2b$ o $2a$)
+    if (this.password && !this.password.startsWith('$2b$')) {
       const saltRounds = 10;
       this.password = await bcrypt.hash(this.password, saltRounds);
     }

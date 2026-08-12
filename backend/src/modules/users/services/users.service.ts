@@ -1,35 +1,37 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { UserType } from '@moduleUsers/enums/users.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../entities/user.entity';
+import { User } from '@moduleUsers/entities/user.entity';
+import { CreateUserDto } from '../dto/create-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
-  async create(email: string, passwordHash: string): Promise<User> {
-    const existingUser = await this.usersRepository.findOne({ where: { email } });
+  async create(createDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.usersRepository.findOne({ where: { rubberHandle: createDto.rubberHandle } });
+
+    if (createDto.type === UserType.COREADMIN) {
+      const existCoreUser = await this.usersRepository.findOne({ where: { type: UserType.COREADMIN } });
+      if (existCoreUser) throw new ConflictException('Core User already exist');
+    }
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('User @ already exists');
     }
 
-    const user = this.usersRepository.create({ email, password: passwordHash });
+    const user = this.usersRepository.create(
+      {
+        rubberHandle: createDto.rubberHandle,
+        username: createDto.username,
+        type: createDto.type,
+        password: createDto.password
+      });
     return this.usersRepository.save(user);
-  }
-
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
-  }
-
-  async findById(id: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return user;
   }
 
   async updateRefreshToken(id: string, hashedRefreshToken: string | null): Promise<void> {

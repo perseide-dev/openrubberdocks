@@ -1,13 +1,20 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Generated } from 'typeorm';
 import { UserType } from '@moduleUsers/enums/users.enum';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
+
+  @Column({ name: 'uuid', unique: true })
+  @Generated('uuid')
+  uuid: number;
+
+  @Column()
+  username: string;
 
   @Column({ unique: true })
-  email: string;
+  rubberHandle: string;
 
   @Column()
   password?: string;

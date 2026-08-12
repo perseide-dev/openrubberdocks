@@ -39,7 +39,6 @@ export class User {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
-    // Verificamos si hay password y si NO está ya hasheada (bcrypt produce strings que empiezan por $2b$ o $2a$)
     if (this.password && !this.password.startsWith('$2b$')) {
       const saltRounds = 10;
       this.password = await bcrypt.hash(this.password, saltRounds);

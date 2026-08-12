@@ -25,7 +25,9 @@
       "@commonUtils/*": ["src/common/utils/*"],
       "@config/*": ["src/config/*"],
       "@database/*": ["src/database/*"],
-      "@modules/*": ["src/modules/*"]
+      "@modules/*": ["src/modules/*"],
+      "@moduleAuth/*":["src/modules/auth/*"],
+      "@moduleUsers/*": ["src/modules/users/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

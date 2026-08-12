@@ -110,7 +110,9 @@
       "^@commonUtils/(.*)$": "<rootDir>/common/utils/$1",
       "^@config/(.*)$": "<rootDir>/config/$1",
       "^@database/(.*)$": "<rootDir>/database/$1",
-      "^@modules/(.*)$": "<rootDir>/modules/$1"
+      "^@modules/(.*)$": "<rootDir>/modules/$1",
+      "^@moduleAuth/(.*)$":"<rootDir>/modules/auth/$1",
+      "^@moduleUsers/(.*)$":"<rootDir>/moudles/users/$1"
     }
   }
 }

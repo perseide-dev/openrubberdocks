@@ -43,6 +43,7 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
+    "nest-commander": "^3.20.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -101,6 +102,7 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@common/(.*)$": "<rootDir>/common/$1",
+      "^@commonCommands/(.*)$": "<rootDir>/common/commands/$1",
       "^@commonPipes/(.*)$": "<rootDir>/common/pipes/$1",
       "^@commonDecorators/(.*)$": "<rootDir>/common/decorators/$1",
       "^@commonExceptions/(.*)$": "<rootDir>/common/exceptions/$1",
@@ -111,8 +113,8 @@
       "^@config/(.*)$": "<rootDir>/config/$1",
       "^@database/(.*)$": "<rootDir>/database/$1",
       "^@modules/(.*)$": "<rootDir>/modules/$1",
-      "^@moduleAuth/(.*)$":"<rootDir>/modules/auth/$1",
-      "^@moduleUsers/(.*)$":"<rootDir>/moudles/users/$1"
+      "^@moduleAuth/(.*)$": "<rootDir>/modules/auth/$1",
+      "^@moduleUsers/(.*)$": "<rootDir>/moudles/users/$1"
     }
   }
 }

@@ -176,3 +176,140 @@ findOne(@Param('id') id: string, @JsonApiQuery() query: JsonApiQueryOptions) {
 }
 ```
 As shown in the response, the interceptor correctly extracts the `author` and `comments` entities from the main document's attributes, and packages them in `included`. Additionally, it links them through the use of `relationships` inside `data`, ensuring compliance with the standard and avoiding redundant data transmission.
+
+### Creating a new resource (POST)
+
+**Request:**
+```http
+POST /articles
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "articles",
+    "attributes": {
+      "title": "New Article",
+      "content": "This is a new article"
+    }
+  }
+}
+```
+
+**Flow in Controller:**
+```typescript
+@Post()
+create(@JsonApiBody() createDto: CreateArticleDto) {
+  // @JsonApiBody() automatically extracts attributes.
+  // createDto is a standard flattened object here: { title: "New Article", content: "..." }
+  return this.articleService.create(createDto);
+}
+```
+
+**Final HTTP Response (201 Created):**
+```json
+{
+  "jsonapi": { "version": "1.0" },
+  "data": {
+    "type": "articles",
+    "id": "2",
+    "attributes": {
+      "title": "New Article",
+      "content": "This is a new article"
+    }
+  }
+}
+```
+
+### Updating an existing resource (PATCH)
+
+**Request:**
+```http
+PATCH /articles/1
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Updated Title"
+    }
+  }
+}
+```
+
+**Flow in Controller:**
+```typescript
+@Patch(':id')
+update(@Param('id') id: string, @JsonApiBody() updateDto: UpdateArticleDto) {
+  // updateDto will contain { title: "Updated Title" }
+  return this.articleService.update(id, updateDto);
+}
+```
+
+**Final HTTP Response (200 OK):**
+```json
+{
+  "jsonapi": { "version": "1.0" },
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "attributes": {
+      "title": "Updated Title",
+      "content": "This is a new article"
+    }
+  }
+}
+```
+
+### Deleting a resource (DELETE)
+
+**Request:**
+```http
+DELETE /articles/1
+```
+
+**Flow in Controller:**
+```typescript
+@Delete(':id')
+remove(@Param('id') id: string) {
+  return this.articleService.remove(id);
+}
+```
+
+**Final HTTP Response (200 OK or 204 No Content):**
+```json
+{
+  "data": null
+}
+```
+
+### Handling Validation Errors
+
+**Request (missing required fields):**
+```http
+POST /articles
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "articles",
+    "attributes": {
+      "title": "" 
+    }
+  }
+}
+```
+
+**Final HTTP Response (400 Bad Request):**
+```json
+{
+  "errors": [
+    {
+      "status": "400",
+      "title": "Bad Request Exception",
+      "detail": "title should not be empty"
+    }
+  ]
+}
+```

@@ -1,7 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../../users/services/users.service';
+import { UsersService } from '@moduleUsers/services/users.service';
+import { ValidateUserDTO } from '@moduleAuth/dto/validate-user.dto';
+import { RefreshTokenDto } from '@moduleAuth/dto/refresh-token.dto';
 import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class AuthService {
@@ -10,15 +13,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) { }
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findBy;
-    if (user && user.password && (await bcrypt.compare(pass, user.password))) {
-      const result = { ...user };
-      delete result.password;
-      delete result.hashedRefreshToken;
-      return result;
+  async validateUser(validateUserDto: ValidateUserDTO): Promise<any> {
+    const user = await this.usersService.findByRubberHandle(validateUserDto.rubberHanlde);
+    if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
+      return user;
     }
-    return null;
+    throw new UnauthorizedException('Incorrect username or password');
   }
 
   async generateTokens(userId: string, email: string) {
@@ -47,14 +47,14 @@ export class AuthService {
     await this.usersService.updateRefreshToken(userId, hashedRefreshToken);
   }
 
-  async refreshTokens(userId: string, refreshToken: string) {
-    const user = await this.usersService.findById(userId);
+  async refreshTokens(refreshTokenDto: RefreshTokenDto) {
+    const user = await this.usersService.findById(refreshTokenDto.userUUID);
     if (!user || !user.hashedRefreshToken) {
       throw new UnauthorizedException('Access Denied');
     }
 
     const refreshTokenMatches = await bcrypt.compare(
-      refreshToken,
+      refreshTokenDto.refreshToken,
       user.hashedRefreshToken,
     );
 
@@ -62,8 +62,8 @@ export class AuthService {
       throw new UnauthorizedException('Access Denied');
     }
 
-    const tokens = await this.generateTokens(user.id, user.email);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    const tokens = await this.generateTokens(user.uuid, user.rubberHandle);
+    await this.updateRefreshToken(user.uuid, tokens.refreshToken);
     return tokens;
   }
 

@@ -1,14 +1,15 @@
-import { IsString, minLength, isNotEmpty, isString, Min, MinLength } from "class-validator";
+import { IsString, IsNotEmpty, MinLength } from 'class-validator';
 
 
-export class ValidateUserDto{
-
-    @IsString()
-    @MinLength(8)
-    rubberHanlde:string;
+export class ValidateUserDTO {
 
     @IsString()
+    @IsNotEmpty()
+    readonly rubberHanlde: string;
+
+    @IsString()
+    @IsNotEmpty()
     @MinLength(8)
-    password: string;
+    readonly pwd: string;
 
 }

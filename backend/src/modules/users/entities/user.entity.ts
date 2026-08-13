@@ -7,11 +7,11 @@ import { Exclude } from 'class-transformer';
 export class User {
   @PrimaryGeneratedColumn('increment')
   @Exclude()
-  id!: number;
+  id: number;
 
   @Column({ name: 'uuid', unique: true })
   @Generated('uuid')
-  uuid!: number;
+  uuid: string;
 
   @Column()
   username!: string;
@@ -24,6 +24,7 @@ export class User {
   password?: string;
 
   @Column({ nullable: true })
+  @Exclude()
   hashedRefreshToken?: string | null;
 
   @Column({

@@ -4,16 +4,17 @@ import type { Response, Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { JsonApiInterceptor } from '../../../common/interceptors/json-api.interceptor';
 import { JsonApiBody } from '../../../common/decorators/json-api-body.decorator';
+import { ValidateUserDTO } from '../dto/validate-user.dto';
 
 @UseInterceptors(new JsonApiInterceptor('users'))
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@JsonApiBody() body: Record<string, string>, @Res({ passthrough: true }) response: Response) {
-    const user = await this.authService.validateUser(body.email, body.password);
+  async login(@JsonApiBody() body: ValidateUserDTO, @Res({ passthrough: true }) response: Response) {
+    const user = await this.authService.validateUser(body);
     if (!user) {
       response.status(HttpStatus.UNAUTHORIZED).send({ errors: [{ status: '401', title: 'Unauthorized', detail: 'Invalid credentials' }] });
       return;
@@ -45,7 +46,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const user = request.user as any;
-    
+
     const tokens = await this.authService.refreshTokens(user.id, user.refreshToken);
 
     response.cookie('Authentication', tokens.accessToken, {
@@ -78,7 +79,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
     });
-    
+
     response.clearCookie('Refresh', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

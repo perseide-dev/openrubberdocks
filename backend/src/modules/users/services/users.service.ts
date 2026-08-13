@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { UserType } from '@moduleUsers/enums/users.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -35,6 +35,20 @@ export class UsersService {
         password:  hashedPassword
       });
     return this.usersRepository.save(user);
+  }
+
+  async findByRubberHandle(rubberHandle: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { rubberHandle: rubberHandle } });
+
+    if (!user) throw new NotFoundException(`User ${rubberHandle} could not be found`);
+
+    return user;
+  }
+
+  async findById(userUUID: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { uuid: userUUID } });
+    if (!user) throw new NotFoundException(`User ${userUUID} could not be found`);
+    return user;
   }
 
   async updateRefreshToken(id: string, hashedRefreshToken: string | null): Promise<void> {

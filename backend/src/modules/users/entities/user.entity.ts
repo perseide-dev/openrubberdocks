@@ -1,23 +1,26 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Generated, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { UserType } from '@moduleUsers/enums/users.enum';
 import * as bcrypt from 'bcrypt';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('increment')
-  id: number;
+  @Exclude()
+  id!: number;
 
   @Column({ name: 'uuid', unique: true })
   @Generated('uuid')
-  uuid: number;
+  uuid!: number;
 
   @Column()
-  username: string;
+  username!: string;
 
   @Column({ unique: true })
-  rubberHandle: string;
+  rubberHandle!: string;
 
   @Column()
+  @Exclude()
   password?: string;
 
   @Column({ nullable: true })
@@ -28,13 +31,13 @@ export class User {
     enum: UserType,
     default: UserType.INTERNAL,
   })
-  type: UserType;
+  type!: UserType;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @BeforeInsert()
   @BeforeUpdate()

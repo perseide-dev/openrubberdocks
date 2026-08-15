@@ -5,10 +5,12 @@ export class CreateUserDto {
 
     @IsString()
     @IsNotEmpty()
+    @MinLength(3)
     readonly username: string;
 
     @IsString()
     @IsNotEmpty()
+    @MinLength(8)
     readonly rubberHandle: string;
 
     @IsEnum(UserType)

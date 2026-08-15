@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@moduleUsers/entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -17,18 +18,21 @@ export class UsersService {
 
     if (createDto.type === UserType.COREADMIN) {
       const existCoreUser = await this.usersRepository.findOne({ where: { type: UserType.COREADMIN } });
-      if (existCoreUser) throw new ConflictException('Core User already exist');
+      if (existCoreUser) throw new ConflictException();
     }
     if (existingUser) {
       throw new ConflictException('User @ already exists');
     }
+
+    const saltOrRounds = 10;
+    const hashedPassword = await bcrypt.hash(createDto.password, saltOrRounds);
 
     const user = this.usersRepository.create(
       {
         rubberHandle: createDto.rubberHandle,
         username: createDto.username,
         type: createDto.type,
-        password: createDto.password
+        password:  hashedPassword
       });
     return this.usersRepository.save(user);
   }

@@ -1,10 +1,11 @@
 import { Controller, Post, Res, Req, UseGuards, Get, HttpCode, HttpStatus, UseInterceptors } from '@nestjs/common';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '@moduleAuth/services/auth.service';
 import type { Response, Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { JsonApiInterceptor } from '../../../common/interceptors/json-api.interceptor';
 import { JsonApiBody } from '../../../common/decorators/json-api-body.decorator';
 import { ValidateUserDTO } from '../dto/validate-user.dto';
+import { RefreshTokenPayload } from '../interface/auth.interface';
 
 @UseInterceptors(new JsonApiInterceptor('users'))
 @Controller('auth')
@@ -45,9 +46,15 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-    const user = request.user as any;
+    const user = request.user as RefreshTokenPayload;
 
-    const tokens = await this.authService.refreshTokens(user.id, user.refreshToken);
+    const tokenPayload =
+    {
+      userUUID: user.uuid,
+      refreshToken: user.refreshToken
+    };
+
+    const tokens = await this.authService.refreshTokens(tokenPayload);
 
     response.cookie('Authentication', tokens.accessToken, {
       httpOnly: true,
@@ -64,7 +71,7 @@ export class AuthController {
     });
 
     // We can return the user object, or null
-    return { id: user.id, email: user.email };
+    return user;
   }
 
   @UseGuards(AuthGuard('jwt'))

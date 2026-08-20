@@ -4,6 +4,8 @@ import { UsersService } from '@moduleUsers/services/users.service';
 import { ValidateUserDTO } from '@moduleAuth/dto/validate-user.dto';
 import { RefreshTokenDto } from '@moduleAuth/dto/refresh-token.dto';
 import * as bcrypt from 'bcrypt';
+import { User } from '@moduleUsers/entities/user.entity';
+import { GenerateTokenDto } from '@moduleAuth/dto/generate-token.dto';
 
 
 @Injectable()
@@ -13,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) { }
 
-  async validateUser(validateUserDto: ValidateUserDTO): Promise<any> {
+  async validateUser(validateUserDto: ValidateUserDTO): Promise<User> {
     const user = await this.usersService.findByRubberHandle(validateUserDto.rubberHanlde);
     if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
       return user;
@@ -21,15 +23,14 @@ export class AuthService {
     throw new UnauthorizedException('Incorrect username or password');
   }
 
-  async generateTokens(userId: string, email: string) {
-    const payload = { sub: userId, email };
+  async generateTokens(generateToken: GenerateTokenDto): Promise<any> {
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(generateToken, {
         secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret',
         expiresIn: '15m',
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(generateToken, {
         secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret',
         expiresIn: '7d',
       }),

@@ -2,10 +2,10 @@ import { Controller, Post, Res, Req, UseGuards, Get, HttpCode, HttpStatus, UseIn
 import { AuthService } from '@moduleAuth/services/auth.service';
 import type { Response, Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { JsonApiInterceptor } from '../../../common/interceptors/json-api.interceptor';
-import { JsonApiBody } from '../../../common/decorators/json-api-body.decorator';
-import { ValidateUserDTO } from '../dto/validate-user.dto';
-import { RefreshTokenPayload } from '../interface/auth.interface';
+import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
+import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
+import { ValidateUserDTO } from '@moduleAuth/dto/validate-user.dto';
+import { RefreshTokenPayload } from '@moduleAuth/interface/auth.interface';
 
 @UseInterceptors(new JsonApiInterceptor('users'))
 @Controller('auth')

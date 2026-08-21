@@ -74,7 +74,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const user = request.user as any;
-    await this.authService.logout(user.id);
+    await this.authService.logout(user.uuid);
 
     response.clearCookie('Authentication', {
       httpOnly: true,

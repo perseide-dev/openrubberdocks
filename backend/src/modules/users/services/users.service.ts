@@ -52,7 +52,7 @@ export class UsersService {
   }
 
   async updateRefreshToken(id: string, hashedRefreshToken: string | null): Promise<void> {
-    await this.usersRepository.update(id, {
+    await this.usersRepository.update({ uuid: id }, {
       hashedRefreshToken,
     });
   }

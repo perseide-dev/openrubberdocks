@@ -4,7 +4,7 @@ import type { Response, Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
-import { ValidateUserDTO } from '@moduleAuth/dto/validate-user.dto';
+import { ValidateUserDTO } from '@moduleAuth/dto/index';
 import { RefreshTokenPayload } from '@moduleAuth/interface/auth.interface';
 import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
 

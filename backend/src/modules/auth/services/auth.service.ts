@@ -1,12 +1,9 @@
-import { UpdateTokenDTO } from '@moduleAuth/dto/update-token.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '@moduleUsers/services/users.service';
-import { ValidateUserDTO } from '@moduleAuth/dto/validate-user.dto';
-import { RefreshTokenDto } from '@moduleAuth/dto/refresh-token.dto';
+import { UpdateTokenDTO, ValidateUserDTO, RefreshTokenDto, GenerateTokenDto } from '@moduleAuth/dto/index';
 import * as bcrypt from 'bcrypt';
 import { User } from '@moduleUsers/entities/user.entity';
-import { GenerateTokenDto } from '@moduleAuth/dto/generate-token.dto';
 import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
 import { AUTH_ERRORS_CONSTANTS } from '@moduleAuth/constants/auth.errors.constants';
 

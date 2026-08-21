@@ -1,4 +1,4 @@
-import { RefreshTokenDto } from '@moduleAuth/dto/refresh-token.dto';
+import { RefreshTokenDto } from '@moduleAuth/dto/index';
 
 export class UpdateTokenDTO extends RefreshTokenDto {
 };

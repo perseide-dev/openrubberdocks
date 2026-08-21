@@ -1,3 +1,4 @@
+import { UpdateTokenDTO } from '@moduleAuth/dto/update-token.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '@moduleUsers/services/users.service';
@@ -6,6 +7,7 @@ import { RefreshTokenDto } from '@moduleAuth/dto/refresh-token.dto';
 import * as bcrypt from 'bcrypt';
 import { User } from '@moduleUsers/entities/user.entity';
 import { GenerateTokenDto } from '@moduleAuth/dto/generate-token.dto';
+import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
 
 
 @Injectable()
@@ -42,20 +44,20 @@ export class AuthService {
     };
   }
 
-  async updateRefreshToken(userId: string, refreshToken: string) {
+  async updateRefreshToken(updateToken: UpdateTokenDTO) {
     const salt = await bcrypt.genSalt(10);
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
-    await this.usersService.updateRefreshToken(userId, hashedRefreshToken);
+    const hashedRefreshToken = await bcrypt.hash(updateToken.refreshToken, salt);
+    await this.usersService.updateRefreshToken(updateToken.userUUID, hashedRefreshToken);
   }
 
-  async refreshTokens(refreshTokenDto: RefreshTokenDto) {
-    const user = await this.usersService.findById(refreshTokenDto.userUUID);
+  async refreshTokens(refreshToken: RefreshTokenDto) {
+    const user = await this.usersService.findById(refreshToken.userUUID);
     if (!user || !user.hashedRefreshToken) {
       throw new UnauthorizedException('Access Denied');
     }
 
     const refreshTokenMatches = await bcrypt.compare(
-      refreshTokenDto.refreshToken,
+      refreshToken.refreshToken,
       user.hashedRefreshToken,
     );
 
@@ -63,8 +65,8 @@ export class AuthService {
       throw new UnauthorizedException('Access Denied');
     }
 
-    const tokens = await this.generateTokens(user.uuid, user.rubberHandle);
-    await this.updateRefreshToken(user.uuid, tokens.refreshToken);
+    const tokens = await this.generateTokens(buildGenerateTokenPayload(user));
+    await this.updateRefreshToken(buildTokenPayload(tokens));
     return tokens;
   }
 

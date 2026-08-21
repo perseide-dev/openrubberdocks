@@ -6,6 +6,7 @@ import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
 import { ValidateUserDTO } from '@moduleAuth/dto/validate-user.dto';
 import { RefreshTokenPayload } from '@moduleAuth/interface/auth.interface';
+import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
 
 @UseInterceptors(new JsonApiInterceptor('users'))
 @Controller('auth')
@@ -21,8 +22,8 @@ export class AuthController {
       return;
     }
 
-    const tokens = await this.authService.generateTokens(user.id, user.email);
-    await this.authService.updateRefreshToken(user.id, tokens.refreshToken);
+    const tokens = await this.authService.generateTokens(buildGenerateTokenPayload(user));
+    await this.authService.updateRefreshToken(buildTokenPayload(tokens));
 
     response.cookie('Authentication', tokens.accessToken, {
       httpOnly: true,
@@ -48,13 +49,7 @@ export class AuthController {
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const user = request.user as RefreshTokenPayload;
 
-    const tokenPayload =
-    {
-      userUUID: user.uuid,
-      refreshToken: user.refreshToken
-    };
-
-    const tokens = await this.authService.refreshTokens(tokenPayload);
+    const tokens = await this.authService.refreshTokens(buildTokenPayload(user));
 
     response.cookie('Authentication', tokens.accessToken, {
       httpOnly: true,

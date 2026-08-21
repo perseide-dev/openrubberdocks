@@ -4,7 +4,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { validate, dataSourceOptions } from '@config/index';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule, UsersModule } from '@modules/index';
+import { AuthModule, UsersModule, WorkspaceModule } from '@modules/index';
 
 @Module({
   imports: [
@@ -19,6 +19,7 @@ import { AuthModule, UsersModule } from '@modules/index';
     }]),
     AuthModule,
     UsersModule,
+    WorkspaceModule,
   ],
   controllers: [],
   providers: [

@@ -29,7 +29,8 @@
       "@database/*": ["src/database/*"],
       "@modules/*": ["src/modules/*"],
       "@moduleAuth/*":["src/modules/auth/*"],
-      "@moduleUsers/*": ["src/modules/users/*"]
+      "@moduleUsers/*": ["src/modules/users/*"],
+      "@moduleWorkspace/*": ["src/modules/workspace/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

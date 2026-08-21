@@ -1,14 +1,14 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, Logger, NotFoundException } from '@nestjs/common';
 import { UserType } from '@moduleUsers/enums/users.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@moduleUsers/entities/user.entity';
-import { CreateUserDto } from '@moduleUsers/dto/create-user.dto';
-import * as bcrypt from 'bcrypt';
-import { USER_ERRORS_CONSTANTS } from '@moduleUsers/constants/user.erros.constans';
+import { CreateUserDto } from '../dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -19,36 +19,36 @@ export class UsersService {
 
     if (createDto.type === UserType.COREADMIN) {
       const existCoreUser = await this.usersRepository.findOne({ where: { type: UserType.COREADMIN } });
-      if (existCoreUser) throw new ConflictException(USER_ERRORS_CONSTANTS.ONLY_ONE_CORE_USER());
+      if (existCoreUser) throw new ConflictException('Core User already exist');
     }
     if (existingUser) {
-      throw new ConflictException(USER_ERRORS_CONSTANTS.USER_ALREADY_EXISTS());
+      throw new ConflictException('User already exists');
     }
-
-    const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(createDto.password, saltOrRounds);
 
     const user = this.usersRepository.create(
       {
         rubberHandle: createDto.rubberHandle,
         username: createDto.username,
         type: createDto.type,
-        password: hashedPassword
+        password: createDto.password
       });
     return this.usersRepository.save(user);
   }
 
   async findByRubberHandle(rubberHandle: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { rubberHandle: rubberHandle } });
-
-    if (!user) throw new NotFoundException(USER_ERRORS_CONSTANTS.USER_NOT_FOUND_BY_HANDLE(rubberHandle));
-
+    const user = await this.usersRepository.findOne({ where: { rubberHandle } });
+    if (!user) {
+      throw new NotFoundException(`User with handle ${rubberHandle} not found`);
+    }
+    this.logger.log(`Found User ${user.rubberHandle}`);
     return user;
   }
 
   async findById(userUUID: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { uuid: userUUID } });
-    if (!user) throw new NotFoundException(USER_ERRORS_CONSTANTS.USER_NOT_FOUND_BY_UUID(userUUID));
+    if (!user) {
+      throw new NotFoundException(`User with UUID ${userUUID} not found`);
+    }
     return user;
   }
 

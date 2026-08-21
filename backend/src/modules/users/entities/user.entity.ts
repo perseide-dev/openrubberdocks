@@ -1,7 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Generated, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Generated, BeforeInsert, BeforeUpdate, OneToMany } from 'typeorm';
 import { UserType } from '@moduleUsers/enums/users.enum';
+import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
+import { WorkspaceMember } from '@moduleWorkspace/entities/workspace-member.entity';
 
 @Entity('users')
 export class User {
@@ -48,5 +50,11 @@ export class User {
       this.password = await bcrypt.hash(this.password, saltRounds);
     }
   }
+
+  @OneToMany(() => WorkspaceMember, (membership) => membership.user)
+  workspaceMemberships: WorkspaceMember[];
+
+  @OneToMany(() => Workspace, (workspace) => workspace.createdBy)
+  createdWorkspaces: Workspace[];
 
 }

@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
-import { UsersService } from '../../users/services/users.service';
+import { UsersService } from '@moduleUsers/services/users.service';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -27,7 +27,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    
+
     const user = await this.usersService.findById(payload.userUUID);
     if (!user) {
       throw new UnauthorizedException();

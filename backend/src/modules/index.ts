@@ -1,2 +1,2 @@
-export * from './auth/auth.module';
-export * from './users/users.module';
+export * from '@moduleAuth/auth.module';
+export * from '@moduleUsers/users.module';

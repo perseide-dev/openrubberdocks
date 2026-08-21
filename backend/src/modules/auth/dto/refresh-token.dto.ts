@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 export class RefreshTokenDto {
     @IsUUID()
-    @IsNotEmpty({ message: 'El ID del usuario es requerido' })
+    @IsNotEmpty({ message: 'User UUID is required' })
     userUUID: string;
     @IsString()
-    @IsNotEmpty({ message: 'El refresh token es requerido' })
+    @IsNotEmpty({ message: 'Refresh token is required' })
     refreshToken: string;
 }

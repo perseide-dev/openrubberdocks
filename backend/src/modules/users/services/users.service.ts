@@ -3,8 +3,9 @@ import { UserType } from '@moduleUsers/enums/users.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@moduleUsers/entities/user.entity';
-import { CreateUserDto } from '../dto/create-user.dto';
+import { CreateUserDto } from '@moduleUsers/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import { USER_ERRORS_CONSTANTS } from '@moduleUsers/constants/user.erros.constans';
 
 @Injectable()
 export class UsersService {
@@ -18,10 +19,10 @@ export class UsersService {
 
     if (createDto.type === UserType.COREADMIN) {
       const existCoreUser = await this.usersRepository.findOne({ where: { type: UserType.COREADMIN } });
-      if (existCoreUser) throw new ConflictException();
+      if (existCoreUser) throw new ConflictException(USER_ERRORS_CONSTANTS.ONLY_ONE_CORE_USER());
     }
     if (existingUser) {
-      throw new ConflictException('User @ already exists');
+      throw new ConflictException(USER_ERRORS_CONSTANTS.USER_ALREADY_EXISTS());
     }
 
     const saltOrRounds = 10;
@@ -32,7 +33,7 @@ export class UsersService {
         rubberHandle: createDto.rubberHandle,
         username: createDto.username,
         type: createDto.type,
-        password:  hashedPassword
+        password: hashedPassword
       });
     return this.usersRepository.save(user);
   }
@@ -40,14 +41,14 @@ export class UsersService {
   async findByRubberHandle(rubberHandle: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { rubberHandle: rubberHandle } });
 
-    if (!user) throw new NotFoundException(`User ${rubberHandle} could not be found`);
+    if (!user) throw new NotFoundException(USER_ERRORS_CONSTANTS.USER_NOT_FOUND_BY_HANDLE(rubberHandle));
 
     return user;
   }
 
   async findById(userUUID: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { uuid: userUUID } });
-    if (!user) throw new NotFoundException(`User ${userUUID} could not be found`);
+    if (!user) throw new NotFoundException(USER_ERRORS_CONSTANTS.USER_NOT_FOUND_BY_UUID(userUUID));
     return user;
   }
 

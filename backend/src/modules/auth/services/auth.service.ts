@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@moduleUsers/entities/user.entity';
 import { GenerateTokenDto } from '@moduleAuth/dto/generate-token.dto';
 import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
+import { AUTH_ERRORS_CONSTANTS } from '@moduleAuth/constants/auth.errors.constants';
 
 
 @Injectable()
@@ -22,7 +23,7 @@ export class AuthService {
     if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
       return user;
     }
-    throw new UnauthorizedException('Incorrect username or password');
+    throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.INVALID_CREDENTIALS());
   }
 
   async generateTokens(generateToken: GenerateTokenDto): Promise<any> {
@@ -53,7 +54,7 @@ export class AuthService {
   async refreshTokens(refreshToken: RefreshTokenDto) {
     const user = await this.usersService.findById(refreshToken.userUUID);
     if (!user || !user.hashedRefreshToken) {
-      throw new UnauthorizedException('Access Denied');
+      throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.ACCESS_DENIED());
     }
 
     const refreshTokenMatches = await bcrypt.compare(
@@ -62,7 +63,7 @@ export class AuthService {
     );
 
     if (!refreshTokenMatches) {
-      throw new UnauthorizedException('Access Denied');
+      throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.ACCESS_DENIED());
     }
 
     const tokens = await this.generateTokens(buildGenerateTokenPayload(user));

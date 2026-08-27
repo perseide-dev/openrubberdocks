@@ -3,8 +3,8 @@ import { IsUUID, IsOptional, IsNumber } from 'class-validator';
 export class MoveBlockDto {
     @IsUUID()
     @IsOptional()
-    new_parent_block_id?: string;
+    newParentBlockUuid?: string;
 
     @IsNumber()
-    new_order_index: number;
+    newOrderIndex: number;
 }

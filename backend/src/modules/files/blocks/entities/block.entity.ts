@@ -5,50 +5,79 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     ManyToOne,
-    OneToMany,
     JoinColumn,
+    Generated,
+    OneToMany
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { File } from '@moduleFiles/manager/entities/file.entity';
+import { User } from '@moduleUsers/entities/user.entity';
+import { BlockType } from '../enums/block-type.enum';
 import { BlockRevision } from './block-revision.entity';
 
 @Entity('blocks')
 export class Block {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+    @PrimaryGeneratedColumn('increment')
+    @Exclude()
+    id: number;
 
-    @Column({ type: 'uuid' })
-    page_id: string;
+    @Column({ name: 'uuid', unique: true })
+    @Generated('uuid')
+    uuid: string;
 
     @ManyToOne(() => File, (file) => file.blocks, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'page_id' })
+    @JoinColumn({ name: 'fileId' })
     file: File;
 
+    @Column({ type: 'int' })
+    fileId: number;
+
     @Column({ type: 'uuid', nullable: true })
-    parent_block_id: string;
+    fileUuid: string;
 
-    // Relación recursiva para anidar bloques (ej. columnas o listas)
-    @ManyToOne(() => Block, (block) => block.child_blocks, { nullable: true, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'parent_block_id' })
-    parent_block: Block;
+    @Column({ type: 'int', nullable: true })
+    parentBlockId: number;
 
-    @OneToMany(() => Block, (block) => block.parent_block)
-    child_blocks: Block[];
+    @Column({ type: 'uuid', nullable: true })
+    parentBlockUuid: string;
 
-    @Column({ type: 'varchar', comment: 'markdown, h1, image, todo, table, code...' })
-    type: string;
+    // Recursive relationship for nested blocks
+    @ManyToOne(() => Block, (block) => block.childBlocks, { nullable: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'parentBlockId' })
+    parentBlock: Block;
 
-    @Column({ type: 'jsonb', default: {}, comment: 'Atributos dinámicos del bloque' })
+    @OneToMany(() => Block, (block) => block.parentBlock)
+    childBlocks: Block[];
+
+    @Column({
+        type: 'enum',
+        enum: BlockType,
+        default: BlockType.TEXT,
+    })
+    type: BlockType;
+
+    @Column({ type: 'jsonb', nullable: true })
     properties: Record<string, any>;
 
-    @Column({ type: 'float', comment: 'Para drag and drop' })
-    order_index: number;
+    @Column({ type: 'float' })
+    orderIndex: number;
+
+    @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'createdById' })
+    createdBy: User;
+
+    @Column({ type: 'int', nullable: true })
+    createdById: number;
+
+    @Column({ type: 'uuid', nullable: true })
+    createdByUuid: string;
 
     @OneToMany(() => BlockRevision, (revision) => revision.block)
     revisions: BlockRevision[];
 
-    @CreateDateColumn({ type: 'timestamp' })
-    created_at: Date;
+    @CreateDateColumn()
+    createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })
-    updated_at: Date;
+    @UpdateDateColumn()
+    updatedAt: Date;
 }

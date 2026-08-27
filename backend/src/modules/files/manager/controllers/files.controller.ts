@@ -26,18 +26,18 @@ export class FilesController {
     return this.filesService.findAll(query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string, @JsonApiQuery() query: JsonApiQueryOptions) {
-    return this.filesService.findOne(id, query);
+  @Get(':uuid')
+  findOne(@Param('uuid') uuid: string, @JsonApiQuery() query: JsonApiQueryOptions) {
+    return this.filesService.findOne(uuid, query);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @JsonApiBody() updateFileDto: UpdateFileDto) {
-    return this.filesService.update(id, updateFileDto);
+  @Patch(':uuid')
+  update(@Param('uuid') uuid: string, @JsonApiBody() updateFileDto: UpdateFileDto) {
+    return this.filesService.update(uuid, updateFileDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.filesService.remove(id);
+  @Delete(':uuid')
+  remove(@Param('uuid') uuid: string) {
+    return this.filesService.remove(uuid);
   }
 }

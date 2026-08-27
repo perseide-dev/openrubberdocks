@@ -2,11 +2,11 @@ import { IsString, IsUUID, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateFileDto {
     @IsUUID()
-    workspace_id: string;
+    workspaceUuid: string;
 
     @IsUUID()
     @IsOptional()
-    parent_page_id?: string;
+    parentPageUuid?: string;
 
     @IsString()
     title: string;
@@ -17,9 +17,9 @@ export class CreateFileDto {
 
     @IsString()
     @IsOptional()
-    cover_image?: string;
+    coverImage?: string;
 
     @IsBoolean()
     @IsOptional()
-    is_template?: boolean;
+    isTemplate?: boolean;
 }

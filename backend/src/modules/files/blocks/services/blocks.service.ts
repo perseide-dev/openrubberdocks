@@ -17,16 +17,19 @@ export class BlocksService {
         private blockRepository: Repository<Block>,
         @InjectRepository(BlockRevision)
         private blockRevisionRepository: Repository<BlockRevision>,
-    ) {}
+    ) { }
 
-    async create(createBlockDto: CreateBlockDto, userId: string): Promise<Block> {
-        const block = this.blockRepository.create(createBlockDto);
+    async create(createBlockDto: CreateBlockDto, userUuid: string): Promise<Block> {
+        const block = this.blockRepository.create({
+            ...createBlockDto,
+            createdByUuid: userUuid,
+        });
         const savedBlock = await this.blockRepository.save(block);
 
         const revision = this.blockRevisionRepository.create({
-            block_id: savedBlock.id,
+            blockUuid: savedBlock.uuid,
             properties: savedBlock.properties,
-            created_by: userId,
+            createdByUuid: userUuid,
         });
         await this.blockRevisionRepository.save(revision);
 
@@ -45,15 +48,15 @@ export class BlocksService {
         if (query.filters?.length) {
             applyJsonApiFilters(qb, query.filters, 'block');
         }
-        
-        qb.orderBy('block.order_index', 'ASC');
+
+        qb.orderBy('block.orderIndex', 'ASC');
 
         return await qb.getMany();
     }
 
-    async findOne(id: string, query?: JsonApiQueryOptions): Promise<Block> {
+    async findOne(uuid: string, query?: JsonApiQueryOptions): Promise<Block> {
         const qb = this.blockRepository.createQueryBuilder('block')
-            .where('block.id = :id', { id });
+            .where('block.uuid = :uuid', { uuid });
 
         if (query?.relations?.length) {
             query.relations.forEach((relation) => {
@@ -68,32 +71,32 @@ export class BlocksService {
         return block;
     }
 
-    async update(id: string, updateBlockDto: UpdateBlockDto, userId: string): Promise<Block> {
-        const block = await this.findOne(id);
-        block.properties = updateBlockDto.properties || block.properties;
+    async update(uuid: string, updateBlockDto: UpdateBlockDto, userUuid: string): Promise<Block> {
+        const block = await this.findOne(uuid);
+        this.blockRepository.merge(block, updateBlockDto);
         const savedBlock = await this.blockRepository.save(block);
 
         const revision = this.blockRevisionRepository.create({
-            block_id: savedBlock.id,
+            blockUuid: savedBlock.uuid,
             properties: savedBlock.properties,
-            created_by: userId,
+            createdByUuid: userUuid,
         });
         await this.blockRevisionRepository.save(revision);
 
         return savedBlock;
     }
 
-    async move(id: string, moveBlockDto: MoveBlockDto): Promise<Block> {
-        const block = await this.findOne(id);
-        block.order_index = moveBlockDto.new_order_index;
-        if (moveBlockDto.new_parent_block_id !== undefined) {
-            block.parent_block_id = moveBlockDto.new_parent_block_id;
+    async move(uuid: string, moveBlockDto: MoveBlockDto): Promise<Block> {
+        const block = await this.findOne(uuid);
+        block.orderIndex = moveBlockDto.newOrderIndex;
+        if (moveBlockDto.newParentBlockUuid !== undefined) {
+            block.parentBlockUuid = moveBlockDto.newParentBlockUuid;
         }
-        return this.blockRepository.save(block);
+        return await this.blockRepository.save(block);
     }
 
-    async remove(id: string): Promise<void> {
-        const block = await this.findOne(id);
+    async remove(uuid: string): Promise<void> {
+        const block = await this.findOne(uuid);
         await this.blockRepository.remove(block);
     }
 }

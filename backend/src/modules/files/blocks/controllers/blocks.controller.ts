@@ -27,24 +27,24 @@ export class BlocksController {
     return this.blocksService.findAll(query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string, @JsonApiQuery() query: JsonApiQueryOptions) {
-    return this.blocksService.findOne(id, query);
+  @Get(':uuid')
+  findOne(@Param('uuid') uuid: string, @JsonApiQuery() query: JsonApiQueryOptions) {
+    return this.blocksService.findOne(uuid, query);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @JsonApiBody() updateBlockDto: UpdateBlockDto, @Req() request: Request) {
+  @Patch(':uuid')
+  update(@Param('uuid') uuid: string, @JsonApiBody() updateBlockDto: UpdateBlockDto, @Req() request: Request) {
     const user = request.user as any;
-    return this.blocksService.update(id, updateBlockDto, user.uuid);
+    return this.blocksService.update(uuid, updateBlockDto, user.uuid);
   }
 
-  @Patch(':id/move')
-  move(@Param('id') id: string, @JsonApiBody() moveBlockDto: MoveBlockDto) {
-    return this.blocksService.move(id, moveBlockDto);
+  @Patch(':uuid/move')
+  move(@Param('uuid') uuid: string, @JsonApiBody() moveBlockDto: MoveBlockDto) {
+    return this.blocksService.move(uuid, moveBlockDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.blocksService.remove(id);
+  @Delete(':uuid')
+  remove(@Param('uuid') uuid: string) {
+    return this.blocksService.remove(uuid);
   }
 }

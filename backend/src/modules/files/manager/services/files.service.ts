@@ -15,12 +15,12 @@ export class FilesService {
         private fileRepository: Repository<File>,
     ) {}
 
-    async create(createFileDto: CreateFileDto, userId: string): Promise<File> {
+    async create(createFileDto: CreateFileDto, userUuid: string): Promise<File> {
         const file = this.fileRepository.create({
             ...createFileDto,
-            created_by: userId,
+            createdByUuid: userUuid,
         });
-        return this.fileRepository.save(file);
+        return await this.fileRepository.save(file);
     }
 
     async findAll(query: JsonApiQueryOptions): Promise<File[]> {
@@ -39,9 +39,9 @@ export class FilesService {
         return await qb.getMany();
     }
 
-    async findOne(id: string, query?: JsonApiQueryOptions): Promise<File> {
+    async findOne(uuid: string, query?: JsonApiQueryOptions): Promise<File> {
         const qb = this.fileRepository.createQueryBuilder('file')
-            .where('file.id = :id', { id });
+            .where('file.uuid = :uuid', { uuid });
 
         if (query?.relations?.length) {
             query.relations.forEach((relation) => {
@@ -56,14 +56,14 @@ export class FilesService {
         return file;
     }
 
-    async update(id: string, updateFileDto: UpdateFileDto): Promise<File> {
-        const file = await this.findOne(id);
-        const updatedFile = Object.assign(file, updateFileDto);
-        return this.fileRepository.save(updatedFile);
+    async update(uuid: string, updateFileDto: UpdateFileDto): Promise<File> {
+        const file = await this.findOne(uuid);
+        this.fileRepository.merge(file, updateFileDto);
+        return await this.fileRepository.save(file);
     }
 
-    async remove(id: string): Promise<void> {
-        const file = await this.findOne(id);
+    async remove(uuid: string): Promise<void> {
+        const file = await this.findOne(uuid);
         await this.fileRepository.remove(file);
     }
 }

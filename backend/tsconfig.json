@@ -30,7 +30,8 @@
       "@modules/*": ["src/modules/*"],
       "@moduleAuth/*":["src/modules/auth/*"],
       "@moduleUsers/*": ["src/modules/users/*"],
-      "@moduleWorkspace/*": ["src/modules/workspace/*"]
+      "@moduleWorkspace/*": ["src/modules/workspace/*"],
+      "@moduleFiles/*": ["src/modules/files/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

@@ -117,7 +117,8 @@
       "^@modules/(.*)$": "<rootDir>/modules/$1",
       "^@moduleAuth/(.*)$": "<rootDir>/modules/auth/$1",
       "^@moduleUsers/(.*)$": "<rootDir>/moudles/users/$1",
-      "^@moduleWorkspace/(.*)": "<rootDir>/modules/workspace/$1"
+      "^@moduleWorkspace/(.*)": "<rootDir>/modules/workspace/$1",
+      "^@moduleFiles/(.*)": "<rootDir>/modules/files/$1"
     }
   }
 }

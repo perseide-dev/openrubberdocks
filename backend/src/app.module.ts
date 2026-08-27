@@ -1,3 +1,5 @@
+import { FilesModule } from './modules/files/manager/files.module';
+import { BlocksModule } from './modules/files/blocks/blocks.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -7,7 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule, UsersModule, WorkspaceModule } from '@modules/index';
 
 @Module({
-  imports: [
+  imports: [FilesModule, BlocksModule,
     TypeOrmModule.forRoot(dataSourceOptions),
     ConfigModule.forRoot({
       validate,

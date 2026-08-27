@@ -6,6 +6,7 @@ import { CreateWorkspaceDto } from '@moduleWorkspace/dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from '@moduleWorkspace/dto/update-workspace.dto';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
+import { WORKSPACE_ERRORS_CONSTANTS } from '../constants/workspace.errors.constants';
 
 @Injectable()
 export class WorkspaceService {
@@ -53,7 +54,7 @@ export class WorkspaceService {
     const workspace = await qb.getOne();
 
     if (!workspace) {
-      throw new NotFoundException(`Workspace with UUID ${uuid} not found`);
+      throw new NotFoundException(WORKSPACE_ERRORS_CONSTANTS.WORKSPACE_NOT_FOUND(uuid));
     }
 
     return workspace;

@@ -7,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { validate, dataSourceOptions } from '@config/index';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule, UsersModule, WorkspaceModule } from '@modules/index';
+import { AuthorizationModule } from '@moduleAuthorization/authorization.module';
 
 @Module({
   imports: [FilesModule, BlocksModule,
@@ -22,6 +23,7 @@ import { AuthModule, UsersModule, WorkspaceModule } from '@modules/index';
     AuthModule,
     UsersModule,
     WorkspaceModule,
+    AuthorizationModule,
   ],
   controllers: [],
   providers: [

@@ -118,7 +118,8 @@
       "^@moduleAuth/(.*)$": "<rootDir>/modules/auth/$1",
       "^@moduleUsers/(.*)$": "<rootDir>/moudles/users/$1",
       "^@moduleWorkspace/(.*)": "<rootDir>/modules/workspace/$1",
-      "^@moduleFiles/(.*)": "<rootDir>/modules/files/$1"
+      "^@moduleFiles/(.*)": "<rootDir>/modules/files/$1",
+      "^@moduleAuthorization/(.*)": "<rootDir>/modules/authorization/$1"
     }
   }
 }

@@ -31,7 +31,8 @@
       "@moduleAuth/*":["src/modules/auth/*"],
       "@moduleUsers/*": ["src/modules/users/*"],
       "@moduleWorkspace/*": ["src/modules/workspace/*"],
-      "@moduleFiles/*": ["src/modules/files/*"]
+      "@moduleFiles/*": ["src/modules/files/*"],
+      "@moduleAuthorization/*": ["src/modules/authorization/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

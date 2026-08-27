@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, Generated } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Permission } from './permission.entity';
-import { UserRoleScope } from './user-role-scope.entity';
+import { Permission } from '@moduleAuthorization/entities/permission.entity';
+import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 
 @Entity('roles')
 export class Role {

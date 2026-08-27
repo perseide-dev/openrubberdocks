@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, Generated } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Role } from './role.entity';
+import { Role } from '@moduleAuthorization/entities/role.entity';
 
 @Entity('permissions')
 export class Permission {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserRoleScope } from '../entities/user-role-scope.entity';
+import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 import { User } from '@moduleUsers/entities/user.entity';
 import { UserType } from '@moduleUsers/enums/users.enum';
 

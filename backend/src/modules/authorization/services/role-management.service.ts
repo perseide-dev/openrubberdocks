@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Role } from '../entities/role.entity';
-import { Permission } from '../entities/permission.entity';
-import { UserRoleScope } from '../entities/user-role-scope.entity';
+import { Role } from '@moduleAuthorization/entities/role.entity';
+import { Permission } from '@moduleAuthorization/entities/permission.entity';
+import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 import { User } from '@moduleUsers/entities/user.entity';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
-import { CreateRoleDto } from '../dto/create-role.dto';
-import { UpdateRoleDto } from '../dto/update-role.dto';
-import { AssignRoleScopeDto } from '../dto/assign-role-scope.dto';
-import { AUTHORIZATION_ERRORS } from '../constants/authorization.errors.constants';
+import { CreateRoleDto } from '@moduleAuthorization/dto/create-role.dto';
+import { UpdateRoleDto } from '@moduleAuthorization/dto/update-role.dto';
+import { AssignRoleScopeDto } from '@moduleAuthorization/dto/assign-role-scope.dto';
+import { AUTHORIZATION_ERRORS } from '@moduleAuthorization/constants/authorization.errors.constants';
 import type { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 
 @Injectable()

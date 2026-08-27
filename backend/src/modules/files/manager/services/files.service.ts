@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { File } from '../entities/file.entity';
 import { CreateFileDto } from '../dto/create-file.dto';
 import { UpdateFileDto } from '../dto/update-file.dto';
-import { FILE_CONSTANTS } from '../constants/file.constants';
+import { FILE_ERRORS_CONSTANTS } from '../constants/file.errors.constants';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
 
@@ -51,7 +51,7 @@ export class FilesService {
 
         const file = await qb.getOne();
         if (!file) {
-            throw new NotFoundException(FILE_CONSTANTS.ERRORS.FILE_NOT_FOUND());
+            throw new NotFoundException(FILE_ERRORS_CONSTANTS.FILE_NOT_FOUND());
         }
         return file;
     }

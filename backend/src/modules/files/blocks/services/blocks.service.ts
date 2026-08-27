@@ -6,7 +6,7 @@ import { BlockRevision } from '../entities/block-revision.entity';
 import { CreateBlockDto } from '../dto/create-block.dto';
 import { UpdateBlockDto } from '../dto/update-block.dto';
 import { MoveBlockDto } from '../dto/move-block.dto';
-import { BLOCK_CONSTANTS } from '../constants/block.constants';
+import { BLOCK_ERRORS_CONSTANTS } from '../constants/block.errors.constants';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
 
@@ -63,7 +63,7 @@ export class BlocksService {
 
         const block = await qb.getOne();
         if (!block) {
-            throw new NotFoundException(BLOCK_CONSTANTS.ERRORS.BLOCK_NOT_FOUND());
+            throw new NotFoundException(BLOCK_ERRORS_CONSTANTS.BLOCK_NOT_FOUND());
         }
         return block;
     }

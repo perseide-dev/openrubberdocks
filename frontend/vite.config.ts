@@ -29,7 +29,8 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/core/utils'),
       '@utils-constants': path.resolve(__dirname, './src/core/utils/constants'),
       '@utils-functions': path.resolve(__dirname, './src/core/utils/functions'),
-      '@utils-labels': path.resolve(__dirname, './src/core/utils/labels')
+      '@utils-labels': path.resolve(__dirname, './src/core/utils/labels'),
+      '@features': path.resolve(__dirname, './src/features')
     }
   }
 })

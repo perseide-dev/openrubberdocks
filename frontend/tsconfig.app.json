@@ -23,7 +23,8 @@
       "@utils/*": ["./src/core/utils/*"],
       "@utils-constants/*": ["./src/core/utils/constants/*"],
       "@utils-functions/*": ["./src/core/utils/functions/*"],
-      "@utils-labels/*": ["./src/core/utils/labels/*"]
+      "@utils-labels/*": ["./src/core/utils/labels/*"],
+      "@features/*": ["./src/features/*"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2023",

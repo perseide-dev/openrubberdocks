@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '@moduleUsers/services/users.service';
 import { UpdateTokenDTO, ValidateUserDTO, RefreshTokenDto, GenerateTokenDto } from '@moduleAuth/dto/index';
 import * as bcrypt from 'bcrypt';
@@ -13,6 +14,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) { }
 
   async validateUser(validateUserDto: ValidateUserDTO): Promise<User> {
@@ -24,14 +26,16 @@ export class AuthService {
   }
 
   async generateTokens(generateToken: GenerateTokenDto): Promise<any> {
+    const accessSecret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(generateToken, {
-        secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret',
+        secret: accessSecret,
         expiresIn: '15m',
       }),
       this.jwtService.signAsync(generateToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret',
+        secret: refreshSecret,
         expiresIn: '7d',
       }),
     ]);
@@ -43,7 +47,8 @@ export class AuthService {
   }
 
   async updateRefreshToken(updateToken: UpdateTokenDTO) {
-    const salt = await bcrypt.genSalt(10);
+    const saltRounds = Number(this.configService.get<number>('BCRYPT_SALT_ROUNDS')) || 12;
+    const salt = await bcrypt.genSalt(saltRounds);
     const hashedRefreshToken = await bcrypt.hash(updateToken.refreshToken, salt);
     await this.usersService.updateRefreshToken(updateToken.userUUID, hashedRefreshToken);
   }

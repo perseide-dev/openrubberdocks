@@ -33,9 +33,9 @@ export class UserRoleScope {
   workspace: Workspace;
 
   @Column({ nullable: true })
-  workspaceId: number;
+  workspaceId: number | null;
 
   // We add squadId as nullable in case Squad scoping is required in the future
   @Column({ nullable: true })
-  squadId: number;
+  squadId: number | null;
 }

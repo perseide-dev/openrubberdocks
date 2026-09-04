@@ -46,7 +46,7 @@ export class User {
   @BeforeUpdate()
   async hashPassword() {
     if (this.password && !this.password.startsWith('$2b$')) {
-      const saltRounds = 10;
+      const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 12;
       this.password = await bcrypt.hash(this.password, saltRounds);
     }
   }

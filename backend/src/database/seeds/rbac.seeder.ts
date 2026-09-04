@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { Seeder, SeederFactoryManager } from 'typeorm-extension';
+import { Seeder } from 'typeorm-extension';
 import { User } from '../../modules/users/entities/user.entity';
 import { Role } from '../../modules/authorization/entities/role.entity';
 import { Permission } from '../../modules/authorization/entities/permission.entity';
@@ -7,10 +7,7 @@ import { UserRoleScope } from '../../modules/authorization/entities/user-role-sc
 import { UserType } from '../../modules/users/enums/users.enum';
 
 export class RbacSeeder implements Seeder {
-  public async run(
-    dataSource: DataSource,
-    factoryManager: SeederFactoryManager,
-  ): Promise<any> {
+  public async run(dataSource: DataSource): Promise<any> {
     const userRepository = dataSource.getRepository(User);
     const roleRepository = dataSource.getRepository(Role);
     const permissionRepository = dataSource.getRepository(Permission);
@@ -22,7 +19,7 @@ export class RbacSeeder implements Seeder {
       coreUser = userRepository.create({
         username: 'Core Admin',
         rubberHandle: 'coreadmin',
-        password: 'supersecretpassword', // Ideally from env in production
+        password: process.env.CORE_ADMIN_PASSWORD || 'supersecretpassword', // Configurable via environment variable
         type: UserType.COREADMIN,
       });
       await userRepository.save(coreUser);
@@ -39,7 +36,7 @@ export class RbacSeeder implements Seeder {
       { action: 'global:audit' }
     ];
 
-    const permissions = [];
+    const permissions: Permission[] = [];
     for (const p of permissionsData) {
       let permission = await permissionRepository.findOneBy({ action: p.action });
       if (!permission) {

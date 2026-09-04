@@ -23,10 +23,10 @@ export class Workspace {
     members: WorkspaceMember[];
 
     @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-    @JoinColumn({ name: 'createdById' })
+    @JoinColumn({ name: 'created_by_id' })
     createdBy: User;
 
-    @Column('uuid')
+    @Column({ name: 'created_by_uuid', type: 'uuid' })
     createdByUUID: string;
 
     @CreateDateColumn()

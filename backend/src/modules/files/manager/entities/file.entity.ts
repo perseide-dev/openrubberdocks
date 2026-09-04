@@ -25,24 +25,24 @@ export class File {
     uuid: string;
 
     @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'workspaceId', referencedColumnName: 'id' })
+    @JoinColumn({ name: 'workspace_id', referencedColumnName: 'id' })
     workspace: Workspace;
 
-    @Column({ type: 'int' })
+    @Column({ name: 'workspace_id', type: 'int' })
     workspaceId: number;
 
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ name: 'workspace_uuid', type: 'uuid', nullable: true })
     workspaceUuid: string;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ name: 'parent_page_id', type: 'int', nullable: true })
     parentPageId: number;
 
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ name: 'parent_page_uuid', type: 'uuid', nullable: true })
     parentPageUuid: string;
 
     // Relación recursiva para páginas hijas/padre
     @ManyToOne(() => File, (file) => file.childPages, { nullable: true, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'parentPageId' })
+    @JoinColumn({ name: 'parent_page_id' })
     parentPage: File;
 
     @OneToMany(() => File, (file) => file.parentPage)
@@ -61,13 +61,13 @@ export class File {
     isTemplate: boolean;
 
     @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-    @JoinColumn({ name: 'createdById' })
+    @JoinColumn({ name: 'created_by_id' })
     createdBy: User;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ name: 'created_by_id', type: 'int', nullable: true })
     createdById: number;
 
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ name: 'created_by_uuid', type: 'uuid', nullable: true })
     createdByUuid: string;
 
     // Relación con los bloques

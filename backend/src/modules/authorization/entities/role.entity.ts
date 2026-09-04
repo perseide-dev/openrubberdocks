@@ -19,14 +19,14 @@ export class Role {
   @Column({ nullable: true })
   description: string;
 
-  @Column({ default: false })
+  @Column({ name: 'is_system_defined', default: false })
   isSystemDefined: boolean;
 
   @ManyToMany(() => Permission, permission => permission.roles, { cascade: true })
   @JoinTable({
     name: 'role_permissions',
-    joinColumn: { name: 'roleId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'permissionId', referencedColumnName: 'id' },
+    joinColumn: { name: 'role_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   permissions: Permission[];
 

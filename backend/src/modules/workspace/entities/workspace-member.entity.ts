@@ -8,17 +8,17 @@ export class WorkspaceMember {
     id: number
 
     @ManyToOne(() => User, (user) => user.workspaceMemberships, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'user_id' })
     user: User;
 
-    @Column({ type: 'int' })
+    @Column({ name: 'user_id', type: 'int' })
     userId: number;
 
     @ManyToOne(() => Workspace, (workspace) => workspace.members, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'workspaceId' })
+    @JoinColumn({ name: 'workspace_id' })
     workspace: Workspace;
 
-    @Column({ type: 'int' })
+    @Column({ name: 'workspace_id', type: 'int' })
     workspaceId: number;
 
     @CreateDateColumn()

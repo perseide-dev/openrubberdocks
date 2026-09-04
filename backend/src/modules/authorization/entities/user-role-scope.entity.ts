@@ -15,27 +15,27 @@ export class UserRoleScope {
   uuid: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => Role, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'roleId' })
+  @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Column()
+  @Column({ name: 'role_id' })
   roleId: number;
 
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE', nullable: true })
-  @JoinColumn({ name: 'workspaceId' })
+  @JoinColumn({ name: 'workspace_id' })
   workspace: Workspace;
 
-  @Column({ nullable: true })
+  @Column({ name: 'workspace_id', type: 'int', nullable: true })
   workspaceId: number | null;
 
   // We add squadId as nullable in case Squad scoping is required in the future
-  @Column({ nullable: true })
+  @Column({ name: 'squad_id', type: 'int', nullable: true })
   squadId: number | null;
 }

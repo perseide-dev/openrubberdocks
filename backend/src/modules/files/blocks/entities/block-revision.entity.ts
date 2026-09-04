@@ -22,26 +22,26 @@ export class BlockRevision {
     uuid: string;
 
     @ManyToOne(() => Block, (block) => block.revisions, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'blockId' })
+    @JoinColumn({ name: 'block_id' })
     block: Block;
 
-    @Column({ type: 'int' })
+    @Column({ name: 'block_id', type: 'int' })
     blockId: number;
 
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ name: 'block_uuid', type: 'uuid', nullable: true })
     blockUuid: string;
 
     @Column({ type: 'jsonb', nullable: true })
     properties: Record<string, any>;
 
     @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-    @JoinColumn({ name: 'createdById' })
+    @JoinColumn({ name: 'created_by_id' })
     createdBy: User;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ name: 'created_by_id', type: 'int', nullable: true })
     createdById: number;
 
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ name: 'created_by_uuid', type: 'uuid', nullable: true })
     createdByUuid: string;
 
     @CreateDateColumn()

@@ -1,2 +1,2 @@
-export * from './baseAPIservice';
-export * from './baseAPIrequest';
+export * from '@http-base/baseAPIservice';
+export * from '@http-base/baseAPIrequest';

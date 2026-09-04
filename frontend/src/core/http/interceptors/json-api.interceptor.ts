@@ -1,27 +1,46 @@
 import type { JsonApiResource, JsonApiResponse, JsonApiPayload } from '@http-types/json-api.types';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Type guard to check if a payload is already in JSON:API format.
+ */
+function isPreformattedJsonApiPayload(value: unknown): value is JsonApiPayload {
+  if (!isRecord(value) || !('data' in value)) return false;
+  const data = value.data;
+  return isRecord(data) && 'attributes' in data;
+}
+
 /**
  * Wraps a standard flat object into the JSON:API specification payload expected
  * by the backend's JsonApiDeserializePipe.
  */
 export function serializeToJsonApi<T extends Record<string, unknown>>(
   data: T,
-  options?: { type?: string; id?: string; relationships?: Record<string, unknown> }
+  options?: {
+    type?: string;
+    id?: string;
+    relationships?: Record<string, { data: { id: string; type?: string } | { id: string; type?: string }[] | null }>;
+  }
 ): JsonApiPayload<Omit<T, 'id'>> {
-  // If already in JSON:API format, pass through
-  if (data && typeof data === 'object' && 'data' in data && 'attributes' in (data as any).data) {
+  // If already in JSON:API format, return as-is
+  if (isPreformattedJsonApiPayload(data)) {
     return data as unknown as JsonApiPayload<Omit<T, 'id'>>;
   }
 
-  const { id: dataId, ...attributes } = data as { id?: string } & Record<string, unknown>;
-  const resourceId = options?.id ?? (typeof dataId === 'string' || typeof dataId === 'number' ? String(dataId) : undefined);
+  const { id: dataId, ...attributes } = data as { id?: string | number } & Record<string, unknown>;
+  const resourceId =
+    options?.id ??
+    (typeof dataId === 'string' || typeof dataId === 'number' ? String(dataId) : undefined);
 
   return {
     data: {
       ...(options?.type ? { type: options.type } : {}),
       ...(resourceId ? { id: resourceId } : {}),
       attributes: attributes as Omit<T, 'id'>,
-      ...(options?.relationships ? { relationships: options.relationships as any } : {}),
+      ...(options?.relationships ? { relationships: options.relationships } : {}),
     },
   };
 }
@@ -33,19 +52,19 @@ export function serializeToJsonApi<T extends Record<string, unknown>>(
 export function flattenResource<T = Record<string, unknown>>(
   resource: JsonApiResource<T>
 ): T & { id: string; type: string } {
-  if (!resource || typeof resource !== 'object') {
-    return resource as any;
+  if (!isRecord(resource)) {
+    return resource as unknown as T & { id: string; type: string };
   }
 
   const { id, type, attributes, relationships } = resource;
 
-  const flattened: any = {
+  const flattened: Record<string, unknown> = {
     id,
     type,
     ...(attributes || {}),
   };
 
-  if (relationships && typeof relationships === 'object') {
+  if (relationships && isRecord(relationships)) {
     Object.keys(relationships).forEach((relKey) => {
       const relData = relationships[relKey]?.data;
       if (relData !== undefined) {
@@ -58,7 +77,7 @@ export function flattenResource<T = Record<string, unknown>>(
     });
   }
 
-  return flattened;
+  return flattened as unknown as T & { id: string; type: string };
 }
 
 /**
@@ -67,11 +86,11 @@ export function flattenResource<T = Record<string, unknown>>(
 export function deserializeJsonApi<T = unknown>(
   payload: unknown
 ): T | T[] | null {
-  if (!payload || typeof payload !== 'object') {
+  if (!isRecord(payload)) {
     return payload as T;
   }
 
-  const response = payload as JsonApiResponse<any>;
+  const response = payload as unknown as JsonApiResponse<T>;
 
   // Check if it matches JsonApiResponse structure
   if (!('data' in response)) {
@@ -83,8 +102,8 @@ export function deserializeJsonApi<T = unknown>(
   }
 
   if (Array.isArray(response.data)) {
-    return response.data.map((item) => flattenResource(item)) as unknown as T[];
+    return response.data.map((item) => flattenResource<T>(item)) as unknown as T[];
   }
 
-  return flattenResource(response.data) as unknown as T;
+  return flattenResource<T>(response.data) as unknown as T;
 }

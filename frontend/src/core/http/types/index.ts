@@ -1,1 +1,1 @@
-export * from './json-api.types';
+export * from '@http-types/json-api.types';

@@ -1,2 +1,2 @@
-export * from './auth-refresh.interceptor';
-export * from './json-api.interceptor';
+export * from '@http-interceptors/auth-refresh.interceptor';
+export * from '@http-interceptors/json-api.interceptor';

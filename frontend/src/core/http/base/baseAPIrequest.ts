@@ -1,5 +1,5 @@
 import { type Options } from 'ky';
-import { baseAPIservice } from './baseAPIservice';
+import { baseAPIservice } from '@http-base/baseAPIservice';
 import { parseHttpError } from '@http-error/http-error.handler';
 import {
   serializeToJsonApi,

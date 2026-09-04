@@ -103,6 +103,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
+    "transformIgnorePatterns": [
+      "node_modules/(?!@nestjs/mapped-types)"
+    ],
     "moduleNameMapper": {
       "^@common/(.*)$": "<rootDir>/common/$1",
       "^@commonCommands/(.*)$": "<rootDir>/common/commands/$1",
@@ -117,7 +120,7 @@
       "^@database/(.*)$": "<rootDir>/database/$1",
       "^@modules/(.*)$": "<rootDir>/modules/$1",
       "^@moduleAuth/(.*)$": "<rootDir>/modules/auth/$1",
-      "^@moduleUsers/(.*)$": "<rootDir>/moudles/users/$1",
+      "^@moduleUsers/(.*)$": "<rootDir>/modules/users/$1",
       "^@moduleWorkspace/(.*)": "<rootDir>/modules/workspace/$1",
       "^@moduleFiles/(.*)": "<rootDir>/modules/files/$1",
       "^@moduleAuthorization/(.*)": "<rootDir>/modules/authorization/$1"

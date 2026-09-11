@@ -25,7 +25,7 @@ If you are purely working on UI/UX in the `frontend/` folder and don't want to d
 3. Now you can go to your terminal, enter the frontend folder, and run your usual development server:
    ```bash
    cd frontend
-   npm run dev
+   pnpm run dev
    ```
    *(The frontend will be able to make requests to `http://localhost:3000` seamlessly, and the backend will be backed by the DB running in Docker).*
 

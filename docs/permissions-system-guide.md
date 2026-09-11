@@ -1,69 +1,69 @@
-# Guía del Sistema de Permisos y Control de Acceso (RBAC Scoped)
+# Permissions System and Access Control Guide (Scoped RBAC)
 
-Este documento detalla la arquitectura, funcionamiento técnico e integración frontend del sistema de autorización y permisos de **OpenRubberDocks**.
+This document details the architecture, technical operation, and frontend integration of the authorization and permissions system in **OpenRubberDocks**.
 
 ---
 
-## 1. Visión General y Arquitectura
+## 1. Overview and Architecture
 
-El sistema de autorización de OpenRubberDocks implementa un modelo **RBAC Scoped (Role-Based Access Control con Alcance Contextual)** combinado con una **Jerarquía de Tipos de Usuario**. 
+The OpenRubberDocks authorization system implements a **Scoped RBAC (Role-Based Access Control with Contextual Scope)** model combined with a **User Type Hierarchy**.
 
-A diferencia de un RBAC tradicional plano (donde un usuario tiene un rol que aplica a toda la aplicación), en OpenRubberDocks los permisos pueden asignarse de manera **global** o estar **acotados a un recurso específico** (por ejemplo, un `Workspace` o en el futuro un `Squad`).
+Unlike a flat, traditional RBAC (where a user has a single role that applies system-wide), permissions in OpenRubberDocks can be assigned **globally** or **scoped to a specific resource** (such as a `Workspace` or, in future releases, a `Squad`).
 
 ```
                     ┌─────────────────────────┐
-                    │      Usuario (User)     │
+                    │          User           │
                     └────────────┬────────────┘
                                  │
-                     Posee múltiples asignaciones
+                     Holds multiple assignments
                                  │
                     ┌────────────▼────────────┐
-                    │     UserRoleScope       │
+                    │      UserRoleScope      │
                     └─────┬─────────────┬─────┘
                           │             │
-              Aplica un   │             │  En el contexto de
+              Applies a   │             │  In the context of
                           ▼             ▼
                  ┌────────┴─────┐  ┌────┴────────────┐
-                 │  Rol (Role)  │  │ Alcance (Scope) │
+                 │     Role     │  │      Scope      │
                  └────────┬─────┘  │  - Global (null)│
                           │        │  - Workspace    │
-              Agrupa varios        │  - (Squad)      │
+              Bundles     │        │  - (Squad)      │
                           ▼        └─────────────────┘
                  ┌────────┴──────────┐
-                 │ Permiso (Action)  │
-                 │  ej. 'item:write' │
+                 │Permission (Action)│
+                 │  e.g. 'item:write'│
                  └───────────────────┘
 ```
 
-### Principios Fundamentales
-1. **Defensa en Profundidad**: El Frontend oculta o deshabilita controles para mejorar la experiencia de usuario (UX), pero el Backend **siempre** valida de forma estricta mediante Guards y Servicios de Acceso.
-2. **Denegación por Defecto (Deny by Default)**: Si un usuario no posee explícitamente un permiso en el alcance requerido, la acción es denegada con `403 Forbidden`.
-3. **Restricción de Usuarios Externos a Nivel de Motor**: Los usuarios clasificados como externos jamás pueden ejecutar acciones destructivas o de mutación (`write`, `create`, `edit`, `delete`), incluso si accidentalmente se les asignara un rol que las contenga.
+### Core Principles
+1. **Defense in Depth**: The Frontend hides or disables UI controls to enhance user experience (UX), but the Backend **always** enforces access strictly via Guards and the Access Control Service.
+2. **Deny by Default**: If a user does not explicitly hold a permission in the requested scope, access is denied with `403 Forbidden`.
+3. **Engine-Level Mutation Lock for External Users**: Users classified as `external` can never execute mutating or destructive actions (`write`, `create`, `edit`, `delete`), even if a role with write permissions is inadvertently assigned to them.
 
 ---
 
-## 2. Tipos de Usuario (`UserType`)
+## 2. User Types (`UserType`)
 
-El sistema clasifica a los usuarios en tres niveles jerárquicos definidos en `UserType`:
+The platform classifies users into three hierarchical tiers defined in the `UserType` enum:
 
-| Tipo de Usuario | Descripción | Restricciones y Reglas de Negocio |
+| User Type | Description | Restrictions and Business Rules |
 | :--- | :--- | :--- |
-| **`coreAdmin`** | Superadministrador supremo del sistema. | Bypass total de scopes. `hasPermission()` retorna `true` automáticamente para cualquier acción. Sus roles y alcances son inmutables y no se pueden alterar vía API. |
-| **`internal`** | Empleados y colaboradores internos. | Puede tener permisos globales (`workspaceId: null`) o permisos acotados a workspaces particulares. Puede realizar lecturas y escrituras según los permisos de sus roles. |
-| **`external`** | Clientes, contratistas o auditores invitados. | **Estrictamente de solo lectura**. El motor bloquea automáticamente cualquier permiso que contenga `write`, `create`, `edit` o `delete`. **Siempre** debe tener un alcance específico (`workspaceUuid`); no puede tener asignaciones globales. |
+| **`coreAdmin`** | Supreme platform super-administrator. | Total scope bypass. `hasPermission()` automatically returns `true` for any action. Their roles and scopes are immutable and cannot be altered via API. |
+| **`internal`** | Regular employees and internal organization members. | Can have global permissions (`workspaceId: null`) or workspace-scoped permissions. Can perform read and write operations based on role permissions. |
+| **`external`** | Invited clients, contractors, or guest auditors. | **Strictly read-only**. The authorization engine automatically blocks any permission containing `write`, `create`, `edit`, or `delete`. **Must always** have a specific scope (`workspaceUuid`); cannot hold global assignments. |
 
 ---
 
-## 3. Modelo de Datos y Entidades (Backend)
+## 3. Data Model and Entities (Backend)
 
-El módulo reside en `backend/src/modules/authorization/` y se compone de cuatro entidades principales:
+The module is located in `backend/src/modules/authorization/` and consists of four main entities:
 
-### A. Entidad `Permission` (`permissions`)
-Representa una capacidad o acción atómica dentro del sistema.
-- `uuid`: Identificador público único (UUIDv4).
-- `action`: Cadena única en formato `recurso:accion` (ej. `workspace:read`, `workspace:write`, `document:create`, `role:assign`).
+### A. `Permission` Entity (`permissions`)
+Represents an atomic action or capability within the system.
+- `uuid`: Unique public identifier (UUIDv4).
+- `action`: Unique string in `resource:action` format (e.g., `workspace:read`, `workspace:write`, `document:create`, `role:assign`).
 
-Permisos base preconfigurados en el sistema:
+Pre-configured base permissions in the system:
 ```typescript
 export const BASE_PERMISSIONS = [
   { action: 'workspace:read' },
@@ -76,26 +76,26 @@ export const BASE_PERMISSIONS = [
 ];
 ```
 
-### B. Entidad `Role` (`roles`)
-Representa un conjunto de permisos agrupados bajo un nombre descriptivo.
-- `uuid`: Identificador público único.
-- `name`: Nombre del rol (ej. `'Super Admin'`, `'External Reader'`, `'Workspace Manager'`).
-- `description`: Explicación del propósito del rol.
-- `isSystemDefined`: Booleano. Si es `true`, el rol fue creado por el sistema y **no puede ser modificado ni eliminado** vía API.
-- `permissions`: Relación `ManyToMany` con `Permission` mediante la tabla pivote `role_permissions`.
+### B. `Role` Entity (`roles`)
+Represents a collection of permissions grouped under a descriptive name.
+- `uuid`: Unique public identifier.
+- `name`: Role name (e.g., `'Super Admin'`, `'External Reader'`, `'Workspace Manager'`).
+- `description`: Explanation of the role's purpose.
+- `isSystemDefined`: Boolean flag. If `true`, the role is system-provided and **cannot be modified or deleted** via API.
+- `permissions`: `ManyToMany` relationship with `Permission` via the `role_permissions` join table.
 
-### C. Entidad `UserRoleScope` (`user_role_scopes`)
-Vincula a un usuario con un rol dentro de un contexto determinado.
-- `user`: Relación `ManyToOne` con `User` (`user_id`).
-- `role`: Relación `ManyToOne` con `Role` (`role_id`).
-- `workspace`: Relación `ManyToOne` con `Workspace` (`workspace_id`, nullable). Si es `null`, el rol es de alcance **global** (solo permitido para usuarios internos).
-- `squadId`: Campo nullable reservado para alcances de equipo/squad.
+### C. `UserRoleScope` Entity (`user_role_scopes`)
+Binds a user to a role within a specific context.
+- `user`: `ManyToOne` relationship with `User` (`user_id`).
+- `role`: `ManyToOne` relationship with `Role` (`role_id`).
+- `workspace`: `ManyToOne` relationship with `Workspace` (`workspace_id`, nullable). If `null`, the role has **global** scope (only permitted for internal users).
+- `squadId`: Nullable column reserved for team/squad scoping.
 
 ---
 
-## 4. Motor de Evaluación de Permisos (`AccessControlService`)
+## 4. Permission Evaluation Engine (`AccessControlService`)
 
-El servicio central que valida si un usuario puede ejecutar una acción es `AccessControlService.hasPermission()`:
+The central service that evaluates whether a user can perform an action is `AccessControlService.hasPermission()`:
 
 ```typescript
 // backend/src/modules/authorization/services/access-control.service.ts
@@ -107,67 +107,67 @@ async hasPermission(
 ): Promise<boolean>
 ```
 
-### Flujo de Decisión:
+### Decision Flow:
 ```mermaid
 flowchart TD
-    Start([Verificar Permiso]) --> FindUser[Buscar Usuario]
-    FindUser --> UserExists{¿Existe Usuario?}
-    UserExists -- No --> Deny[Denegar: false]
-    UserExists -- Sí --> IsCoreAdmin{¿Es coreAdmin?}
+    Start([Check Permission]) --> FindUser[Find User]
+    FindUser --> UserExists{User exists?}
+    UserExists -- No --> Deny[Deny: false]
+    UserExists -- Yes --> IsCoreAdmin{Is coreAdmin?}
     
-    IsCoreAdmin -- Sí --> Allow[Permitir: true]
-    IsCoreAdmin -- No --> FetchScopes[Cargar Scopes del Usuario con Roles y Permisos]
+    IsCoreAdmin -- Yes --> Allow[Allow: true]
+    IsCoreAdmin -- No --> FetchScopes[Load User Scopes with Roles and Permissions]
     
-    FetchScopes --> HasScopes{¿Tiene Scopes?}
+    FetchScopes --> HasScopes{Has scopes?}
     HasScopes -- No --> Deny
-    HasScopes -- Sí --> LoopScopes[Iterar sobre cada Scope]
+    HasScopes -- Yes --> LoopScopes[Iterate Over Each Scope]
     
-    LoopScopes --> MatchAction{¿El rol contiene requiredPermission?}
-    MatchAction -- No --> NextScope[Siguiente Scope]
-    MatchAction -- Sí --> IsExternal{¿Usuario es external?}
+    LoopScopes --> MatchAction{Role includes requiredPermission?}
+    MatchAction -- No --> NextScope[Next Scope]
+    MatchAction -- Yes --> IsExternal{User is external?}
     
-    IsExternal -- Sí --> IsMutation{¿Acción incluye write/create/edit/delete?}
-    IsMutation -- Sí --> NextScope
-    IsMutation -- No --> MatchWorkspaceExt{¿Coincide workspaceUuid o squadId?}
-    MatchWorkspaceExt -- Sí --> Allow
+    IsExternal -- Yes --> IsMutation{Action contains write/create/edit/delete?}
+    IsMutation -- Yes --> NextScope
+    IsMutation -- No --> MatchWorkspaceExt{Matches workspaceUuid or squadId?}
+    MatchWorkspaceExt -- Yes --> Allow
     MatchWorkspaceExt -- No --> NextScope
     
-    IsExternal -- No --> IsGlobalInternal{¿Es global? workspaceId == null}
-    IsGlobalInternal -- Sí --> Allow
-    IsGlobalInternal -- No --> MatchWorkspaceInt{¿Coincide workspaceUuid o squadId?}
-    MatchWorkspaceInt -- Sí --> Allow
+    IsExternal -- No --> IsGlobalInternal{Is global? workspaceId == null}
+    IsGlobalInternal -- Yes --> Allow
+    IsGlobalInternal -- No --> MatchWorkspaceInt{Matches workspaceUuid or squadId?}
+    MatchWorkspaceInt -- Yes --> Allow
     MatchWorkspaceInt -- No --> NextScope
     
-    NextScope --> MoreScopes{¿Hay más scopes?}
-    MoreScopes -- Sí --> LoopScopes
+    NextScope --> MoreScopes{More scopes?}
+    MoreScopes -- Yes --> LoopScopes
     MoreScopes -- No --> Deny
 ```
 
 ---
 
-## 5. Aplicación en Endpoints del Backend (Guards y Decoradores)
+## 5. Backend Endpoint Enforcement (Guards and Decorators)
 
-Para proteger un endpoint en NestJS, se combinan dos decoradores y el guard de permisos:
+To protect an endpoint in NestJS, two decorators and the permissions guard work in tandem:
 
-1. `@RequirePermissions(...permissions: string[])`: Define la lista de acciones requeridas.
-2. `@CheckScope(paramName: string)`: Indica qué parámetro de la URL (ej. `'uuid'`) contiene el identificador del Workspace a evaluar.
-3. `@UseGuards(AuthGuard('jwt'), PermissionsGuard)`: Valida la sesión y ejecuta la verificación de permisos en el alcance correspondiente.
+1. `@RequirePermissions(...permissions: string[])`: Declares the required permission actions.
+2. `@CheckScope(paramName: string)`: Specifies which route parameter (e.g., `'uuid'`) contains the target `Workspace` identifier to evaluate.
+3. `@UseGuards(AuthGuard('jwt'), PermissionsGuard)`: Validates the session and verifies permissions within the matching scope.
 
-### Ejemplo en un Controlador:
+### Controller Example:
 ```typescript
 // backend/src/modules/workspace/controllers/workspace.controller.ts
 @UseGuards(AuthGuard('jwt'), PermissionsGuard)
 @Controller('workspaces')
 export class WorkspaceController {
   
-  // Requiere permiso global o en contexto para ver workspaces
+  // Requires global or scoped read permission to list workspaces
   @Get()
   @RequirePermissions('workspace:read')
   findAll(@JsonApiQuery() query: JsonApiQueryOptions) {
     return this.workspaceService.findAll(query);
   }
 
-  // Verifica que el usuario tenga 'workspace:read' ESPECÍFICAMENTE en el workspace ':uuid'
+  // Verifies that the user has 'workspace:read' SPECIFICALLY in workspace ':uuid'
   @Get(':uuid')
   @RequirePermissions('workspace:read')
   @CheckScope('uuid')
@@ -175,7 +175,7 @@ export class WorkspaceController {
     return this.workspaceService.findOne(uuid);
   }
 
-  // Verifica que el usuario tenga 'workspace:write' ESPECÍFICAMENTE en el workspace ':uuid'
+  // Verifies that the user has 'workspace:write' SPECIFICALLY in workspace ':uuid'
   @Patch(':uuid')
   @RequirePermissions('workspace:write')
   @CheckScope('uuid')
@@ -185,7 +185,7 @@ export class WorkspaceController {
 }
 ```
 
-Si el usuario no cuenta con el permiso o el alcance no coincide, el `PermissionsGuard` lanza:
+If the user lacks the permission or the scope does not match, `PermissionsGuard` throws:
 ```json
 {
   "statusCode": 403,
@@ -196,11 +196,11 @@ Si el usuario no cuenta con el permiso o el alcance no coincide, el `Permissions
 
 ---
 
-## 6. Integración con el Frontend (React + TypeScript)
+## 6. Frontend Integration (React + TypeScript)
 
-Siguiendo las directrices de arquitectura de frontend (`frontend/docs/ARCHITECTURE.md`), la integración se divide entre el estado global (`@global` / `features/auth`), utilidades y componentes declarativos de autorización.
+Following the frontend architecture guidelines (`frontend/docs/ARCHITECTURE.md`), integration is organized across global state (`@global` / `features/auth`), utility hooks, and declarative UI components.
 
-### A. Tipos de Dominio en Frontend
+### A. Domain Types in Frontend
 
 ```typescript
 // src/features/auth/types/authorization.types.ts
@@ -238,9 +238,9 @@ export interface CurrentUser {
 }
 ```
 
-### B. Hook de Permisos (`usePermissions`)
+### B. Permissions Hook (`usePermissions`)
 
-Este hook replica de forma reactiva la lógica de `AccessControlService` en el cliente para evaluaciones síncronas de UI:
+This hook reactively mirrors the backend `AccessControlService` logic on the client for synchronous UI evaluations:
 
 ```typescript
 // src/core/global/hooks/usePermissions.ts
@@ -251,12 +251,12 @@ export const usePermissions = () => {
   const { user } = useAuth();
 
   /**
-   * Evalúa si el usuario actual posee un permiso en un contexto dado
+   * Evaluates if the current user possesses a permission in a given context
    */
   const hasPermission = useCallback((action: string, workspaceUuid?: string): boolean => {
     if (!user) return false;
 
-    // Regla 1: coreAdmin tiene acceso total sin importar el scope
+    // Rule 1: coreAdmin has full access regardless of scope
     if (user.type === 'coreAdmin') {
       return true;
     }
@@ -269,7 +269,7 @@ export const usePermissions = () => {
       const hasAction = scope.role.permissions.some(p => p.action === action);
 
       if (hasAction) {
-        // Regla 2: Usuario Externo no puede escribir bajo ninguna circunstancia
+        // Rule 2: External users cannot mutate data under any circumstance
         if (user.type === 'external') {
           const isMutation = ['write', 'create', 'edit', 'delete'].some(verb => action.includes(verb));
           if (isMutation) continue;
@@ -280,12 +280,12 @@ export const usePermissions = () => {
           continue;
         }
 
-        // Regla 3: Usuario Interno con alcance global (workspace null)
+        // Rule 3: Internal user with global scope (workspace is null)
         if (!scope.workspace) {
           return true;
         }
 
-        // Regla 4: Usuario Interno con alcance específico por workspace
+        // Rule 4: Internal user with specific workspace scope
         if (workspaceUuid && scope.workspace?.uuid === workspaceUuid) {
           return true;
         }
@@ -310,9 +310,9 @@ export const usePermissions = () => {
 };
 ```
 
-### C. Componente Declarativo `<Can />`
+### C. Declarative UI Component (`<Can />`)
 
-Permite condicionar bloques de JSX de forma semántica y limpia:
+Conditionally renders JSX elements cleanly and semantically:
 
 ```tsx
 // src/core/components/ui/Can.tsx
@@ -339,7 +339,7 @@ export const Can: React.FC<CanProps> = ({ action, scope, children, fallback = nu
 };
 ```
 
-### D. Protección de Rutas con React Router (`ScopedRouteGuard`)
+### D. Route Protection with React Router (`ScopedRouteGuard`)
 
 ```tsx
 // src/core/routes/guards/ScopedRouteGuard.tsx
@@ -373,22 +373,22 @@ export const ScopedRouteGuard: React.FC<ScopedRouteGuardProps> = ({
 
 ---
 
-## 7. Casos de Uso Prácticos
+## 7. Practical Use Cases
 
-A continuación se presentan los escenarios más habituales dentro de la plataforma:
+Here are the most common scenarios across the platform:
 
-### Caso 1: Superadministrador del Sistema (`coreAdmin`)
-* **Contexto**: Un desarrollador o devops principal accede con credenciales de usuario `coreAdmin`.
-* **Comportamiento en Backend**:
-  - `AccessControlService.hasPermission()` detecta `user.type === UserType.COREADMIN` y retorna `true` de inmediato sin consultar tablas de scopes.
-  - La API de asignación (`POST /authorization/scopes`) rechaza cualquier intento de agregar o quitar scopes a este usuario (`CANNOT_MODIFY_CORE_USER`).
-* **Comportamiento en Frontend**:
-  - `usePermissions().isCoreAdmin` es `true`.
-  - El componente `<Can>` renderiza todas las secciones administrativas globales (gestión de roles, logs de auditoría, configuración del servidor).
+### Case 1: Platform Super-Administrator (`coreAdmin`)
+* **Context**: A principal developer or DevOps engineer logs in with `coreAdmin` credentials.
+* **Backend Behavior**:
+  - `AccessControlService.hasPermission()` detects `user.type === UserType.COREADMIN` and immediately returns `true` without querying scope tables.
+  - The scope assignment API (`POST /authorization/scopes`) rejects any attempt to add or remove scopes for this user (`CANNOT_MODIFY_CORE_USER`).
+* **Frontend Behavior**:
+  - `usePermissions().isCoreAdmin` is `true`.
+  - The `<Can>` component renders all global administrative sections (role management, audit logs, system configuration).
 
-### Caso 2: Administrador Global de la Organización (Usuario Interno)
-* **Contexto**: Un director de tecnología (CTO) o jefe de equipo interno.
-* **Asignación en Base de Datos**:
+### Case 2: Global Organization Administrator (Internal User)
+* **Context**: A Chief Technology Officer (CTO) or internal operations lead.
+* **Database Assignment**:
   ```json
   {
     "userUuid": "user-internal-01",
@@ -396,66 +396,66 @@ A continuación se presentan los escenarios más habituales dentro de la platafo
     "workspaceUuid": null
   }
   ```
-* **Comportamiento**:
-  - Al tener `workspace: null`, su rol aplica a toda la plataforma.
-  - Puede listar todos los workspaces, crear nuevos workspaces y gestionar roles.
-  - En el frontend, el selector de workspaces le permite ver y entrar a cualquiera con permisos de administrador.
+* **Behavior**:
+  - With `workspace: null`, the role applies platform-wide.
+  - Can list all workspaces, create new workspaces, and manage custom roles.
+  - In the frontend, the workspace switcher allows viewing and managing any workspace with admin privileges.
 
-### Caso 3: Usuario con Permisos Diferenciados por Workspace (Multi-tenancy)
-* **Contexto**: Una ingeniera (María) participa en dos proyectos:
-  - En **Workspace "Finanzas"** es **Editora** (`workspace:write`, `document:write`).
-  - En **Workspace "Infraestructura"** es únicamente **Lectora** (`workspace:read`, `document:read`).
-* **Uso en Frontend**:
+### Case 3: User with Contextual Workspace Permissions (Multi-Tenancy)
+* **Context**: An engineer (Mary) participates in two distinct projects:
+  - In the **"Billing" Workspace**, she is an **Editor** (`workspace:write`, `document:write`).
+  - In the **"Security" Workspace**, she is strictly a **Viewer** (`workspace:read`, `document:read`).
+* **Frontend Usage**:
   ```tsx
-  // Componente dentro del dashboard del workspace
+  // Component within the workspace dashboard
   const WorkspaceDashboard = ({ workspaceUuid }: { workspaceUuid: string }) => {
     return (
       <div>
-        <h1>Detalles del Proyecto</h1>
+        <h1>Project Dashboard</h1>
 
-        {/* Solo visible en el workspace donde tiene permiso de edición */}
+        {/* Only visible in workspaces where the user holds edit permissions */}
         <Can action="workspace:write" scope={workspaceUuid}>
           <button onClick={handleOpenSettingsModal}>
-            Configuración del Workspace
+            Workspace Settings
           </button>
         </Can>
 
         <Can 
           action="document:write" 
           scope={workspaceUuid}
-          fallback={<p className="text-muted">Modo de solo lectura activado.</p>}
+          fallback={<p className="text-muted">Read-only mode active.</p>}
         >
-          <button onClick={handleCreateDocument}>+ Crear Documento</button>
+          <button onClick={handleCreateDocument}>+ Create Document</button>
         </Can>
       </div>
     );
   };
   ```
-* **Resultado**:
-  - Cuando María abre el Workspace "Finanzas", los botones están disponibles y funcionales.
-  - Cuando cambia al Workspace "Infraestructura", la UI muestra automáticamente el aviso *"Modo de solo lectura activado"* y oculta los botones de mutación.
+* **Outcome**:
+  - In the "Billing" Workspace, buttons are visible and interactive.
+  - When switching to the "Security" Workspace, the UI automatically displays the *"Read-only mode active"* message and hides mutation buttons.
 
-### Caso 4: Invitado Externo o Auditor (`external`)
-* **Contexto**: Se invita a un auditor externo o cliente a revisar un Workspace de entregables.
-* **Blindaje en Backend**:
-  - Incluso si un administrador le asignara por error un rol con permisos como `document:write` o `workspace:delete`:
+### Case 4: External Guest or Auditor (`external`)
+* **Context**: An external compliance auditor is invited to inspect deliverables in a specific workspace.
+* **Backend Protection**:
+  - Even if an administrator accidentally assigns a role containing `document:write` or `workspace:delete`:
     ```typescript
     if (user.type === UserType.EXTERNAL) {
       if (requiredPermission.includes('write') || requiredPermission.includes('delete')) {
-        continue; // Ignorado forzosamente
+        continue; // Enforced bypass of mutation permissions
       }
     }
     ```
-  - Toda llamada a endpoints de mutación responderá `403 Forbidden`.
+  - Any mutating API request returns `403 Forbidden`.
 * **Frontend**:
-  - Los formularios de edición se renderizan en modo solo lectura (`disabled`).
-  - Las acciones destructivas ni siquiera aparecen en el DOM.
+  - Mutation forms render in read-only mode (`disabled`).
+  - Destructive buttons are omitted from the DOM.
 
-### Caso 5: Creación de Roles Dinámicos y Asignación de Alcances (Panel de Administración)
-* **Contexto**: Un administrador necesita crear un rol personalizado para líderes técnicos y asignarlo a un usuario en un workspace específico.
-* **Flujo de Peticiones HTTP**:
+### Case 5: Dynamic Role Creation and Scope Assignment (Admin Panel)
+* **Context**: An administrator creates a custom role for Tech Leads and assigns it to an employee in a specific workspace.
+* **HTTP Flow**:
 
-1. **Creación del Rol**:
+1. **Role Creation**:
    ```bash
    POST /authorization/roles
    Content-Type: application/vnd.api+json
@@ -464,7 +464,7 @@ A continuación se presentan los escenarios más habituales dentro de la platafo
      "data": {
        "attributes": {
          "name": "Tech Lead",
-         "description": "Puede gestionar documentos y leer configuración del workspace",
+         "description": "Can manage documents and view workspace configuration",
          "permissionUuids": [
            "d3b07384-d113-40e1-965a-0639f75f7823", // document:write
            "e4c18495-e224-41f2-a76b-1740a86a8934"  // workspace:read
@@ -474,7 +474,7 @@ A continuación se presentan los escenarios más habituales dentro de la platafo
    }
    ```
 
-2. **Asignación del Alcance**:
+2. **Scope Assignment**:
    ```bash
    POST /authorization/scopes
    Content-Type: application/vnd.api+json
@@ -483,7 +483,7 @@ A continuación se presentan los escenarios más habituales dentro de la platafo
      "data": {
        "attributes": {
          "userUuid": "7a8b9c0d-1111-2222-3333-444455556666",
-         "roleUuid": "<uuid-del-nuevo-rol-tech-lead>",
+         "roleUuid": "<tech-lead-role-uuid>",
          "workspaceUuid": "9f8e7d6c-5555-4444-3333-222211110000"
        }
      }
@@ -492,12 +492,12 @@ A continuación se presentan los escenarios más habituales dentro de la platafo
 
 ---
 
-## 8. Manejo de Errores de Autorización (`403 Forbidden`)
+## 8. Authorization Error Handling (`403 Forbidden`)
 
-En el frontend, el módulo `@http-error` (`parseHttpError`) intercepta los errores del backend. Cuando un usuario intenta realizar una operación no permitida, el error es capturado y tipado como `AppError`:
+In the frontend, `@http-error` (`parseHttpError`) intercepts backend errors. When an unauthorized action is attempted, the response is parsed into a standardized `AppError`:
 
 ```typescript
-// Ejemplo de manejo en un servicio o mutación de TanStack Query
+// Handling in a service or TanStack Query mutation
 import { parseHttpError } from '@http-error/http-error.handler';
 import { HTTP_STATUS } from '@http-constants/http-status.constants';
 
@@ -507,17 +507,16 @@ try {
   const appError = await parseHttpError(error);
   
   if (appError.status === HTTP_STATUS.FORBIDDEN) {
-    // Notificación clara para el usuario
-    toast.error('No tienes los permisos necesarios para realizar esta modificación en este workspace.');
+    toast.error('You do not have the required permissions to modify this workspace.');
   }
 }
 ```
 
 ---
 
-## 9. Resumen de Buenas Prácticas
+## 9. Best Practices Summary
 
-1. **Nunca confiar en el cliente**: Las validaciones de UI con `<Can>` o `disabled` son estrictamente para mejorar la UX. La seguridad reside 100% en los Guards del Backend (`PermissionsGuard` + `AccessControlService`).
-2. **Usar `@CheckScope` siempre que un recurso pertenezca a un Workspace**: Si una ruta recibe un `:uuid` de un workspace, acompáñala siempre de `@CheckScope('uuid')` para que el guard valide el contexto exacto.
-3. **Roles del sistema inmutables**: No intentes editar ni borrar roles marcados con `isSystemDefined: true` (`Super Admin`, `External Reader`). Modificarlos provocará un error `CANNOT_MODIFY_SYSTEM_ROLE`.
-4. **Respetar el aislamiento de usuarios externos**: Recuerda que los usuarios `external` nunca podrán modificar datos; si un cliente necesita capacidades de edición, su cuenta debe ser creada como tipo `internal`.
+1. **Never trust the client alone**: Frontend checks (`<Can>`, `disabled`) are strictly for UX. Security is 100% enforced by Backend Guards (`PermissionsGuard` + `AccessControlService`).
+2. **Always pair scoped endpoints with `@CheckScope`**: When a route param identifies a workspace, decorate the controller method with `@CheckScope('paramName')` to ensure contextual validation.
+3. **Protect system-defined roles**: Do not attempt to update or delete roles marked with `isSystemDefined: true` (`Super Admin`, `External Reader`). Doing so yields `CANNOT_MODIFY_SYSTEM_ROLE`.
+4. **Maintain external user boundaries**: Remember that `external` accounts cannot execute write operations; if a collaborator requires edit capabilities, they must be provisioned as `internal`.

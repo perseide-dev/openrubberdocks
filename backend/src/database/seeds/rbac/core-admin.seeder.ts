@@ -15,8 +15,8 @@ export class CoreAdminSeeder implements Seeder {
     let coreUser = await userRepository.findOneBy({ type: UserType.COREADMIN });
     if (!coreUser) {
       coreUser = userRepository.create({
-        username: 'Core Admin',
-        rubberHandle: 'coreadmin',
+        username: process.env.CORE_ADMIN_USERNAME || 'Core Admin',
+        rubberHandle: process.env.CORE_ADMIN_HANDLE || 'coreadmin',
         password: process.env.CORE_ADMIN_PASSWORD || 'supersecretpassword',
         type: UserType.COREADMIN,
       });

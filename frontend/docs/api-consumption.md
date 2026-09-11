@@ -1,12 +1,12 @@
-# Flujo de Consumo de API y Gestión de Estado del Servidor
+# API Consumption and Server State Management Flow
 
-Esta guía define la arquitectura estricta y el flujo unidireccional canónico (basado en los principios de **Clean Architecture** y **Domain-Driven Design**) para consumir endpoints del backend y gestionar el estado del servidor en el frontend de **OpenRubberDocks**.
+This guide defines the strict architecture and canonical unidirectional flow (grounded in **Clean Architecture** and **Domain-Driven Design** principles) for consuming backend endpoints and managing server state in the **OpenRubberDocks** frontend.
 
 ---
 
-## 1. Principio Fundamental y Flujo Canónico
+## 1. Fundamental Principle and Canonical Flow
 
-El flujo de datos sigue una jerarquía estricta de 4 capas desacopladas donde **el Servicio consume al Repositorio**:
+The data flow follows a strict 4-tier decoupled hierarchy where **the Service consumes the Repository**:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -14,82 +14,82 @@ El flujo de datos sigue una jerarquía estricta de 4 capas desacopladas donde **
 └───────────────────────────────────▲────────────────────────────────────┘
                                     │ HTTP (JSON:API / Cookies)
 ┌───────────────────────────────────┴────────────────────────────────────┐
-│ 1. REPOSITORIOS (repositories/) — Capa de Acceso a Datos               │
-│    - Consulta en crudo la API usando baseAPIrequest / env.API_URL      │
-│    - Funciones asíncronas puras (Promise<T>)                           │
-│    - Abstrae el transporte de red sin dependencias de React ni de TSQ  │
+│ 1. REPOSITORIES (repositories/) — Data Access Layer                    │
+│    - Performs raw API calls using baseAPIrequest / env.API_URL         │
+│    - Pure asynchronous functions (Promise<T>)                          │
+│    - Abstracts network transport with zero React or TSQ dependencies   │
 └───────────────────────────────────▲────────────────────────────────────┘
-                                    │ Retorna Promise tipada
+                                    │ Returns typed Promise
 ┌───────────────────────────────────┴────────────────────────────────────┐
-│ 2. SERVICIOS (services/) — Capa de Casos de Uso / Orquestación         │
-│    - Orquesta TanStack Query (useQuery, useMutation)                   │
-│    - Define Query Keys, Cache Time, Stale Time e Invalidaciones        │
-│    - Consume exclusivamente los Repositorios                           │
+│ 2. SERVICES (services/) — Use Cases / Orchestration Layer              │
+│    - Orchestrates TanStack Query (useQuery, useMutation)               │
+│    - Defines Query Keys, Cache Time, Stale Time, and Invalidations     │
+│    - Exclusively consumes the Repositories                             │
 └───────────────────────────────────▲────────────────────────────────────┘
-                                    │ Expone Queries / Mutations
+                                    │ Exposes Queries / Mutations
 ┌───────────────────────────────────┴────────────────────────────────────┐
-│ 3. HOOKS (hooks/) — Capa de Lógica de UI                               │
-│    - Maneja la lógica principal de la UI (estados locales, filtros)    │
-│    - Transforma datos para la vista y coordina efectos colaterales     │
-│    - Consume exclusivamente los Servicios                              │
+│ 3. HOOKS (hooks/) — UI Logic Layer                                     │
+│    - Manages main UI logic (local states, filtering, sorting)          │
+│    - Transforms data for views and coordinates side effects            │
+│    - Exclusively consumes the Services                                 │
 └───────────────────────────────────▲────────────────────────────────────┘
-                                    │ Expone variables limpias y callbacks
+                                    │ Exposes clean state and callbacks
 ┌───────────────────────────────────┴────────────────────────────────────┐
-│ 4. COMPONENTES (components/) — Capa Visual Pura                        │
-│    - Única y exclusivamente UI (Dumb / Presentational Components)      │
-│    - Cero lógica de red, cero TanStack Query directo                   │
-│    - Reciben datos y eventos vía props o desde el hook de la feature   │
+│ 4. COMPONENTS (components/) — Pure Visual Layer                        │
+│    - Exclusively UI (Dumb / Presentational Components)                 │
+│    - Zero network logic, zero direct TanStack Query calls              │
+│    - Receives data and callbacks via props or from the feature hook    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Regla de Oro: Cero Declaraciones Explícitas Inline
+## 2. Golden Rule: Zero Explicit Inline Declarations
 
 > [!IMPORTANT]
-> **Prohibido declarar `interface`, `type` o `const` dentro de archivos de repositorios, servicios o hooks.**
+> **Declaring `interface`, `type`, or `const` directly inside repository, service, or hook files is strictly prohibited.**
 
-1. **Interfaces y Tipos**:
-   - Todo tipo o interfaz específico del dominio debe residir en `features/<feature>/types/`.
-   - Si se trata de un tipo global o transversal (por ejemplo, estructuras JSON:API o respuestas base de red), debe importarse desde `@http-types/*` o el módulo correspondiente de `@core`.
-2. **Constantes**:
-   - Todos los endpoints relativos, Query Keys, parámetros por defecto o valores fijos deben residir en `features/<feature>/constants/`.
-   - Si son constantes globales de red (códigos HTTP, títulos de error), deben importarse desde `@http-constants/*` o `@utils-constants/*`.
-3. **Uso Obligatorio de Aliases**:
-   - Nunca usar rutas relativas (`../../`). Usar siempre `@features/*`, `@http-base/*`, etc.
+1. **Interfaces and Types**:
+   - Every domain-specific type or interface must reside in `features/<feature>/types/`.
+   - Global or transversal types (e.g., JSON:API structures or core network response shapes) must be imported from `@http-types/*` or the corresponding `@core` module.
+2. **Constants**:
+   - All relative endpoint paths, Query Keys, default parameters, or static configuration values must reside in `features/<feature>/constants/`.
+   - Global network constants (HTTP status codes, error titles) must be imported from `@http-constants/*` or `@utils-constants/*`.
+3. **Mandatory Path Aliases**:
+   - Never use relative paths (`../../`). Always use `@features/*`, `@http-base/*`, etc.
 
 ---
 
-## 3. Estructura de Carpetas de una Feature
+## 3. Feature Directory Structure
 
-Cada módulo de negocio en `src/features/<feature>/` debe organizarse de la siguiente manera:
+Every business module in `src/features/<feature>/` must be structured as follows:
 
 ```text
 src/features/workspaces/
 ├── constants/
-│   └── workspace.constants.ts       # Query keys, endpoints relativos, timeouts
+│   └── workspace.constants.ts       # Query keys, relative endpoints, timeouts
 ├── types/
-│   └── workspace.types.ts           # Entidades, DTOs, Payloads, Respuestas
+│   └── workspace.types.ts           # Entities, DTOs, payloads, responses
 ├── repositories/
-│   └── workspace.repository.ts      # Llamadas en crudo a la API (baseAPIrequest)
+│   └── workspace.repository.ts      # Raw API calls (baseAPIrequest)
 ├── services/
 │   └── workspace.service.ts         # TanStack Query (useQuery, useMutation, invalidation)
 ├── hooks/
-│   └── useWorkspaceList.ts          # Lógica principal de UI y estados reactivos
+│   └── useWorkspaceList.ts          # Main UI presentation logic and reactive states
 └── components/
-    ├── WorkspaceCard.tsx            # UI pura
-    └── WorkspaceList.tsx            # UI pura
+    ├── WorkspaceCard.tsx            # Pure UI component
+    └── WorkspaceList.tsx            # Pure UI component
 ```
 
 ---
 
-## 4. Implementación Paso a Paso (Caso de Estudio: Workspaces)
+## 4. Step-by-Step Implementation (Case Study: Workspaces)
 
-A continuación se ilustra la implementación canónica y estricta para la entidad `Workspace`.
+The following example demonstrates the canonical and strict implementation for the `Workspace` domain entity.
 
-### Paso 1: Tipos de Dominio (`types/`)
+### Step 1: Domain Types (`types/`)
 
-Archivo: `src/features/workspaces/types/workspace.types.ts`
+File: `src/features/workspaces/types/workspace.types.ts`
 
 ```typescript
 // types/workspace.types.ts
@@ -114,9 +114,9 @@ export interface WorkspaceFilters {
 
 ---
 
-### Paso 2: Constantes de Dominio (`constants/`)
+### Step 2: Domain Constants (`constants/`)
 
-Archivo: `src/features/workspaces/constants/workspace.constants.ts`
+File: `src/features/workspaces/constants/workspace.constants.ts`
 
 ```typescript
 // constants/workspace.constants.ts
@@ -132,21 +132,21 @@ export const WORKSPACE_QUERY_KEYS = {
 } as const;
 
 export const WORKSPACE_DEFAULTS = {
-  STALE_TIME: 5 * 60 * 1000, // 5 minutos
+  STALE_TIME: 5 * 60 * 1000, // 5 minutes
 } as const;
 ```
 
 ---
 
-### Paso 3: Repositorio de Consulta en Crudo (`repositories/`)
+### Step 3: Raw Data Access Repository (`repositories/`)
 
-El repositorio representa la **Capa de Acceso a Datos**.
-- Se encarga de hacer las peticiones HTTP directas utilizando `baseAPIrequest` (que inyecta `env.API_URL` y gestiona JSON:API y credenciales).
-- Son funciones asíncronas puras (`async/await`) que retornan `Promise<T>`.
-- **NO** usa React ni hooks de TanStack Query (`useQuery`, `useMutation`).
-- **NO** declara tipos inline ni constantes inline.
+The repository represents the **Data Access Layer**.
+- Executes direct HTTP requests using `baseAPIrequest` (which injects `env.API_URL` and manages JSON:API serialization and session cookies).
+- Consists of pure asynchronous functions (`async/await`) returning `Promise<T>`.
+- **DOES NOT** use React or TanStack Query hooks (`useQuery`, `useMutation`).
+- **DOES NOT** declare inline types or inline constants.
 
-Archivo: `src/features/workspaces/repositories/workspace.repository.ts`
+File: `src/features/workspaces/repositories/workspace.repository.ts`
 
 ```typescript
 // repositories/workspace.repository.ts
@@ -158,21 +158,21 @@ import type {
 } from '@features/workspaces/types/workspace.types';
 
 /**
- * Consulta en crudo la lista de workspaces desde el backend
+ * Fetches the raw workspaces list from the backend
  */
 export async function getWorkspacesRepository(): Promise<Workspace[]> {
   return baseAPIrequest.get<Workspace[]>(WORKSPACE_ENDPOINTS.BASE);
 }
 
 /**
- * Consulta en crudo un workspace por su UUID
+ * Fetches a single workspace by UUID in raw format
  */
 export async function getWorkspaceByUuidRepository(uuid: string): Promise<Workspace> {
   return baseAPIrequest.get<Workspace>(WORKSPACE_ENDPOINTS.BY_UUID(uuid));
 }
 
 /**
- * Realiza la petición POST en crudo para persistir un workspace
+ * Sends a raw POST request to persist a new workspace
  */
 export async function createWorkspaceRepository(
   payload: CreateWorkspacePayload
@@ -187,15 +187,15 @@ export async function createWorkspaceRepository(
 
 ---
 
-### Paso 4: Servicio de Orquestación con TanStack Query (`services/`)
+### Step 4: Orchestration Service with TanStack Query (`services/`)
 
-El servicio representa los **Casos de Uso y la Gestión de Estado del Servidor**.
-- Consume exclusivamente los métodos del repositorio.
-- Configura los hooks de **TanStack Query** (`useQuery`, `useMutation`).
-- Aplica las políticas de caché (`staleTime`, `gcTime`) e invalidaciones (`queryClient.invalidateQueries`).
-- **NO** declara tipos inline ni constantes inline.
+The service represents the **Use Cases and Server State Management Layer**.
+- Exclusively consumes the repository functions.
+- Configures **TanStack Query** hooks (`useQuery`, `useMutation`).
+- Enforces caching policies (`staleTime`, `gcTime`) and cache invalidations (`queryClient.invalidateQueries`).
+- **DOES NOT** declare inline types or inline constants.
 
-Archivo: `src/features/workspaces/services/workspace.service.ts`
+File: `src/features/workspaces/services/workspace.service.ts`
 
 ```typescript
 // services/workspace.service.ts
@@ -216,7 +216,7 @@ import type {
 import type { AppError } from '@http-error/http-error.handler';
 
 /**
- * Hook de servicio para consultar la lista de workspaces en caché
+ * Service hook to query and cache the workspace list
  */
 export function useWorkspacesService() {
   return useQuery<Workspace[], AppError>({
@@ -227,7 +227,7 @@ export function useWorkspacesService() {
 }
 
 /**
- * Hook de servicio para consultar el detalle de un workspace en caché
+ * Service hook to query and cache workspace detail
  */
 export function useWorkspaceDetailService(uuid: string) {
   return useQuery<Workspace, AppError>({
@@ -239,7 +239,7 @@ export function useWorkspaceDetailService(uuid: string) {
 }
 
 /**
- * Hook de servicio para mutación de creación con invalidación de caché
+ * Service hook for workspace creation mutation with automatic cache invalidation
  */
 export function useCreateWorkspaceService() {
   const queryClient = useQueryClient();
@@ -247,7 +247,7 @@ export function useCreateWorkspaceService() {
   return useMutation<Workspace, AppError, CreateWorkspacePayload>({
     mutationFn: (payload) => createWorkspaceRepository(payload),
     onSuccess: () => {
-      // Forzar actualización de la lista de workspaces en segundo plano
+      // Force background refetch of all workspace listings
       queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEYS.ALL });
     },
   });
@@ -256,15 +256,15 @@ export function useCreateWorkspaceService() {
 
 ---
 
-### Paso 5: Hook de Lógica Principal de UI (`hooks/`)
+### Step 5: Main UI Presentation Hook (`hooks/`)
 
-El hook se encarga de la **Lógica de Presentación y Estado Reactivo**.
-- Consume los hooks del servicio.
-- Maneja estados reactivos locales (`useState`, `useMemo`, `useCallback`) como filtros de búsqueda, selección y ordenamiento.
-- Simplifica la interfaz que recibirán los componentes visuales.
-- **NO** declara tipos inline ni constantes inline.
+The hook manages **Presentation Logic and Local Reactive State**.
+- Consumes the service hooks.
+- Handles reactive local state (`useState`, `useMemo`, `useCallback`) such as search filtering, item selection, and sorting.
+- Simplifies the surface API consumed by visual components.
+- **DOES NOT** declare inline types or inline constants.
 
-Archivo: `src/features/workspaces/hooks/useWorkspaceList.ts`
+File: `src/features/workspaces/hooks/useWorkspaceList.ts`
 
 ```typescript
 // hooks/useWorkspaceList.ts
@@ -285,7 +285,7 @@ export function useWorkspaceList() {
   const { data: workspaces, isLoading, error, refetch } = useWorkspacesService();
   const createMutation = useCreateWorkspaceService();
 
-  // Filtrado reactivo en memoria para la interfaz
+  // Reactive in-memory filtering for the UI
   const filteredWorkspaces = useMemo(() => {
     if (!workspaces) return [];
     if (!filters.search) return workspaces;
@@ -294,7 +294,7 @@ export function useWorkspaceList() {
     return workspaces.filter((ws) => ws.name.toLowerCase().includes(query));
   }, [workspaces, filters.search]);
 
-  // Handler de creación adaptado para la vista
+  // View-tailored creation handler
   const handleCreate = useCallback(
     async (payload: CreateWorkspacePayload) => {
       return createMutation.mutateAsync(payload);
@@ -327,14 +327,14 @@ export function useWorkspaceList() {
 
 ---
 
-### Paso 6: Componentes de UI Pura (`components/`)
+### Step 6: Pure UI Components (`components/`)
 
-Los componentes tienen la **única y exclusiva responsabilidad de renderizar elementos visuales**.
-- Reciben sus datos y eventos del hook de la feature o mediante `props`.
-- **CERO llamadas a APIs, HTTP, o TanStack Query directo**.
+Components have the **sole and exclusive responsibility of rendering visual elements**.
+- Receive data and callbacks from the feature hook or via `props`.
+- **ZERO direct calls to APIs, HTTP clients, or TanStack Query**.
 
-#### A. Tarjeta de Workspace (Presentacional Atómica)
-Archivo: `src/features/workspaces/components/WorkspaceCard.tsx`
+#### A. Workspace Card (Atomic Presentational Component)
+File: `src/features/workspaces/components/WorkspaceCard.tsx`
 
 ```tsx
 // components/WorkspaceCard.tsx
@@ -369,8 +369,8 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
 };
 ```
 
-#### B. Lista de Workspaces (Contenedor de Vista)
-Archivo: `src/features/workspaces/components/WorkspaceList.tsx`
+#### B. Workspace List (View Container Component)
+File: `src/features/workspaces/components/WorkspaceList.tsx`
 
 ```tsx
 // components/WorkspaceList.tsx
@@ -389,13 +389,13 @@ export const WorkspaceList: React.FC = () => {
   } = useWorkspaceList();
 
   if (isLoading) {
-    return <div className="loader">Cargando workspaces...</div>;
+    return <div className="loader">Loading workspaces...</div>;
   }
 
   if (error) {
     return (
       <div className="error-banner">
-        <p>Error al cargar: {error.message}</p>
+        <p>Error loading workspaces: {error.message}</p>
       </div>
     );
   }
@@ -403,17 +403,17 @@ export const WorkspaceList: React.FC = () => {
   return (
     <section className="workspace-container">
       <header className="workspace-header">
-        <h2>Mis Workspaces</h2>
+        <h2>My Workspaces</h2>
         <input
           type="search"
-          placeholder="Buscar por nombre..."
+          placeholder="Search by name..."
           onChange={(e) => handleSearchChange(e.target.value)}
           className="search-input"
         />
       </header>
 
       {workspaces.length === 0 ? (
-        <p className="empty-state">No se encontraron workspaces.</p>
+        <p className="empty-state">No workspaces found.</p>
       ) : (
         <div className="workspace-grid">
           {workspaces.map((ws) => (
@@ -433,29 +433,29 @@ export const WorkspaceList: React.FC = () => {
 
 ---
 
-## 5. Matriz de Responsabilidades y Ubicación Canónica
+## 5. Canonical Responsibility and Placement Matrix
 
-| Elemento | ¿Dónde se declara? | ¿Quién lo consume? |
+| Element | Declared In | Consumed By |
 | :--- | :--- | :--- |
-| **Interfaces de Entidad / DTOs** | `features/<feature>/types/` | Repositorios, Servicios, Hooks, Componentes |
-| **Interfaces de Red Globales** | `src/core/http/types/` (`@http-types/*`) | `baseAPIrequest`, Interceptors |
-| **Endpoints y URLs Relativas** | `features/<feature>/constants/` | Repositorios |
-| **Query Keys e Intervalos de Caché** | `features/<feature>/constants/` | Servicios |
-| **Llamada HTTP Pura (`baseAPIrequest`)** | `features/<feature>/repositories/` | Servicios |
-| **Hooks TanStack (`useQuery`, `useMutation`)** | `features/<feature>/services/` | Hooks de la feature |
-| **Invalidación de Caché (`invalidateQueries`)** | `features/<feature>/services/` | Servicios (dentro de `onSuccess`) |
-| **Lógica Reactiva de UI (`useState`, filtros)** | `features/<feature>/hooks/` | Componentes |
-| **JSX / Estilos / Interacción Visual Pura** | `features/<feature>/components/` | Páginas / Layouts |
+| **Domain Entity Interfaces / DTOs** | `features/<feature>/types/` | Repositories, Services, Hooks, Components |
+| **Global Network Interfaces** | `src/core/http/types/` (`@http-types/*`) | `baseAPIrequest`, Interceptors |
+| **Relative Endpoints and URLs** | `features/<feature>/constants/` | Repositories |
+| **Query Keys and Cache Intervals** | `features/<feature>/constants/` | Services |
+| **Raw HTTP Calls (`baseAPIrequest`)** | `features/<feature>/repositories/` | Services |
+| **TanStack Hooks (`useQuery`, `useMutation`)** | `features/<feature>/services/` | Feature Hooks |
+| **Cache Invalidation (`invalidateQueries`)** | `features/<feature>/services/` | Service (inside `onSuccess`) |
+| **UI Presentation State (`useState`, filters)** | `features/<feature>/hooks/` | Components |
+| **JSX / Styles / Pure Visual Interaction** | `features/<feature>/components/` | Pages / Layouts |
 
 ---
 
-## 6. Checklist para Code Review / Pull Requests
+## 6. Pull Request and Code Review Checklist
 
-Antes de aprobar un PR que consuma endpoints de la API, verifica:
+Before approving a PR that touches API consumption:
 
-- [ ] **¿El Repositorio solo hace llamadas en crudo?** No debe importar `@tanstack/react-query` ni usar hooks de React.
-- [ ] **¿El Servicio orquesta TanStack Query?** Todas las llamadas a `useQuery`, `useMutation` e invalidaciones están aquí consumiendo al repositorio.
-- [ ] **¿El Hook orquesta la lógica de UI?** Consume el servicio y expone datos procesados y handlers limpios para los componentes.
-- [ ] **¿Cero declaraciones inline?** Ningún archivo en `repositories/`, `services/` o `hooks/` define `interface`, `type` o constantes con valores fijos.
-- [ ] **¿Todo usa Path Aliases?** Sin `../../..` en las importaciones.
-- [ ] **¿Componentes libres de lógica de red?** Los componentes no tienen llamadas `mutate()`, `queryClient`, ni promesas directas; interactúan exclusivamente a través de los custom hooks o props.
+- [ ] **Does the Repository only perform raw HTTP calls?** It must not import `@tanstack/react-query` or React hooks.
+- [ ] **Does the Service orchestrate TanStack Query?** All `useQuery`, `useMutation`, and invalidation calls must reside here, consuming the repository.
+- [ ] **Does the Hook handle UI presentation logic?** It consumes the service and exposes clean, view-ready state and handlers.
+- [ ] **Zero inline declarations?** No file in `repositories/`, `services/`, or `hooks/` defines inline `interface`, `type`, or static `const` values.
+- [ ] **Are Path Aliases strictly used?** No `../../..` relative paths.
+- [ ] **Are Components free from network logic?** Components contain no direct `mutate()`, `queryClient`, or promises; they interact strictly through custom hooks or props.

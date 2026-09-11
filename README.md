@@ -1,6 +1,6 @@
 # OpenRubberDocks
 
-A modern, scalable multi-tenant platform built with **NestJS**, **TypeORM**, **PostgreSQL**, **React 19**, and a **Contemporary Digital Brutalist** design system.
+A modern, self-hosted developer documentation platform built with **NestJS**, **TypeORM**, **PostgreSQL**, **React 19**, and a **Contemporary Digital Brutalist** design system.
 
 ---
 

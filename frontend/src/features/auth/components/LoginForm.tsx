@@ -144,10 +144,10 @@ export function LoginForm() {
             }}
           >
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              RBAC SCOPE: WORKSPACE_STRICT
+              PLATFORM: OPENRUBBERDOCKS
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              ENCRYPT: BCRYPT_2B
+              WORKSPACE: SECURE_ACCESS
             </Typography>
           </Box>
         </CardContent>

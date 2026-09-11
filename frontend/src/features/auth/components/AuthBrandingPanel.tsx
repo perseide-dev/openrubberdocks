@@ -8,9 +8,10 @@ import {
   TableCell,
   Divider,
 } from '@mui/material';
-import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
-import TerminalOutlinedIcon from '@mui/icons-material/TerminalOutlined';
-import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
+import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import AllInclusiveOutlinedIcon from '@mui/icons-material/AllInclusiveOutlined';
+import DnsOutlinedIcon from '@mui/icons-material/DnsOutlined';
 
 export function AuthBrandingPanel() {
   return (
@@ -32,11 +33,11 @@ export function AuthBrandingPanel() {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="overline" sx={{ letterSpacing: '0.15em' }}>
-            // OPENRUBBERDOCKS // GATEWAY_2026
+            // OPENRUBBERDOCKS // SELF-HOSTED DEV DOCS
           </Typography>
           <Chip
-            icon={<ShieldOutlinedIcon sx={{ fontSize: '1rem !important' }} />}
-            label="ENCLAVE LOCKED"
+            icon={<AllInclusiveOutlinedIcon sx={{ fontSize: '1rem !important' }} />}
+            label="100% FREE & SELF-HOSTED"
             size="small"
             color="primary"
           />
@@ -44,7 +45,7 @@ export function AuthBrandingPanel() {
 
         <Divider />
 
-        <Box sx={{ marginTop: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ marginTop: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <Typography
             variant="h2"
             sx={{
@@ -54,100 +55,105 @@ export function AuthBrandingPanel() {
               textTransform: 'uppercase',
             }}
           >
-            CONTEMPORARY
+            DOCUMENTATION
             <br />
-            BRUTALIST
+            WITHOUT
             <br />
-            ACCESS
+            SAAS LOCK-IN
           </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            // MULTI-TENANT RBAC PROTOCOL // REUSABLE DIGITAL WIREFRAME //
+          <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+            A centralized, clear and accessible documentation engine built to document internal systems,
+            client handoffs, and engineering architecture. Deploy on your own VPS with complete data sovereignty
+            and zero recurring monthly bills.
           </Typography>
         </Box>
       </Box>
 
-      {/* Middle telemetry & architectural specs */}
+      {/* Middle value propositions & roadmap */}
       <Box sx={{ my: { xs: 3, md: 4 }, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
           <Chip
-            icon={<TerminalOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
-            label="HTTPONLY COOKIES"
+            icon={<DnsOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
+            label="ZERO PER-SEAT PRICING"
             size="small"
             variant="outlined"
           />
           <Chip
-            icon={<MemoryOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
-            label="SILENT JWT ROTATION"
+            icon={<LayersOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
+            label="MODULAR CONTENT BLOCKS"
             size="small"
             variant="outlined"
           />
-          <Chip label="SCOPED RBAC" size="small" variant="outlined" />
+          <Chip
+            icon={<AccountTreeOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
+            label="PROCESS MAPS & FLOWS [UPCOMING]"
+            size="small"
+            variant="outlined"
+          />
         </Box>
 
-        {/* Telemetry Table */}
-        <Table size="small" aria-label="system telemetry">
+        {/* Real Product Comparison & Specs Table */}
+        <Table size="small" aria-label="product value proposition">
           <TableBody>
             <TableRow>
-              <TableCell sx={{ color: 'text.secondary', width: '40%' }}>
-                // ARCHITECTURE
+              <TableCell sx={{ color: 'text.secondary', width: '38%' }}>
+                // HOSTING_MODEL
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
-                CLEAN DDD 4-TIER
+                SELF-HOSTED (YOUR VPS // YOUR DOCKER)
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ color: 'text.secondary' }}>
-                // USER_TYPES
+                // COST_STRUCTURE
               </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
-                CORE_ADMIN | INTERNAL | EXTERNAL
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ color: 'text.secondary' }}>
-                // REFRESH_ENGINE
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
-                KY AFTER_RESPONSE_HOOK
+              <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                FREE FOREVER // NO MONTHLY SAAS FEES
               </TableCell>
             </TableRow>
             <TableRow>
               <TableCell sx={{ color: 'text.secondary' }}>
-                // SYSTEM_STATUS
+                // CORE_EXPERIENCE
               </TableCell>
-              <TableCell align="right">
-                <Box
-                  component="span"
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.8,
-                    fontWeight: 700,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      backgroundColor: 'success.main',
-                      display: 'inline-block',
-                    }}
-                  />
-                  STANDBY_OK
-                </Box>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                MODULAR BLOCK-BY-BLOCK DOCUMENTATION
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ color: 'text.secondary' }}>
+                // DESIGNED_FOR
+              </TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                IN-HOUSE TEAMS, AGENCIES & FREELANCERS
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ color: 'text.secondary' }}>
+                // NEXT_HORIZON
+              </TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                PROCESS FLOW MAPS & INTERACTIVE DIAGRAMS
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ color: 'text.secondary' }}>
+                // DATA_OWNERSHIP
+              </TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                100% PRIVATE & STORED ON YOUR DATABASE
               </TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </Box>
 
-      {/* Footer telemetry */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Footer value statement */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          HASH: SHA256 // AES-GCM
+          YOUR CODE // YOUR SERVERS // YOUR KNOWLEDGE
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          LOCAL_PORT // :3000 API
+          NO SUBSCRIPTIONS // NO VENDOR TIE-IN
         </Typography>
       </Box>
     </Box>

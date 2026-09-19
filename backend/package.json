@@ -107,8 +107,9 @@
       "node_modules/(?!@nestjs/mapped-types)"
     ],
     "moduleNameMapper": {
+      "^@/(.*)": "<rootDir>/$1",
+      "^@commands/(.*)$": "<rootDir>/commands/$1",
       "^@common/(.*)$": "<rootDir>/common/$1",
-      "^@commonCommands/(.*)$": "<rootDir>/common/commands/$1",
       "^@commonPipes/(.*)$": "<rootDir>/common/pipes/$1",
       "^@commonDecorators/(.*)$": "<rootDir>/common/decorators/$1",
       "^@commonExceptions/(.*)$": "<rootDir>/common/exceptions/$1",

@@ -8,6 +8,7 @@ import { validate, dataSourceOptions } from '@config/index';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule, UsersModule, WorkspaceModule } from '@modules/index';
 import { AuthorizationModule } from '@moduleAuthorization/authorization.module';
+import { CreateCoreUserCommand } from '@commands/launch.command';
 
 @Module({
   imports: [FilesModule, BlocksModule,
@@ -31,6 +32,7 @@ import { AuthorizationModule } from '@moduleAuthorization/authorization.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    CreateCoreUserCommand
   ],
 })
 export class AppModule { }

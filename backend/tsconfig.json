@@ -16,8 +16,9 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
+      "@/*": ["src/*"],
+      "@commands/*": ["src/commands/*"],
       "@common/*": ["src/common/*"],
-      "@commonCommands/*": ["src/commands/*"],
       "@commonPipes/*": ["src/common/pipes/*"],
       "@commonDecorators/*": ["src/common/decorators/*"],
       "@commonExceptions/*": ["src/common/exceptions/*"],

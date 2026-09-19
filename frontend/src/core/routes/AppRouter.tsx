@@ -1,32 +1,67 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  Navigate
+} from 'react-router-dom';
+
 import { ProtectedRoute } from '@routes/ProtectedRoute';
 import { PublicRoute } from '@routes/PublicRoute';
 import { ProtectedLayout } from '@layout/ProtectedLayout';
 import { LoginPage } from '@features/auth/pages/LoginPage';
-import { DashboardPage } from '@features/dashboard/pages/DashboardPage';
+import { DashboardPage } from '@features/projects/pages/DashboardPage';
+
+// Importa tus componentes globales si los tienes
+// import { AutoPageviewTracker } from '...';
+// import { ThemeInitializer } from '...';
+
+const router = createBrowserRouter([
+  {
+    // Envoltorio global
+    element: (
+      <>
+        {/* <AutoPageviewTracker /> */}
+        {/* <ThemeInitializer /> */}
+        <Outlet />
+      </>
+    ),
+    children: [
+      // 1. Rutas Públicas
+      {
+        element: <PublicRoute />,
+        children: [
+          {
+            path: "/login",
+            element: <LoginPage />
+          }
+        ]
+      },
+
+      // 2. Rutas Protegidas y su Layout
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <ProtectedLayout />,
+            children: [
+              {
+                path: "/dashboard",
+                element: <DashboardPage />
+              },
+            ]
+          }
+        ]
+      },
+
+      // 3. Ruta Fallback (Catch-all)
+      {
+        path: "*",
+        element: <Navigate to="/dashboard" replace />
+      }
+    ]
+  }
+]);
 
 export function AppRouter() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes (only accessible when not logged in) */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-        </Route>
-
-        {/* Protected Routes (require authenticated session) */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<ProtectedLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/workspaces" element={<DashboardPage />} />
-            <Route path="/settings/rbac" element={<DashboardPage />} />
-            <Route index element={<Navigate to="/dashboard" replace />} />
-          </Route>
-        </Route>
-
-        {/* Fallback route */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 }

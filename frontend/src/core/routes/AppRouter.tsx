@@ -9,7 +9,7 @@ import { ProtectedRoute } from '@routes/ProtectedRoute';
 import { PublicRoute } from '@routes/PublicRoute';
 import { ProtectedLayout } from '@layout/ProtectedLayout';
 import { LoginPage } from '@features/auth/pages/LoginPage';
-import { DashboardRouter } from '@features/workspaces/routes/Router';
+import { DashboardRouter } from '@features-workspaces/manager/routes/Router';
 
 // Importa tus componentes globales si los tienes
 // import { AutoPageviewTracker } from '...';

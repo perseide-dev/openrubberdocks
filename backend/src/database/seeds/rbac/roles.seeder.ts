@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
-import { Role } from '../../../modules/authorization/entities/role.entity';
-import { Permission } from '../../../modules/authorization/entities/permission.entity';
+import { Role } from '@moduleAuthorization/entities/role.entity'
+import { Permission } from '@moduleAuthorization/entities/permission.entity';
 
 export class RolesSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<any> {

@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "cli": "node dist/cli.js",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -27,7 +28,7 @@
     "schema:drop": "pnpm typeorm schema:drop",
     "db:create": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs db:create -d dist/config/typeorm.config.js",
     "db:drop": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs db:drop -d dist/config/typeorm.config.js",
-    "seed:run": "pnpm build && ts-node -r tsconfig-paths/register ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d dist/config/typeorm.config.js",
+    "seed:run": "node ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d dist/config/typeorm.config.js",
     "seed:create": "pnpm build && ts-node -r tsconfig-paths/register ./node_modules/typeorm-extension/bin/cli.cjs seed:create"
   },
   "dependencies": {

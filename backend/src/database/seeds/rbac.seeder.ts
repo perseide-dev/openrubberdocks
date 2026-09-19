@@ -1,8 +1,6 @@
 import { DataSource } from 'typeorm';
 import { Seeder, runSeeder } from 'typeorm-extension';
-import { PermissionsSeeder } from './rbac/permissions.seeder';
-import { RolesSeeder } from './rbac/roles.seeder';
-import { CoreAdminSeeder } from './rbac/core-admin.seeder';
+import { PermissionsSeeder, RolesSeeder, CoreAdminSeeder } from '@database/seeds/rbac/index'
 
 export class RbacSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<any> {

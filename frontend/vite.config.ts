@@ -30,7 +30,8 @@ export default defineConfig({
       '@utils-constants': path.resolve(__dirname, './src/core/utils/constants'),
       '@utils-functions': path.resolve(__dirname, './src/core/utils/functions'),
       '@utils-labels': path.resolve(__dirname, './src/core/utils/labels'),
-      '@features': path.resolve(__dirname, './src/features')
+      '@features': path.resolve(__dirname, './src/features'),
+      '@features-workspaces': path.resolve(__dirname, './src/features/workspaces')
     }
   }
 })

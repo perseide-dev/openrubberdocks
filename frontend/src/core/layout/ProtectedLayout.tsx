@@ -1,48 +1,42 @@
+// src/layout/ProtectedLayout.tsx
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import type { RouteObject } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Chip,
-  Button,
-  IconButton,
-  Divider,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  ListItemIcon,
+  Box, Typography, Chip, Button, IconButton, Divider, Drawer,
+  List, ListItem, ListItemButton, ListItemText, ListItemIcon, Collapse
 } from '@mui/material';
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
-import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import TerminalOutlinedIcon from '@mui/icons-material/TerminalOutlined';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import CircleIcon from '@mui/icons-material/Circle';
 import { useAuth } from '@global-hooks/useAuth';
 
-interface NavItem {
+export type NavHandle = {
   label: string;
-  path: string;
-  icon: typeof DashboardOutlinedIcon;
+  icon?: React.ElementType;
+};
+
+interface ProtectedLayoutProps {
+  navRoutes: RouteObject[]; // <- Acepta las rutas de AppRouter
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: '// DASHBOARD', path: '/dashboard', icon: DashboardOutlinedIcon },
-  { label: '// WORKSPACES', path: '/workspaces', icon: LayersOutlinedIcon },
-  { label: '// ACCESS_RBAC', path: '/settings/rbac', icon: SecurityOutlinedIcon },
-];
-
-export function ProtectedLayout() {
+export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   const handleLogout = async () => {
     await logout();
     navigate('/login', { replace: true });
+  };
+
+  const toggleMenu = (path: string) => {
+    setOpenMenus((prev) => ({ ...prev, [path]: !prev[path] }));
   };
 
   const handleNavigate = (path: string) => {
@@ -50,227 +44,116 @@ export function ProtectedLayout() {
     setMobileDrawerOpen(false);
   };
 
-  const renderNavList = () => (
-    <List sx={{ padding: 0 }}>
-      {NAV_ITEMS.map((item) => {
-        const IconComponent = item.icon;
-        const isActive = location.pathname === item.path;
+  // Función constructora de paths seguros
+  const buildPath = (parentPath: string, currentPath?: string) => {
+    if (!currentPath) return parentPath;
+    if (currentPath.startsWith('/')) return currentPath;
+    return parentPath === '/' ? `/${currentPath}` : `${parentPath}/${currentPath}`;
+  };
 
-        return (
-          <ListItem key={item.path} disablePadding sx={{ marginBottom: 1 }}>
+  // FUNCIÓN RECURSIVA QUE "CHUPA" LAS RUTAS
+  const renderNavItems = (routes: RouteObject[], basePath = '', level = 0) => {
+    return routes.map((route, index) => {
+      const handle = route.handle as NavHandle | undefined;
+
+      // Si no tiene handle.label, lo ignoramos en el menú
+      if (!handle || !handle.label) return null;
+
+      const fullPath = buildPath(basePath, route.path);
+      const IconComponent = handle.icon || CircleIcon;
+
+      // Filtrar subrutas que tengan label
+      const validChildren = route.children?.filter(child => (child.handle as NavHandle)?.label) || [];
+      const hasChildren = validChildren.length > 0;
+
+      const isActive = location.pathname === fullPath || (route.index && location.pathname === basePath);
+      const isParentActive = location.pathname.startsWith(`${fullPath}/`);
+      const isOpen = openMenus[fullPath] ?? isParentActive;
+
+      return (
+        <Box key={fullPath || index}>
+          <ListItem disablePadding sx={{ marginBottom: 1 }}>
             <ListItemButton
-              onClick={() => handleNavigate(item.path)}
+              onClick={() => hasChildren ? toggleMenu(fullPath) : handleNavigate(fullPath)}
               sx={{
                 border: '1.5px solid',
                 borderColor: isActive ? 'primary.main' : 'divider',
                 backgroundColor: isActive ? 'primary.main' : 'transparent',
                 color: isActive ? 'primary.contrastText' : 'text.primary',
-                '&:hover': {
-                  backgroundColor: isActive ? 'primary.main' : 'action.hover',
-                },
+                '&:hover': { backgroundColor: isActive ? 'primary.main' : 'action.hover' },
                 paddingY: 1.25,
+                paddingLeft: 2 + level * 2,
               }}
             >
-              <ListItemIcon
-                sx={{
-                  color: isActive ? 'primary.contrastText' : 'inherit',
-                  minWidth: 36,
-                }}
-              >
-                <IconComponent fontSize="small" />
+              <ListItemIcon sx={{ color: isActive ? 'primary.contrastText' : 'inherit', minWidth: 36 }}>
+                <IconComponent sx={{ fontSize: level > 0 ? '1rem' : '1.25rem' }} />
               </ListItemIcon>
               <ListItemText
                 primary={
-                  <Typography
-                    variant="button"
-                    sx={{
-                      fontWeight: 700,
-                      letterSpacing: '0.06em',
-                      fontSize: '0.85rem',
-                      display: 'block',
-                    }}
-                  >
-                    {item.label}
+                  <Typography variant="button" sx={{ fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.85rem', display: 'block' }}>
+                    {handle.label}
                   </Typography>
                 }
               />
+              {hasChildren && (isOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />)}
             </ListItemButton>
           </ListItem>
-        );
-      })}
-    </List>
-  );
+
+          {hasChildren && (
+            <Collapse in={isOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {renderNavItems(validChildren, fullPath, level + 1)}
+              </List>
+            </Collapse>
+          )}
+        </Box>
+      );
+    });
+  };
+
+  const renderNavList = () => <List sx={{ padding: 0 }}>{renderNavItems(navRoutes)}</List>;
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'background.default',
-      }}
-    >
-      {/* Top Header Bar */}
-      <Box
-        component="header"
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingX: { xs: 2, md: 3 },
-          paddingY: 1.5,
-          borderBottom: '2px solid',
-          borderColor: 'divider',
-          backgroundColor: 'background.paper',
-        }}
-      >
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
+      <Box component="header" sx={{ /* tu diseño actual */ paddingX: { xs: 2, md: 3 }, paddingY: 1.5, borderBottom: '2px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
+        {/* Tu código actual del Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton
-            sx={{ display: { xs: 'inline-flex', md: 'none' } }}
-            onClick={() => setMobileDrawerOpen(true)}
-            size="small"
-            aria-label="open mobile navigation"
-          >
+          <IconButton sx={{ display: { xs: 'inline-flex', md: 'none' } }} onClick={() => setMobileDrawerOpen(true)} size="small">
             <MenuOutlinedIcon fontSize="small" />
           </IconButton>
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>
-              OPENRUBBERDOCKS
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              // WORKSPACE TEMPLATE // 2026
-            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>OPENRUBBERDOCKS</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>// WORKSPACE TEMPLATE // 2026</Typography>
           </Box>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Chip
-            icon={<TerminalOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />}
-            label={`@${user?.rubberHandle || 'unknown'}`}
-            variant="outlined"
-            size="small"
-          />
-          <Chip
-            label={user?.type?.toUpperCase() || 'USER'}
-            size="small"
-            color="primary"
-          />
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleLogout}
-            endIcon={<LogoutOutlinedIcon fontSize="small" />}
-            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
-          >
-            DISCONNECT
-          </Button>
-          <IconButton
-            onClick={handleLogout}
-            size="small"
-            sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
-            aria-label="disconnect session"
-          >
-            <LogoutOutlinedIcon fontSize="small" />
-          </IconButton>
+          <Chip icon={<TerminalOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />} label={`@${user?.rubberHandle || 'unknown'}`} variant="outlined" size="small" />
+          <Button variant="outlined" size="small" onClick={handleLogout} endIcon={<LogoutOutlinedIcon fontSize="small" />} sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>DISCONNECT</Button>
+          <IconButton onClick={handleLogout} size="small" sx={{ display: { xs: 'inline-flex', sm: 'none' } }}><LogoutOutlinedIcon fontSize="small" /></IconButton>
         </Box>
       </Box>
 
-      {/* Main Container: Sidebar + Outlet */}
       <Box sx={{ display: 'flex', flex: 1 }}>
-        {/* Desktop Sidebar */}
-        <Box
-          component="nav"
-          sx={{
-            width: 260,
-            display: { xs: 'none', md: 'flex' },
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            borderRight: '2px solid',
-            borderColor: 'divider',
-            padding: 2.5,
-            backgroundColor: 'background.paper',
-            boxSizing: 'border-box',
-          }}
-        >
+        <Box component="nav" sx={{ width: 260, display: { xs: 'none', md: 'flex' }, flexDirection: 'column', justifyContent: 'space-between', borderRight: '2px solid', borderColor: 'divider', padding: 2.5 }}>
           <Box>
-            <Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
-              // PROTOCOL NAVIGATION
-            </Typography>
+            <Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>// PROTOCOL NAVIGATION</Typography>
             {renderNavList()}
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Divider sx={{ mb: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              SECURITY: SCOPED_RBAC
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              TRANSPORT: HTTPONLY_ROTATION
-            </Typography>
           </Box>
         </Box>
 
-        {/* Mobile Drawer */}
-        <Drawer
-          anchor="left"
-          open={mobileDrawerOpen}
-          onClose={() => setMobileDrawerOpen(false)}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': {
-              width: 280,
-              padding: 2.5,
-              backgroundColor: 'background.paper',
-              borderRight: '2px solid',
-              borderColor: 'divider',
-            },
-          }}
-        >
+        <Drawer anchor="left" open={mobileDrawerOpen} onClose={() => setMobileDrawerOpen(false)} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: 280, padding: 2.5 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              NAVIGATION
-            </Typography>
-            <IconButton onClick={() => setMobileDrawerOpen(false)} size="small">
-              <LogoutOutlinedIcon fontSize="small" />
-            </IconButton>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>NAVIGATION</Typography>
+            <IconButton onClick={() => setMobileDrawerOpen(false)} size="small"><LogoutOutlinedIcon fontSize="small" /></IconButton>
           </Box>
           <Divider sx={{ mb: 2 }} />
           {renderNavList()}
         </Drawer>
 
-        {/* Dynamic Content Outlet */}
-        <Box
-          component="main"
-          sx={{
-            flex: 1,
-            padding: { xs: 2, sm: 3, md: 4 },
-            overflowY: 'auto',
-          }}
-        >
+        <Box component="main" sx={{ flex: 1, padding: { xs: 2, sm: 3, md: 4 }, overflowY: 'auto' }}>
           <Outlet />
         </Box>
-      </Box>
-
-      {/* Telemetry Footer */}
-      <Box
-        component="footer"
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingX: { xs: 2, md: 3 },
-          paddingY: 1,
-          borderTop: '2px solid',
-          borderColor: 'divider',
-          backgroundColor: 'background.paper',
-        }}
-      >
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          SYSTEM // OPENRUBBERDOCKS GATEWAY 2026
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          STATUS // ALL CHANNELS NOMINAL
-        </Typography>
       </Box>
     </Box>
   );

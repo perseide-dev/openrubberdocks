@@ -9,11 +9,15 @@ import { ProtectedRoute } from '@routes/ProtectedRoute';
 import { PublicRoute } from '@routes/PublicRoute';
 import { ProtectedLayout } from '@layout/ProtectedLayout';
 import { LoginPage } from '@features/auth/pages/LoginPage';
-import { DashboardPage } from '@features/projects/pages/DashboardPage';
+import { DashboardRouter } from '@features/workspaces/routes/Router';
 
 // Importa tus componentes globales si los tienes
 // import { AutoPageviewTracker } from '...';
 // import { ThemeInitializer } from '...';
+
+const protectedModules = [
+  ...DashboardRouter
+];
 
 const router = createBrowserRouter([
   {
@@ -42,13 +46,8 @@ const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           {
-            element: <ProtectedLayout />,
-            children: [
-              {
-                path: "/dashboard",
-                element: <DashboardPage />
-              },
-            ]
+            element: <ProtectedLayout navRoutes={protectedModules} />,
+            children: protectedModules
           }
         ]
       },
@@ -56,7 +55,7 @@ const router = createBrowserRouter([
       // 3. Ruta Fallback (Catch-all)
       {
         path: "*",
-        element: <Navigate to="/dashboard" replace />
+        element: <Navigate to="/workspaces" replace />
       }
     ]
   }

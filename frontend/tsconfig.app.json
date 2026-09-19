@@ -48,7 +48,9 @@
       "@utils-labels": ["./src/core/utils/labels"],
       "@utils-labels/*": ["./src/core/utils/labels/*"],
       "@features": ["./src/features"],
-      "@features/*": ["./src/features/*"]
+      "@features/*": ["./src/features/*"],
+      "@features-workspaces": ["./src/features/workspaces"],
+      "@features-workspaces/*": ["./src/features/workspaces/*"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2023",

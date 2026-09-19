@@ -18,7 +18,7 @@ export class AuthService {
   ) { }
 
   async validateUser(validateUserDto: ValidateUserDTO): Promise<User> {
-    const user = await this.usersService.findByRubberHandle(validateUserDto.rubberHanlde);
+    const user = await this.usersService.findByRubberHandle(validateUserDto.rubberHandle);
     if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
       return user;
     }

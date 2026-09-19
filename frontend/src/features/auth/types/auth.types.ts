@@ -15,7 +15,7 @@ export interface LoginCredentials {
 }
 
 export interface LoginBackendPayload extends Record<string, unknown> {
-  rubberHanlde: string;
+  rubberHandle: string;
   pwd: string;
 }
 

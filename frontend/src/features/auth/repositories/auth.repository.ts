@@ -12,14 +12,16 @@ import type {
  */
 export async function loginRepository(credentials: LoginCredentials): Promise<AuthUser> {
   const payload: LoginBackendPayload = {
-    rubberHanlde: credentials.rubberHandle,
+    rubberHandle: credentials.rubberHandle,
     pwd: credentials.pwd,
   };
 
   return baseAPIrequest.post<AuthUser, LoginBackendPayload>(
     AUTH_ENDPOINTS.LOGIN,
     payload,
-    { resourceType: 'users' }
+    {
+      resourceType: 'users',
+    }
   );
 }
 

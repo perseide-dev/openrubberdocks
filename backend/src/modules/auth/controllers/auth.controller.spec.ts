@@ -47,7 +47,7 @@ describe('AuthController', () => {
         send: jest.fn(),
       } as unknown as Response;
 
-      const result = await controller.login({ rubberHanlde: 'test', pwd: 'pwd' }, mockResponse);
+      const result = await controller.login({ rubberHandle: 'test', pwd: 'pwd' }, mockResponse);
 
       expect(authService.generateTokens).toHaveBeenCalled();
       expect(authService.updateRefreshToken).toHaveBeenCalled();
@@ -63,7 +63,7 @@ describe('AuthController', () => {
         send: jest.fn(),
       } as unknown as Response;
 
-      const result = await controller.login({ rubberHanlde: 'test', pwd: 'pwd' }, mockResponse);
+      const result = await controller.login({ rubberHandle: 'test', pwd: 'pwd' }, mockResponse);
       
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
       expect(result).toBeUndefined();

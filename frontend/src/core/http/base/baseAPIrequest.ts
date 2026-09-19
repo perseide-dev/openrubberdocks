@@ -19,6 +19,11 @@ export interface BaseRequestOptions extends Omit<Options, 'json'> {
    * Type identifier to include when serializing JSON:API payload.
    */
   resourceType?: string;
+  /**
+   * If true disable automatically wraps outgoing body in JSON:API format { data: { attributes: {payload} } }.
+   */
+
+  disableAttributesNesting?: boolean;
 }
 
 /**
@@ -55,8 +60,19 @@ export const baseAPIrequest = {
       const wrap = options?.wrapJsonApi ?? true;
 
       let jsonPayload: unknown = body;
+
       if (!isFormData && body && wrap) {
-        jsonPayload = serializeToJsonApi(body as Record<string, unknown>, { type: options?.resourceType });
+        // 2. LÓGICA PARA EVITAR ANIDAR EN ATTRIBUTES
+        if (options?.disableAttributesNesting) {
+          jsonPayload = {
+            data: {
+              type: options.resourceType,
+              ...body,
+            },
+          };
+        } else {
+          jsonPayload = serializeToJsonApi(body as Record<string, unknown>, { type: options?.resourceType });
+        }
       }
 
       const requestOptions: Options = {
@@ -85,8 +101,19 @@ export const baseAPIrequest = {
       const wrap = options?.wrapJsonApi ?? true;
 
       let jsonPayload: unknown = body;
+
       if (!isFormData && body && wrap) {
-        jsonPayload = serializeToJsonApi(body as Record<string, unknown>, { type: options?.resourceType });
+        // 2. LÓGICA PARA EVITAR ANIDAR EN ATTRIBUTES
+        if (options?.disableAttributesNesting) {
+          jsonPayload = {
+            data: {
+              type: options.resourceType,
+              ...body,
+            },
+          };
+        } else {
+          jsonPayload = serializeToJsonApi(body as Record<string, unknown>, { type: options?.resourceType });
+        }
       }
 
       const requestOptions: Options = {
@@ -115,8 +142,19 @@ export const baseAPIrequest = {
       const wrap = options?.wrapJsonApi ?? true;
 
       let jsonPayload: unknown = body;
+
       if (!isFormData && body && wrap) {
-        jsonPayload = serializeToJsonApi(body as Record<string, unknown>, { type: options?.resourceType });
+        // 2. LÓGICA PARA EVITAR ANIDAR EN ATTRIBUTES
+        if (options?.disableAttributesNesting) {
+          jsonPayload = {
+            data: {
+              type: options.resourceType,
+              ...body,
+            },
+          };
+        } else {
+          jsonPayload = serializeToJsonApi(body as Record<string, unknown>, { type: options?.resourceType });
+        }
       }
 
       const requestOptions: Options = {

@@ -56,7 +56,7 @@ describe('AuthService', () => {
       usersService.findByRubberHandle.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.validateUser({ rubberHanlde: 'test', pwd: 'password' });
+      const result = await service.validateUser({ rubberHandle: 'test', pwd: 'password' });
       expect(result).toEqual(mockUser);
     });
 
@@ -64,7 +64,7 @@ describe('AuthService', () => {
       usersService.findByRubberHandle.mockResolvedValue({ id: 1, password: 'hashedpassword' });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.validateUser({ rubberHanlde: 'test', pwd: 'wrong' })).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser({ rubberHandle: 'test', pwd: 'wrong' })).rejects.toThrow(UnauthorizedException);
     });
   });
 

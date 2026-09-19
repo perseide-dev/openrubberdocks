@@ -5,7 +5,7 @@ export class ValidateUserDTO {
 
     @IsString()
     @IsNotEmpty()
-    readonly rubberHanlde: string;
+    readonly rubberHandle: string;
 
     @IsString()
     @IsNotEmpty()

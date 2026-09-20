@@ -15,3 +15,7 @@ export async function createWorkspaceRepository(payloadCreateWorkspace: CreateWo
         }
     );
 }
+
+export async function getMeRepository(): Promise<any> {
+    return baseAPIrequest.get<any>(WORKSPACE_ENDPOINTS.BASE);
+}

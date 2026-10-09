@@ -27,3 +27,8 @@ export interface WorkspaceFilters {
     search?: string;
     sortBy?: 'name' | 'createdAt';
 }
+
+export interface WorkspaceFormState {
+    name: string;
+    description: string;
+}

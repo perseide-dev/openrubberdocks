@@ -34,4 +34,5 @@ export const WORKSPACE_FORM_INITIAL_STATE: WorkspaceFormState = {
 export const WORKSPACE_MESSAGES = {
     NAME_REQUIRED: 'Workspace name is required.',
     CREATE_ERROR: 'Unable to create workspace. Please try again.',
+    LIST_ERROR: 'Unable to load workspaces. Please try again.',
 } as const;

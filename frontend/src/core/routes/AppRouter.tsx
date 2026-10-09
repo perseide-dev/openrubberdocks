@@ -10,13 +10,15 @@ import { PublicRoute } from '@routes/PublicRoute';
 import { ProtectedLayout } from '@layout/ProtectedLayout';
 import { LoginPage } from '@features/auth/pages/LoginPage';
 import { DashboardRouter } from '@features-workspaces/manager/routes/Router';
+import { FilesRouter } from '@features/workspaces/files/routes/Router';
 
 // Importa tus componentes globales si los tienes
 // import { AutoPageviewTracker } from '...';
 // import { ThemeInitializer } from '...';
 
 const protectedModules = [
-  ...DashboardRouter
+  ...DashboardRouter,
+  ...FilesRouter
 ];
 
 const router = createBrowserRouter([

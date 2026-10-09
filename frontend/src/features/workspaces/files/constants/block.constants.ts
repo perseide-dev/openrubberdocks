@@ -1,6 +1,7 @@
 import type {
     BlockFilters,
     BlockType,
+    BlockTypeOption,
 } from '@features/workspaces/files/types/block.types';
 
 export const BLOCK_ENDPOINTS = {
@@ -40,4 +41,18 @@ export const BLOCK_TYPES: readonly BlockType[] = [
     'code',
     'quote',
     'divider',
+] as const;
+
+export const BLOCK_TYPE_OPTIONS: readonly BlockTypeOption[] = [
+    { type: 'text', label: 'Text' },
+    { type: 'heading_1', label: 'Heading 1' },
+    { type: 'heading_2', label: 'Heading 2' },
+    { type: 'heading_3', label: 'Heading 3' },
+    { type: 'bullet_list', label: 'Bullet List' },
+    { type: 'numbered_list', label: 'Numbered List' },
+    { type: 'todo', label: 'To-do' },
+    { type: 'image', label: 'Image' },
+    { type: 'code', label: 'Code' },
+    { type: 'quote', label: 'Quote' },
+    { type: 'divider', label: 'Divider' },
 ] as const;

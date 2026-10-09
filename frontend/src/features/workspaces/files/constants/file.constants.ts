@@ -22,3 +22,9 @@ export const FILE_MUTATION_KEYS = {
 export const FILE_DEFAULTS = {
     STALE_TIME: 5 * 60 * 1000,
 } as const;
+
+export const FILE_MESSAGES = {
+    TITLE_REQUIRED: 'File title is required.',
+    CREATE_ERROR: 'Unable to create the file. Please try again.',
+    BLOCKS_ERROR: 'Unable to save the file blocks. Please try again.',
+} as const;

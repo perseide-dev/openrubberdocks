@@ -56,3 +56,14 @@ export interface BlockFilters {
     parentBlockUuid?: string;
     type?: BlockType;
 }
+
+export interface BlockTypeOption {
+    type: BlockType;
+    label: string;
+}
+
+export interface FileEditorBlock {
+    id: string;
+    type: BlockType;
+    content: string;
+}

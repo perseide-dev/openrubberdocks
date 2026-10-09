@@ -5,11 +5,13 @@ import { Block } from '../entities/block.entity';
 import { BlockRevision } from '../entities/block-revision.entity';
 import { NotFoundException } from '@nestjs/common';
 import { BlockType } from '../enums/block-type.enum';
+import { File } from '@moduleFiles/manager/entities/file.entity';
 
 describe('BlocksService', () => {
   let service: BlocksService;
   let blockRepo: any;
   let blockRevisionRepo: any;
+  let fileRepo: any;
   let mockQueryBuilder: any;
 
   beforeEach(async () => {
@@ -35,6 +37,10 @@ describe('BlocksService', () => {
       save: jest.fn(),
     };
 
+    fileRepo = {
+      findOne: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BlocksService,
@@ -45,6 +51,10 @@ describe('BlocksService', () => {
         {
           provide: getRepositoryToken(BlockRevision),
           useValue: blockRevisionRepo,
+        },
+        {
+          provide: getRepositoryToken(File),
+          useValue: fileRepo,
         },
       ],
     }).compile();
@@ -58,10 +68,11 @@ describe('BlocksService', () => {
 
   describe('create', () => {
     it('should create block and revision', async () => {
-      const createDto = { pageUuid: 'p-1', type: BlockType.PARAGRAPH, properties: {}, orderIndex: 1 };
+      const createDto = { fileUuid: 'p-1', type: BlockType.TEXT, properties: {}, orderIndex: 1 } as any;
       const userUUID = 'u-1';
       
-      const expectedBlockCreate = { ...createDto, createdByUuid: userUUID };
+      fileRepo.findOne.mockResolvedValue({ id: 7, uuid: 'p-1' });
+      const expectedBlockCreate = { ...createDto, fileId: 7, createdByUuid: userUUID };
       const savedBlock = { uuid: 'b-1', properties: {}, ...expectedBlockCreate };
 
       blockRepo.create.mockReturnValue(expectedBlockCreate);

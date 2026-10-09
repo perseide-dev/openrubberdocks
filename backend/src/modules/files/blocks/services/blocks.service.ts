@@ -7,8 +7,10 @@ import { CreateBlockDto } from '../dto/create-block.dto';
 import { UpdateBlockDto } from '../dto/update-block.dto';
 import { MoveBlockDto } from '../dto/move-block.dto';
 import { BLOCK_ERRORS_CONSTANTS } from '../constants/block.errors.constants';
+import { FILE_ERRORS_CONSTANTS } from '@moduleFiles/manager/constants/file.errors.constants';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
+import { File } from '@moduleFiles/manager/entities/file.entity';
 
 @Injectable()
 export class BlocksService {
@@ -17,11 +19,22 @@ export class BlocksService {
         private blockRepository: Repository<Block>,
         @InjectRepository(BlockRevision)
         private blockRevisionRepository: Repository<BlockRevision>,
+        @InjectRepository(File)
+        private fileRepository: Repository<File>,
     ) { }
 
     async create(createBlockDto: CreateBlockDto, userUuid: string): Promise<Block> {
+        const file = await this.fileRepository.findOne({
+            where: { uuid: createBlockDto.fileUuid },
+        });
+
+        if (!file) {
+            throw new NotFoundException(FILE_ERRORS_CONSTANTS.FILE_NOT_FOUND());
+        }
+
         const block = this.blockRepository.create({
             ...createBlockDto,
+            fileId: file.id,
             createdByUuid: userUuid,
         });
         const savedBlock = await this.blockRepository.save(block);

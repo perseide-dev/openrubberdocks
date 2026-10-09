@@ -41,6 +41,7 @@ export class BlocksService {
 
         const revision = this.blockRevisionRepository.create({
             blockUuid: savedBlock.uuid,
+            blockId: savedBlock.id,
             properties: savedBlock.properties,
             createdByUuid: userUuid,
         });
@@ -91,6 +92,7 @@ export class BlocksService {
 
         const revision = this.blockRevisionRepository.create({
             blockUuid: savedBlock.uuid,
+            blockId: savedBlock.id,
             properties: savedBlock.properties,
             createdByUuid: userUuid,
         });

@@ -1,6 +1,9 @@
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Card, Skeleton, Alert, Typography } from '@mui/material';
 import { useWorkspaceList } from '@features/workspaces/manager/hooks/useWorkspaceList';
 import { WorkspaceCard } from '@features/workspaces/manager/components/WorkspaceCard';
+import type { Workspace } from '@features/workspaces/manager/types/workspace.types';
 
 const SKELETON_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'] as const;
 
@@ -8,8 +11,15 @@ const SKELETON_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'] as const;
  * Renders the grid of available workspaces with loading, error and empty states.
  */
 export function CardListDashboardPage() {
-    const { workspaces, isLoading, isError, errorMessage, isEmpty, handleOpenWorkspace } =
-        useWorkspaceList();
+    const navigate = useNavigate();
+
+    const handleOpenWorkspace = useCallback(
+        (workspace: Workspace) => navigate(`/workspaces/${workspace.uuid}`),
+        [navigate]
+    );
+
+    const { workspaces, isLoading, isError, errorMessage, isEmpty } =
+        useWorkspaceList({ onOpenWorkspace: handleOpenWorkspace });
 
     if (isLoading) {
         return (

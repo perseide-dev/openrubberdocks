@@ -9,12 +9,17 @@ import type {
     UpdateFilePayload,
 } from '@features/workspaces/files/types/file.types';
 
+import type { FileFilters } from '@features/workspaces/files/types/file.types';
+
 /**
  * Fetches the raw files list from the backend (GET /pages).
  */
-export async function getFilesRepository(): Promise<WorkspaceFile[]> {
-    return baseAPIrequest.get<WorkspaceFile[]>(FILE_ENDPOINTS.BASE);
+export async function getFilesRepository(filters?: FileFilters): Promise<WorkspaceFile[]> {
+    return baseAPIrequest.get<WorkspaceFile[]>(FILE_ENDPOINTS.BASE, {
+        params: filters,
+    });
 }
+
 
 /**
  * Fetches a single file by UUID from the backend (GET /pages/:uuid).

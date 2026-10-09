@@ -19,9 +19,6 @@ import type {
 } from '@features/workspaces/files/types/file.types';
 import type { AppError } from '@http-error/http-error.handler';
 
-/**
- * Service hook to query and cache the files list.
- */
 export function useFilesService() {
     return useQuery<WorkspaceFile[], AppError>({
         queryKey: FILE_QUERY_KEYS.ALL,
@@ -30,9 +27,15 @@ export function useFilesService() {
     });
 }
 
-/**
- * Service hook to query and cache a single file detail by UUID.
- */
+export function useWorkspaceFilesService(workspaceUuid: string) {
+    return useQuery<WorkspaceFile[], AppError>({
+        queryKey: [...FILE_QUERY_KEYS.ALL, { workspaceUuid }],
+        queryFn: () => getFilesRepository({ workspaceUuid }),
+        enabled: Boolean(workspaceUuid),
+        staleTime: FILE_DEFAULTS.STALE_TIME,
+    });
+}
+
 export function useFileDetailService(uuid: string) {
     return useQuery<WorkspaceFile, AppError>({
         queryKey: FILE_QUERY_KEYS.DETAIL(uuid),
@@ -42,9 +45,6 @@ export function useFileDetailService(uuid: string) {
     });
 }
 
-/**
- * Service mutation hook to create a file and invalidate listings.
- */
 export function useCreateFileService() {
     const queryClient = useQueryClient();
 
@@ -57,9 +57,6 @@ export function useCreateFileService() {
     });
 }
 
-/**
- * Service mutation hook to update a file and refresh affected caches.
- */
 export function useUpdateFileService() {
     const queryClient = useQueryClient();
 
@@ -75,9 +72,6 @@ export function useUpdateFileService() {
     });
 }
 
-/**
- * Service mutation hook to delete a file and purge related caches.
- */
 export function useDeleteFileService() {
     const queryClient = useQueryClient();
 

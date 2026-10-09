@@ -66,4 +66,14 @@ export interface FileEditorBlock {
     id: string;
     type: BlockType;
     content: string;
+    checked?: boolean;
+}
+
+export type BlockSelectorMode = 'insert' | 'convert';
+
+export interface BlockSelectorRequest {
+    element: HTMLElement;
+    blockId: string;
+    mode: BlockSelectorMode;
+    query: string;
 }

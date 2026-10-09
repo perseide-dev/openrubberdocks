@@ -46,7 +46,10 @@ export function useFileCreation(workspaceUuid: string) {
                 await createBlockMutation.mutateAsync({
                     fileUuid: file.uuid,
                     type: block.type,
-                    properties: { text: block.content },
+                    properties:
+                        block.type === 'todo'
+                            ? { text: block.content, checked: Boolean(block.checked) }
+                            : { text: block.content },
                     orderIndex: index,
                 });
             }

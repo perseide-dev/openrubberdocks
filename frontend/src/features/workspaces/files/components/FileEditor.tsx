@@ -10,9 +10,6 @@ interface FileEditorProps {
     onTitleChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-/**
- * Notion-like file composer: a title plus an ordered, draggable block canvas.
- */
 export function FileEditor({ title, errorMessage, blockEditor, onTitleChange }: FileEditorProps) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

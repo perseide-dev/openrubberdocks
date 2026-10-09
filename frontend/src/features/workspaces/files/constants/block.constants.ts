@@ -56,3 +56,19 @@ export const BLOCK_TYPE_OPTIONS: readonly BlockTypeOption[] = [
     { type: 'quote', label: 'Quote' },
     { type: 'divider', label: 'Divider' },
 ] as const;
+
+export const BLOCK_SLASH_TRIGGER = '/';
+
+export const BLOCK_CONTENT_PLACEHOLDERS: Record<BlockType, string> = {
+    text: "Type something, or press '/' for a block type",
+    heading_1: 'Heading 1',
+    heading_2: 'Heading 2',
+    heading_3: 'Heading 3',
+    bullet_list: 'List item',
+    numbered_list: 'List item',
+    todo: 'To-do',
+    image: 'Paste an image URL',
+    code: 'Code',
+    quote: 'Quote',
+    divider: '',
+};

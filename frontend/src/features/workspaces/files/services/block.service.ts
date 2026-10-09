@@ -17,23 +17,27 @@ import type {
     CreateBlockPayload,
     UpdateBlockVariables,
     MoveBlockVariables,
+    BlockFilters,
 } from '@features/workspaces/files/types/block.types';
 import type { AppError } from '@http-error/http-error.handler';
 
-/**
- * Service hook to query and cache the blocks list.
- */
-export function useBlocksService() {
+export function useBlocksService(filters?: BlockFilters) {
     return useQuery<WorkspaceBlock[], AppError>({
-        queryKey: BLOCK_QUERY_KEYS.ALL,
-        queryFn: getBlocksRepository,
+        queryKey: filters ? [...BLOCK_QUERY_KEYS.ALL, filters] : BLOCK_QUERY_KEYS.ALL,
+        queryFn: () => getBlocksRepository(filters),
         staleTime: BLOCK_DEFAULTS.STALE_TIME,
     });
 }
 
-/**
- * Service hook to query and cache a single block detail by UUID.
- */
+export function useFileBlocksService(fileUuid: string) {
+    return useQuery<WorkspaceBlock[], AppError>({
+        queryKey: [...BLOCK_QUERY_KEYS.ALL, { fileUuid }],
+        queryFn: () => getBlocksRepository({ fileUuid }),
+        enabled: Boolean(fileUuid),
+        staleTime: BLOCK_DEFAULTS.STALE_TIME,
+    });
+}
+
 export function useBlockDetailService(uuid: string) {
     return useQuery<WorkspaceBlock, AppError>({
         queryKey: BLOCK_QUERY_KEYS.DETAIL(uuid),
@@ -43,9 +47,6 @@ export function useBlockDetailService(uuid: string) {
     });
 }
 
-/**
- * Service mutation hook to create a block and invalidate listings.
- */
 export function useCreateBlockService() {
     const queryClient = useQueryClient();
 
@@ -58,9 +59,6 @@ export function useCreateBlockService() {
     });
 }
 
-/**
- * Service mutation hook to update a block and refresh affected caches.
- */
 export function useUpdateBlockService() {
     const queryClient = useQueryClient();
 
@@ -76,9 +74,6 @@ export function useUpdateBlockService() {
     });
 }
 
-/**
- * Service mutation hook to reposition a block and refresh affected caches.
- */
 export function useMoveBlockService() {
     const queryClient = useQueryClient();
 
@@ -94,9 +89,6 @@ export function useMoveBlockService() {
     });
 }
 
-/**
- * Service mutation hook to delete a block and purge related caches.
- */
 export function useDeleteBlockService() {
     const queryClient = useQueryClient();
 

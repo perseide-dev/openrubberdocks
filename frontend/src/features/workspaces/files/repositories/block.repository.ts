@@ -10,11 +10,15 @@ import type {
     MoveBlockPayload,
 } from '@features/workspaces/files/types/block.types';
 
+import type { BlockFilters } from '@features/workspaces/files/types/block.types';
+
 /**
  * Fetches the raw blocks list from the backend (GET /blocks).
  */
-export async function getBlocksRepository(): Promise<WorkspaceBlock[]> {
-    return baseAPIrequest.get<WorkspaceBlock[]>(BLOCK_ENDPOINTS.BASE);
+export async function getBlocksRepository(filters?: BlockFilters): Promise<WorkspaceBlock[]> {
+    return baseAPIrequest.get<WorkspaceBlock[]>(BLOCK_ENDPOINTS.BASE, {
+        params: filters,
+    });
 }
 
 /**

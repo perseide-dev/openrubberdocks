@@ -7,3 +7,4 @@ export { FileEditor } from './FileEditor';
 export { FilesTable } from './FilesTable';
 export { FilesCards } from './FilesCards';
 export { FilesView } from './FilesView';
+export { FileViewer } from './FileViewer';

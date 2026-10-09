@@ -7,17 +7,29 @@ import { UpdateFileDto } from '../dto/update-file.dto';
 import { FILE_ERRORS_CONSTANTS } from '../constants/file.errors.constants';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
+import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 
 @Injectable()
 export class FilesService {
     constructor(
         @InjectRepository(File)
         private fileRepository: Repository<File>,
+        @InjectRepository(Workspace)
+        private workspaceRepository: Repository<Workspace>,
     ) {}
 
     async create(createFileDto: CreateFileDto, userUuid: string): Promise<File> {
+        const workspace = await this.workspaceRepository.findOne({
+            where: { uuid: createFileDto.workspaceUuid },
+        });
+
+        if (!workspace) {
+            throw new NotFoundException(FILE_ERRORS_CONSTANTS.FILE_NOT_FOUND());
+        }
+
         const file = this.fileRepository.create({
             ...createFileDto,
+            workspaceId: workspace.id,
             createdByUuid: userUuid,
         });
         return await this.fileRepository.save(file);

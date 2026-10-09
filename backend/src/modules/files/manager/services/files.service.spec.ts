@@ -3,11 +3,13 @@ import { FilesService } from './files.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { File } from '../entities/file.entity';
 import { NotFoundException } from '@nestjs/common';
+import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 
 describe('FilesService', () => {
   let service: FilesService;
   let repository: any;
   let mockQueryBuilder: any;
+  let workspaceRepository: any;
 
   beforeEach(async () => {
     mockQueryBuilder = {
@@ -18,6 +20,9 @@ describe('FilesService', () => {
       getOne: jest.fn(),
     };
 
+    workspaceRepository = {
+      findOne: jest.fn(),
+    };
     repository = {
       create: jest.fn(),
       save: jest.fn(),
@@ -33,6 +38,10 @@ describe('FilesService', () => {
           provide: getRepositoryToken(File),
           useValue: repository,
         },
+        {
+          provide: getRepositoryToken(Workspace),
+          useValue: workspaceRepository,
+        },
       ],
     }).compile();
 
@@ -45,10 +54,11 @@ describe('FilesService', () => {
 
   describe('create', () => {
     it('should create and save a file', async () => {
-      const createDto = { workspaceUuid: 'ws-1', title: 'Test', isPublished: false };
+      const createDto = { workspaceUuid: 'ws-1', title: 'Test' } as any;
       const userUUID = 'u-1';
-      
-      const expectedCreated = { ...createDto, createdByUuid: userUUID };
+      const workspace = { id: 5, uuid: 'ws-1' };
+      workspaceRepository.findOne.mockResolvedValue(workspace);
+      const expectedCreated = { ...createDto, workspaceId: workspace.id, createdByUuid: userUUID };
       repository.create.mockReturnValue(expectedCreated);
       repository.save.mockResolvedValue({ id: 1, ...expectedCreated });
 
@@ -69,7 +79,7 @@ describe('FilesService', () => {
 
     it('should apply filters and relations', async () => {
       mockQueryBuilder.getMany.mockResolvedValue([{ id: 1 }]);
-      await service.findAll({ relations: ['workspace'], filters: [{ field: 'title', operator: 'eq', value: 'Test' }] });
+      await service.findAll({ relations: ['workspace'], filters: [{ fields: ['title'], operator: 'eq', value: 'Test' }] });
       expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('file.workspace', 'workspace');
       expect(mockQueryBuilder.andWhere).toHaveBeenCalled();
     });

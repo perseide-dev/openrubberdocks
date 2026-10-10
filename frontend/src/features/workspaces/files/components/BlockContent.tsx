@@ -11,6 +11,7 @@ const sharedInput: SxProps<Theme> = {
 };
 
 function getInputSx(type: BlockType): SxProps<Theme> {
+  // Aseguramos que los line-height sean consistentes para que el centro visual coincida
   switch (type) {
     case 'heading_1':
       return { ...sharedInput, fontSize: '2rem', fontWeight: 700, lineHeight: 1.2 };
@@ -23,13 +24,13 @@ function getInputSx(type: BlockType): SxProps<Theme> {
         ...sharedInput,
         fontFamily: '"Space Mono", monospace',
         fontSize: '0.875rem',
-        lineHeight: 1.6,
+        lineHeight: 1.5, // Ajustado para mejor centrado
         whiteSpace: 'pre-wrap',
       };
     case 'quote':
-      return { ...sharedInput, fontSize: '1.05rem', lineHeight: 1.6, fontStyle: 'italic' };
+      return { ...sharedInput, fontSize: '1.05rem', lineHeight: 1.5, fontStyle: 'italic' };
     default:
-      return { ...sharedInput, fontSize: '1rem', lineHeight: 1.6 };
+      return { ...sharedInput, fontSize: '1rem', lineHeight: 1.5 }; // Ajustado para mejor centrado
   }
 }
 
@@ -44,20 +45,25 @@ interface BlockContentProps {
 
 function PrefixRow({ prefix, children }: { prefix: string; children: ReactNode }) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+    // display: flex y alignItems: center son los que crean esa "línea horizontal imaginaria"
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
       <Box
         sx={{
           minWidth: 18,
           fontFamily: '"Space Mono", monospace',
           fontSize: '1rem',
-          lineHeight: 1.6,
+          lineHeight: 1, // Line height de 1 ayuda a centrar exactamente el texto del prefijo
           color: 'text.secondary',
           userSelect: 'none',
+          display: 'flex',
+          justifyContent: 'center', // Centra el prefijo dentro de su propia caja
         }}
       >
         {prefix}
       </Box>
-      <Box sx={{ flexGrow: 1, minWidth: 0 }}>{children}</Box>
+      <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+        {children}
+      </Box>
     </Box>
   );
 }
@@ -92,7 +98,11 @@ export function BlockContent({
         width: '100%',
         fontFamily: '"Space Grotesk", sans-serif',
         color: 'text.primary',
-        '& .MuiInputBase-input': getInputSx(block.type) as SxProps<Theme>,
+        '& .MuiInputBase-input': {
+          ...(getInputSx(block.type) as object),
+          padding: 0,
+          lineHeight: 1.5,
+        },
       }}
     />
   );
@@ -107,12 +117,12 @@ export function BlockContent({
 
   if (block.type === 'todo') {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
         <Checkbox
           size="small"
           checked={Boolean(block.checked)}
           onChange={onToggleChecked}
-          sx={{ marginTop: 0.25 }}
+          sx={{ padding: 0, '& .MuiSvgIcon-root': { fontSize: '1.25rem' } }}
         />
         <Box
           sx={{
@@ -120,6 +130,8 @@ export function BlockContent({
             minWidth: 0,
             textDecoration: block.checked ? 'line-through' : 'none',
             opacity: block.checked ? 0.6 : 1,
+            display: 'flex', 
+            alignItems: 'center' // Centra el contenedor del editor
           }}
         >
           {editor}
@@ -130,7 +142,7 @@ export function BlockContent({
 
   if (block.type === 'quote') {
     return (
-      <Box sx={{ borderLeft: '3px solid', borderColor: 'divider', paddingLeft: 2 }}>
+      <Box sx={{ borderLeft: '3px solid', borderColor: 'divider', paddingLeft: 2, display: 'flex', alignItems: 'center' }}>
         {editor}
       </Box>
     );
@@ -144,6 +156,8 @@ export function BlockContent({
           border: '1.5px solid',
           borderColor: 'divider',
           padding: 1.5,
+          display: 'flex', 
+          alignItems: 'center'
         }}
       >
         {editor}
@@ -152,6 +166,7 @@ export function BlockContent({
   }
 
   if (block.type === 'image') {
+    // Las imágenes generalmente mantienen su flex-direction en column para que la imagen quede debajo del texto.
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {editor}

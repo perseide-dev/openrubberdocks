@@ -78,7 +78,7 @@ export function SortableBlock({
             sx={{
                 position: 'relative',
                 display: 'flex',
-                alignItems: 'flex-start',
+                alignItems: 'center',
                 gap: 0.5,
                 padding: '4px 6px',
                 border: '1.5px solid',

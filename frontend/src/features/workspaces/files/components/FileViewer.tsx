@@ -47,20 +47,22 @@ function getViewSx(type: BlockType) {
 
 function PrefixRow({ prefix, children }: { prefix: string; children: ReactNode }) {
     return (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
                 sx={{
                     minWidth: 18,
                     fontFamily: '"Space Mono", monospace',
                     fontSize: '1rem',
-                    lineHeight: 1.6,
+                    lineHeight: 1,
                     color: 'text.secondary',
                     userSelect: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
                 }}
             >
                 {prefix}
             </Box>
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>{children}</Box>
+            <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>{children}</Box>
         </Box>
     );
 }
@@ -104,12 +106,12 @@ export function FileViewer({ blocks }: FileViewerProps) {
                 if (block.type === 'todo') {
                     const checked = getCheckedFromProperties(block.properties);
                     return (
-                        <Box key={block.uuid} sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                        <Box key={block.uuid} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <Checkbox
                                 size="small"
                                 checked={checked}
                                 disabled
-                                sx={{ marginTop: 0.25, padding: 0, '& .MuiSvgIcon-root': { fontSize: '1.125rem' } }}
+                                sx={{ padding: 0, '& .MuiSvgIcon-root': { fontSize: '1.125rem' } }}
                             />
                             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                                 <Typography
@@ -128,7 +130,7 @@ export function FileViewer({ blocks }: FileViewerProps) {
 
                 if (block.type === 'quote') {
                     return (
-                        <Box key={block.uuid} sx={{ borderLeft: '3px solid', borderColor: 'divider', paddingLeft: 2 }}>
+                        <Box key={block.uuid} sx={{ borderLeft: '3px solid', borderColor: 'divider', paddingLeft: 2, display: 'flex', alignItems: 'center' }}>
                             <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
                         </Box>
                     );
@@ -143,6 +145,8 @@ export function FileViewer({ blocks }: FileViewerProps) {
                                 border: '1.5px solid',
                                 borderColor: 'divider',
                                 padding: 1.5,
+                                display: 'flex',
+                                alignItems: 'center',
                             }}
                         >
                             <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>

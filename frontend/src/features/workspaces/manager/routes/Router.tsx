@@ -2,9 +2,8 @@ import { DashboardPage } from '@features-workspaces/manager/pages/DashboardPage'
 import { WorkspaceDetailPage } from '@features-workspaces/manager/pages/WorkspaceDetailPage';
 import type { RouteObject } from 'react-router-dom';
 import { workspace } from '@features-workspaces/manager/routes/routes';
+import { ScopedRouteGuard } from '@routes/ScopedRouteGuard';
 import type { NavHandle } from '@layout/types/layout.types';
-
-
 
 export const DashboardRouter: RouteObject[] = [
     {
@@ -14,6 +13,10 @@ export const DashboardRouter: RouteObject[] = [
     },
     {
         path: workspace.detail.route,
-        element: <WorkspaceDetailPage />
+        element: (
+            <ScopedRouteGuard>
+                <WorkspaceDetailPage />
+            </ScopedRouteGuard>
+        )
     },
 ];

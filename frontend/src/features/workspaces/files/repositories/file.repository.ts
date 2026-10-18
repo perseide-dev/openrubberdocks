@@ -16,7 +16,7 @@ import type { FileFilters } from '@features/workspaces/files/types/file.types';
  */
 export async function getFilesRepository(filters?: FileFilters): Promise<WorkspaceFile[]> {
     return baseAPIrequest.get<WorkspaceFile[]>(FILE_ENDPOINTS.BASE, {
-        params: filters,
+        searchParams: filters as Record<string, string | number | boolean>,
     });
 }
 

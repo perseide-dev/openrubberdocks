@@ -1,6 +1,6 @@
-import { useState, useCallback, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCreateFileService } from '@features/workspaces/files/services/file.service';
+import { useState, useCallback, useMemo, type ChangeEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCreateFileService, useWorkspaceFilesService } from '@features/workspaces/files/services/file.service';
 import { useCreateBlockService } from '@features/workspaces/files/services/block.service';
 import { useBlockEditor } from '@features/workspaces/files/hooks/useBlockEditor';
 import { FILE_MESSAGES } from '@features/workspaces/files/constants/file.constants';
@@ -12,9 +12,18 @@ import type { AppError } from '@http-error/http-error.handler';
  */
 export function useFileCreation(workspaceUuid: string) {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const parentPageUuid = searchParams.get('parent') || undefined;
+
     const createFileMutation = useCreateFileService();
     const createBlockMutation = useCreateBlockService();
+    const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
     const blockEditor = useBlockEditor();
+
+    const parentFile = useMemo(() => {
+        if (!parentPageUuid) return undefined;
+        return workspaceFiles.find((f) => f.uuid === parentPageUuid);
+    }, [workspaceFiles, parentPageUuid]);
 
     const [title, setTitle] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -38,6 +47,7 @@ export function useFileCreation(workspaceUuid: string) {
             const file = await createFileMutation.mutateAsync({
                 workspaceUuid,
                 title: trimmedTitle,
+                parentPageUuid,
             });
 
             const blocks = blockEditor.blocks;
@@ -55,7 +65,7 @@ export function useFileCreation(workspaceUuid: string) {
             }
 
             blockEditor.reset();
-            navigate(`/workspaces/${workspaceUuid}`);
+            navigate(`/workspaces/${workspaceUuid}/files/${file.uuid}`);
         } catch (err) {
             const appError = err as AppError;
             const errorDetail =
@@ -66,13 +76,16 @@ export function useFileCreation(workspaceUuid: string) {
 
             setErrorMessage(errorDetail);
         }
-    }, [title, workspaceUuid, createFileMutation, createBlockMutation, blockEditor, navigate]);
+    }, [title, workspaceUuid, parentPageUuid, createFileMutation, createBlockMutation, blockEditor, navigate]);
 
     return {
         title,
         errorMessage,
         isSaving: createFileMutation.isPending || createBlockMutation.isPending,
         blockEditor,
+        parentFile,
+        parentPageUuid,
+        workspaceFiles,
         handleTitleChange,
         handleSave,
     };

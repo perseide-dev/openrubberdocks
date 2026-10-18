@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useWorkspaceFilesService } from '@features/workspaces/files/services/file.service';
-
-export type FilesViewMode = 'table' | 'cards';
+import type { FilesViewMode } from '@features/workspaces/files/types/file.types';
 
 export function useWorkspaceFiles(workspaceUuid: string) {
     const [viewMode, setViewMode] = useState<FilesViewMode>('table');

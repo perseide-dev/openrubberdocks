@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { BlockTypeMenu } from '@features/workspaces/files/components/BlockTypeMenu';
 import { SortableBlock } from '@features/workspaces/files/components/SortableBlock';
 import { BLOCK_SLASH_TRIGGER } from '@features/workspaces/files/constants/block.constants';
-import type { BlockEditorController } from '@features/workspaces/files/hooks/useBlockEditor';
+import type { BlockEditorController } from '@features/workspaces/files/types/block.types';
 
 interface BlockEditorProps {
     blockEditor: BlockEditorController;

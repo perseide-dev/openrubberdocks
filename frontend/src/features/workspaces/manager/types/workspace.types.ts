@@ -50,3 +50,10 @@ export interface CreateWorkspaceFormController {
     handleSubmit: (e?: React.FormEvent) => Promise<void>;
     reset: () => void;
 }
+
+export interface WorkspaceCardProps {
+    workspace: Workspace;
+    onOpen: (workspace: Workspace) => void;
+    onDelete?: (workspace: Workspace) => void;
+}
+

@@ -141,7 +141,7 @@ export function FileViewer({ blocks }: FileViewerProps) {
                         <Box
                             key={block.uuid}
                             sx={{
-                                backgroundColor: '#F0F0F0',
+                                backgroundColor: 'action.hover',
                                 border: '1.5px solid',
                                 borderColor: 'divider',
                                 padding: 1.5,

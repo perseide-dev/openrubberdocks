@@ -2,6 +2,8 @@ import { Button } from '@mui/material';
 import { useCreateWorkspaceDrawer } from '@features/workspaces/manager/hooks/useCreateWorkspaceDrawer';
 import { CreateWorkspaceDrawer } from '@features/workspaces/manager/components/CreateWorkspaceDrawer';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { Can } from '@components/ui/Can';
+import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 
 export function HeaderDashboardPage() {
     const { isOpen, handleOpen, handleClose, form } = useCreateWorkspaceDrawer();
@@ -11,9 +13,11 @@ export function HeaderDashboardPage() {
             <WorkspaceHeader
                 title="Work Spaces"
                 action={
-                    <Button color="inherit" onClick={handleOpen}>
-                        Create Space
-                    </Button>
+                    <Can action={BASE_PERMISSIONS_ACTIONS.WORKSPACE_CREATE}>
+                        <Button color="inherit" onClick={handleOpen}>
+                            Create Space
+                        </Button>
+                    </Can>
                 }
             />
 

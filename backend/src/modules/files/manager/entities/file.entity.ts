@@ -35,10 +35,10 @@ export class File {
     workspaceUuid: string;
 
     @Column({ name: 'parent_page_id', type: 'int', nullable: true })
-    parentPageId: number;
+    parentPageId?: number | null;
 
     @Column({ name: 'parent_page_uuid', type: 'uuid', nullable: true })
-    parentPageUuid: string;
+    parentPageUuid?: string | null;
 
     // Relación recursiva para páginas hijas/padre
     @ManyToOne(() => File, (file) => file.childPages, { nullable: true, onDelete: 'CASCADE' })

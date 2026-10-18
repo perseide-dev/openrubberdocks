@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FilesService } from './files.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { File } from '../entities/file.entity';
+import { File } from '@moduleFiles/manager/entities/file.entity';
 import { NotFoundException } from '@nestjs/common';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 
@@ -53,12 +53,12 @@ describe('FilesService', () => {
   });
 
   describe('create', () => {
-    it('should create and save a file', async () => {
+    it('should create and save a root file without parent', async () => {
       const createDto = { workspaceUuid: 'ws-1', title: 'Test' } as any;
       const userUUID = 'u-1';
       const workspace = { id: 5, uuid: 'ws-1' };
       workspaceRepository.findOne.mockResolvedValue(workspace);
-      const expectedCreated = { ...createDto, workspaceId: workspace.id, createdByUuid: userUUID };
+      const expectedCreated = { ...createDto, workspaceId: workspace.id, parentPageId: null, createdByUuid: userUUID };
       repository.create.mockReturnValue(expectedCreated);
       repository.save.mockResolvedValue({ id: 1, ...expectedCreated });
 
@@ -66,6 +66,23 @@ describe('FilesService', () => {
       expect(repository.create).toHaveBeenCalledWith(expectedCreated);
       expect(repository.save).toHaveBeenCalledWith(expectedCreated);
       expect(result).toEqual({ id: 1, ...expectedCreated });
+    });
+
+    it('should resolve parentPageId when parentPageUuid is provided', async () => {
+      const createDto = { workspaceUuid: 'ws-1', parentPageUuid: 'parent-1', title: 'Child' } as any;
+      const userUUID = 'u-1';
+      const workspace = { id: 5, uuid: 'ws-1' };
+      const parentPage = { id: 42, uuid: 'parent-1' };
+      workspaceRepository.findOne.mockResolvedValue(workspace);
+      repository.findOne = jest.fn().mockResolvedValue(parentPage);
+      const expectedCreated = { ...createDto, workspaceId: workspace.id, parentPageId: 42, createdByUuid: userUUID };
+      repository.create.mockReturnValue(expectedCreated);
+      repository.save.mockResolvedValue({ id: 2, ...expectedCreated });
+
+      const result = await service.create(createDto, userUUID);
+      expect(repository.findOne).toHaveBeenCalledWith({ where: { uuid: 'parent-1' } });
+      expect(repository.create).toHaveBeenCalledWith(expectedCreated);
+      expect(result).toEqual({ id: 2, ...expectedCreated });
     });
   });
 

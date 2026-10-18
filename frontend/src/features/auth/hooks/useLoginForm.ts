@@ -56,9 +56,9 @@ export function useLoginForm() {
           pwd,
         });
 
-        // Determine destination: redirect to origin route if protected or default to /dashboard
+        // Determine destination: redirect to origin route if protected or default to /workspaces
         const fromLocation = (location.state as { from?: { pathname?: string } })?.from?.pathname;
-        const destination = fromLocation && fromLocation !== '/login' ? fromLocation : '/dashboard';
+        const destination = fromLocation && fromLocation !== '/login' ? fromLocation : '/workspaces';
         navigate(destination, { replace: true });
       } catch (err) {
         const appError = err as AppError;

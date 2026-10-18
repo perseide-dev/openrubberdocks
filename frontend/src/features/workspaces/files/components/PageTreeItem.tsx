@@ -123,7 +123,7 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
             letterSpacing: '0.02em',
           }}
         >
-          {node.file.title || 'UNTITLED_PAGE'}
+          {node.file.title || 'UNTITLED_FILE'}
         </Typography>
 
         <Can
@@ -133,7 +133,7 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
           <IconButton
             size="small"
             className="tree-add-btn"
-            title="Create sub-page"
+            title="Create sub-file"
             onClick={(e) => {
               e.stopPropagation();
               onCreateSubPage?.(node.file.uuid);

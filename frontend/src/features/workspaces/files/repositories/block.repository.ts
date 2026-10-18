@@ -17,7 +17,7 @@ import type { BlockFilters } from '@features/workspaces/files/types/block.types'
  */
 export async function getBlocksRepository(filters?: BlockFilters): Promise<WorkspaceBlock[]> {
     return baseAPIrequest.get<WorkspaceBlock[]>(BLOCK_ENDPOINTS.BASE, {
-        params: filters,
+        searchParams: filters as Record<string, string | number | boolean>,
     });
 }
 

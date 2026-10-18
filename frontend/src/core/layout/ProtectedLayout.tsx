@@ -14,6 +14,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircleIcon from '@mui/icons-material/Circle';
 import { useAuth } from '@global-hooks/useAuth';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
+import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();
@@ -21,6 +22,12 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const location = useLocation();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+
+  const workspaceMatch = location.pathname.match(/^\/workspaces\/([0-9a-fA-F-]+)/);
+  const workspaceUuid = workspaceMatch ? workspaceMatch[1] : null;
+
+  const fileMatch = location.pathname.match(/^\/workspaces\/[0-9a-fA-F-]+\/files\/([0-9a-fA-F-]+)/);
+  const activeFileUuid = fileMatch ? fileMatch[1] : undefined;
 
   const handleLogout = async () => {
     await logout();
@@ -135,11 +142,18 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
       </Box>
 
       <Box sx={{ display: 'flex', flex: 1 }}>
-        <Box component="nav" sx={{ width: 260, display: { xs: 'none', md: 'flex' }, flexDirection: 'column', justifyContent: 'space-between', borderRight: '2px solid', borderColor: 'divider', padding: 2.5 }}>
-          <Box>
-            <Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>// PROTOCOL NAVIGATION</Typography>
-            {renderNavList()}
-          </Box>
+        <Box component="nav" sx={{ width: 260, display: { xs: 'none', md: 'flex' }, flexDirection: 'column', borderRight: '2px solid', borderColor: 'divider', padding: 2.5 }}>
+          {workspaceUuid ? (
+            <PageTreeSidebar
+              workspaceUuid={workspaceUuid}
+              activeFileUuid={activeFileUuid}
+            />
+          ) : (
+            <Box>
+              <Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>// PROTOCOL NAVIGATION</Typography>
+              {renderNavList()}
+            </Box>
+          )}
         </Box>
 
         <Drawer anchor="left" open={mobileDrawerOpen} onClose={() => setMobileDrawerOpen(false)} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: 280, padding: 2.5 } }}>
@@ -147,8 +161,18 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
             <Typography variant="h6" sx={{ fontWeight: 800 }}>NAVIGATION</Typography>
             <IconButton onClick={() => setMobileDrawerOpen(false)} size="small"><LogoutOutlinedIcon fontSize="small" /></IconButton>
           </Box>
-          <Divider sx={{ mb: 2 }} />
-          {renderNavList()}
+          {workspaceUuid ? (
+            <PageTreeSidebar
+              workspaceUuid={workspaceUuid}
+              activeFileUuid={activeFileUuid}
+              onCloseMobile={() => setMobileDrawerOpen(false)}
+            />
+          ) : (
+            <>
+              <Divider sx={{ mb: 2 }} />
+              {renderNavList()}
+            </>
+          )}
         </Drawer>
 
         <Box component="main" sx={{ flex: 1, padding: { xs: 2, sm: 3, md: 4 }, overflowY: 'auto' }}>

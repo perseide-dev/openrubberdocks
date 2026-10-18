@@ -3,8 +3,7 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import { FilesTable } from '@features/workspaces/files/components/FilesTable';
 import { FilesCards } from '@features/workspaces/files/components/FilesCards';
-import type { FilesViewMode } from '@features/workspaces/files/hooks/useWorkspaceFiles';
-import type { WorkspaceFile } from '@features/workspaces/files/types/file.types';
+import type { FilesViewMode, WorkspaceFile } from '@features/workspaces/files/types/file.types';
 
 interface FilesViewProps {
     files: WorkspaceFile[];

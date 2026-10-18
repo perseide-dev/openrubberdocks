@@ -1,6 +1,6 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { WorkspaceHeader } from '@features/workspaces/manager/components/WorkspaceHeader';
+import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { FileViewer } from '@features/workspaces/files/components/FileViewer';
 import { useFileView } from '@features/workspaces/files/hooks/useFileView';
 import { files } from '@features/workspaces/files/routes/routes';

@@ -3,15 +3,9 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import { FilesTable } from '@features/workspaces/files/components/FilesTable';
 import { FilesCards } from '@features/workspaces/files/components/FilesCards';
-import type { FilesViewMode, WorkspaceFile } from '@features/workspaces/files/types/file.types';
+import type { FilesViewProps } from '@features/workspaces/files/types/file.types';
 
-interface FilesViewProps {
-    files: WorkspaceFile[];
-    viewMode: FilesViewMode;
-    onViewModeChange: (mode: FilesViewMode) => void;
-}
-
-export function FilesView({ files, viewMode, onViewModeChange }: FilesViewProps) {
+export function FilesView({ files, viewMode, onViewModeChange, onDeleteFile }: FilesViewProps) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -33,7 +27,11 @@ export function FilesView({ files, viewMode, onViewModeChange }: FilesViewProps)
                 </ButtonGroup>
             </Box>
 
-            {viewMode === 'table' ? <FilesTable files={files} /> : <FilesCards files={files} />}
+            {viewMode === 'table' ? (
+                <FilesTable files={files} onDelete={onDeleteFile} />
+            ) : (
+                <FilesCards files={files} onDelete={onDeleteFile} />
+            )}
         </Box>
     );
 }

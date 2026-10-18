@@ -32,3 +32,21 @@ export interface WorkspaceFormState {
     name: string;
     description: string;
 }
+
+export interface UseWorkspaceListParams {
+    onOpenWorkspace?: (workspace: Workspace) => void;
+}
+
+export interface UseCreateWorkspaceFormParams {
+    onSuccess?: () => void;
+}
+
+export interface CreateWorkspaceFormController {
+    formState: WorkspaceFormState;
+    errorMessage: string | null;
+    isSubmitting: boolean;
+    handleNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleSubmit: (e?: React.FormEvent) => Promise<void>;
+    reset: () => void;
+}

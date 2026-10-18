@@ -1,4 +1,8 @@
-import type { ChangelogItem, LoginFormState } from '../types/auth.types';
+import type { ChangelogItem, LoginFormState } from '@features/auth/types/auth.types';
+
+export const AUTH_DEFAULTS = {
+  STALE_TIME: 5 * 60 * 1000,
+} as const;
 
 export const AUTH_ENDPOINTS = {
   LOGIN: 'auth/login',

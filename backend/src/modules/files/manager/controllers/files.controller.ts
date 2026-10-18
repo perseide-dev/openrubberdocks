@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Param, UseGuards, UseInterceptors, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
-import { FilesService } from '../services/files.service';
-import { CreateFileDto } from '../dto/create-file.dto';
-import { UpdateFileDto } from '../dto/update-file.dto';
+import { FilesService } from '@moduleFiles/manager/services/files.service';
+import { CreateFileDto } from '@moduleFiles/manager/dto/create-file.dto';
+import { UpdateFileDto } from '@moduleFiles/manager/dto/update-file.dto';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
 import { JsonApiQuery } from '@commonDecorators/json-api-query.decorator';

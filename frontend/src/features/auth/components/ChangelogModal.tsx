@@ -9,6 +9,7 @@ import {
   IconButton,
   Divider,
   Button,
+  Card,
 } from '@mui/material';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
@@ -66,16 +67,13 @@ export function ChangelogModal({ open, onClose }: ChangelogModalProps) {
         }}
       >
         {CHANGELOG_DATA.map((item) => (
-          <Box
+          <Card
             key={item.version}
             sx={{
               display: 'flex',
               flexDirection: 'column',
               gap: 2,
-              border: '1.5px solid',
-              borderColor: 'divider',
               padding: 2.5,
-              backgroundColor: 'background.paper',
             }}
           >
             {/* Entry Header */}
@@ -141,11 +139,10 @@ export function ChangelogModal({ open, onClose }: ChangelogModalProps) {
                 }}
               >
                 {item.details.map((detail) => (
-                  <Box
+                  <Card
+                    variant="outlined"
                     key={detail.category}
                     sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
                       padding: 1.5,
                     }}
                   >
@@ -163,11 +160,11 @@ export function ChangelogModal({ open, onClose }: ChangelogModalProps) {
                     <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
                       {detail.description}
                     </Typography>
-                  </Box>
+                  </Card>
                 ))}
               </Box>
             </Box>
-          </Box>
+          </Card>
         ))}
       </DialogContent>
 

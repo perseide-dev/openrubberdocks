@@ -43,3 +43,20 @@ export interface FileFilters {
 }
 
 export type FilesViewMode = 'table' | 'cards';
+
+export interface FilesCardsProps {
+    files: WorkspaceFile[];
+    onDelete?: (file: WorkspaceFile) => void;
+}
+
+export interface FilesTableProps {
+    files: WorkspaceFile[];
+    onDelete?: (file: WorkspaceFile) => void;
+}
+
+export interface FilesViewProps {
+    files: WorkspaceFile[];
+    viewMode: FilesViewMode;
+    onViewModeChange: (mode: FilesViewMode) => void;
+    onDeleteFile?: (file: WorkspaceFile) => void;
+}

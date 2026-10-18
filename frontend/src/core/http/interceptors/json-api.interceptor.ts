@@ -47,16 +47,20 @@ export function serializeToJsonApi<T extends Record<string, unknown>>(
 
 /**
  * Flattens a single JSON:API resource { id, type, attributes, relationships }
- * into a standard flat JavaScript entity { id, ...attributes }.
+ * into a standard flat JavaScript entity { id, ...attributes }, resolving
+ * sideloaded relationships from includedMap when available.
  */
 export function flattenResource<T = Record<string, unknown>>(
-  resource: JsonApiResource<T>
+  resource: JsonApiResource<T>,
+  includedMap?: Map<string, JsonApiResource<unknown>>,
+  visited = new Set<string>()
 ): T & { id: string; type: string } {
   if (!isRecord(resource)) {
     return resource as unknown as T & { id: string; type: string };
   }
 
   const { id, type, attributes, relationships } = resource;
+  const resourceKey = `${type}:${id}`;
 
   const flattened: Record<string, unknown> = {
     id,
@@ -64,14 +68,38 @@ export function flattenResource<T = Record<string, unknown>>(
     ...(attributes || {}),
   };
 
+  if (visited.has(resourceKey)) {
+    return flattened as unknown as T & { id: string; type: string };
+  }
+
+  const nextVisited = new Set(visited);
+  nextVisited.add(resourceKey);
+
   if (relationships && isRecord(relationships)) {
     Object.keys(relationships).forEach((relKey) => {
       const relData = relationships[relKey]?.data;
       if (relData !== undefined) {
         if (Array.isArray(relData)) {
           flattened[`${relKey}Ids`] = relData.map((item) => item.id);
+          if (includedMap) {
+            const resolvedItems = relData
+              .map((item) => {
+                const match = includedMap.get(`${item.type}:${item.id}`);
+                return match ? flattenResource(match, includedMap, nextVisited) : null;
+              })
+              .filter(Boolean);
+            if (resolvedItems.length > 0) {
+              flattened[relKey] = resolvedItems;
+            }
+          }
         } else if (relData && typeof relData === 'object') {
           flattened[`${relKey}Id`] = relData.id;
+          if (includedMap) {
+            const match = includedMap.get(`${relData.type}:${relData.id}`);
+            if (match) {
+              flattened[relKey] = flattenResource(match, includedMap, nextVisited);
+            }
+          }
         }
       }
     });
@@ -81,7 +109,8 @@ export function flattenResource<T = Record<string, unknown>>(
 }
 
 /**
- * Deserializes an entire JSON:API response payload into flat data models.
+ * Deserializes an entire JSON:API response payload into flat data models,
+ * connecting relationships with entities present in response.included.
  */
 export function deserializeJsonApi<T = unknown>(
   payload: unknown
@@ -101,9 +130,19 @@ export function deserializeJsonApi<T = unknown>(
     return null;
   }
 
-  if (Array.isArray(response.data)) {
-    return response.data.map((item) => flattenResource<T>(item)) as unknown as T[];
+  let includedMap: Map<string, JsonApiResource<unknown>> | undefined;
+  if (Array.isArray(response.included) && response.included.length > 0) {
+    includedMap = new Map();
+    response.included.forEach((inc) => {
+      if (inc && inc.type && inc.id !== undefined) {
+        includedMap?.set(`${inc.type}:${inc.id}`, inc);
+      }
+    });
   }
 
-  return flattenResource<T>(response.data) as unknown as T;
+  if (Array.isArray(response.data)) {
+    return response.data.map((item) => flattenResource<T>(item, includedMap)) as unknown as T[];
+  }
+
+  return flattenResource<T>(response.data, includedMap) as unknown as T;
 }

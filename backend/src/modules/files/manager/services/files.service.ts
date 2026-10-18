@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { File } from '../entities/file.entity';
-import { CreateFileDto } from '../dto/create-file.dto';
-import { UpdateFileDto } from '../dto/update-file.dto';
-import { FILE_ERRORS_CONSTANTS } from '../constants/file.errors.constants';
+import { File } from '@moduleFiles/manager/entities/file.entity';
+import { CreateFileDto } from '@moduleFiles/manager/dto/create-file.dto';
+import { UpdateFileDto } from '@moduleFiles/manager/dto/update-file.dto';
+import { FILE_ERRORS_CONSTANTS } from '@moduleFiles/manager/constants/file.errors.constants';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
-import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
+import { applyJsonApiFilters } from '@commonUtils/typeorm-filter.util';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 
 @Injectable()
@@ -27,9 +27,21 @@ export class FilesService {
             throw new NotFoundException(FILE_ERRORS_CONSTANTS.FILE_NOT_FOUND());
         }
 
+        let parentPageId: number | null = null;
+        if (createFileDto.parentPageUuid) {
+            const parentPage = await this.fileRepository.findOne({
+                where: { uuid: createFileDto.parentPageUuid },
+            });
+            if (!parentPage) {
+                throw new NotFoundException('Parent page not found');
+            }
+            parentPageId = parentPage.id;
+        }
+
         const file = this.fileRepository.create({
             ...createFileDto,
             workspaceId: workspace.id,
+            parentPageId,
             createdByUuid: userUuid,
         });
         return await this.fileRepository.save(file);

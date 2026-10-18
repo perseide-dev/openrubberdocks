@@ -1,10 +1,13 @@
-export { BlockContent } from './BlockContent';
-export { BlockTypeMenu } from './BlockTypeMenu';
-export { SortableBlock } from './SortableBlock';
-export { BlockEditor } from './BlockEditor';
-export { FileEditor } from './FileEditor';
+export { BlockContent } from '@features-workspaces/files/components/BlockContent';
+export { BlockTypeMenu } from '@features-workspaces/files/components/BlockTypeMenu';
+export { SortableBlock } from '@features-workspaces/files/components/SortableBlock';
+export { BlockEditor } from '@features-workspaces/files/components/BlockEditor';
+export { FileEditor } from '@features-workspaces/files/components/FileEditor';
 
-export { FilesTable } from './FilesTable';
-export { FilesCards } from './FilesCards';
-export { FilesView } from './FilesView';
-export { FileViewer } from './FileViewer';
+export { FilesTable } from '@features-workspaces/files/components/FilesTable';
+export { FilesCards } from '@features-workspaces/files/components/FilesCards';
+export { FilesView } from '@features-workspaces/files/components/FilesView';
+export { FileViewer } from '@features-workspaces/files/components/FileViewer';
+
+export { PageTreeItem } from '@features-workspaces/files/components/PageTreeItem';
+export { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';

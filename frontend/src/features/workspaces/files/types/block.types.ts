@@ -77,3 +77,42 @@ export interface BlockSelectorRequest {
     mode: BlockSelectorMode;
     query: string;
 }
+
+export interface BlockSelectorController {
+    isOpen: boolean;
+    anchorEl: HTMLElement | null;
+    targetBlockId: string | null;
+    mode: BlockSelectorMode;
+    query: string;
+    open: (request: BlockSelectorRequest) => void;
+    close: () => void;
+    setQuery: (query: string) => void;
+}
+
+import type {
+    DragEndEvent,
+    SensorDescriptor,
+    SensorOptions,
+    CollisionDetection,
+} from '@dnd-kit/core';
+
+export interface BlockEditorController {
+    blocks: FileEditorBlock[];
+    sensors: SensorDescriptor<SensorOptions>[];
+    collisionDetection: CollisionDetection;
+    selector: BlockSelectorController;
+    addBlock: (type: BlockType, overId?: string) => string;
+    updateBlock: (id: string, content: string, properties?: Record<string, unknown>) => void;
+    convertBlock: (id: string, type: BlockType) => void;
+    toggleChecked: (id: string) => void;
+    removeBlock: (id: string) => void;
+    handleDragEnd: (event: DragEndEvent) => void;
+    handleBlockChange: (id: string, content: string) => void;
+    handleBlockKeyDown: (id: string, e: React.KeyboardEvent<HTMLElement>) => void;
+    openInsertSelector: (element: HTMLElement, id: string) => void;
+    closeSelector: () => void;
+    handleSelectBlockType: (type: BlockType) => void;
+    registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
+    focusBlock: (id: string) => void;
+    reset: () => void;
+}

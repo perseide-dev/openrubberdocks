@@ -2,13 +2,14 @@ import { useState, useCallback } from 'react';
 import type {
     BlockSelectorMode,
     BlockSelectorRequest,
+    BlockSelectorController,
 } from '@features/workspaces/files/types/block.types';
 
 /**
  * Holds the state of the floating block selector (anchor, target block, mode
  * and search query) shared by the inline button and the slash command.
  */
-export function useBlockSelector() {
+export function useBlockSelector(): BlockSelectorController {
     const [isOpen, setIsOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [targetBlockId, setTargetBlockId] = useState<string | null>(null);
@@ -41,5 +42,3 @@ export function useBlockSelector() {
         setQuery,
     };
 }
-
-export type BlockSelectorController = ReturnType<typeof useBlockSelector>;

@@ -1,9 +1,9 @@
 import { DataSource } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
-import { User } from '../../../modules/users/entities/user.entity';
-import { Role } from '../../../modules/authorization/entities/role.entity';
-import { UserRoleScope } from '../../../modules/authorization/entities/user-role-scope.entity';
-import { UserType } from '../../../modules/users/enums/users.enum';
+import { User } from '@moduleUsers/entities/user.entity';
+import { Role } from '@moduleAuthorization/entities/role.entity';
+import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
+import { UserType } from '@moduleUsers/enums/users.enum';
 
 export class CoreAdminSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<any> {

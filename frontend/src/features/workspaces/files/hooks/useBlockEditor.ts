@@ -10,14 +10,18 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useBlockSelector } from '@features/workspaces/files/hooks/useBlockSelector';
 import { BLOCK_SLASH_TRIGGER } from '@features/workspaces/files/constants/block.constants';
-import type { BlockType, FileEditorBlock } from '@features/workspaces/files/types/block.types';
+import type {
+    BlockType,
+    FileEditorBlock,
+    BlockEditorController,
+} from '@features/workspaces/files/types/block.types';
 
 /**
  * Manages the local, Notion-like block canvas: creation, edition, conversion,
  * removal, drag-and-drop ordering, the floating block selector and the keyboard
  * shortcuts that keep the editing flow uninterrupted.
  */
-export function useBlockEditor() {
+export function useBlockEditor(): BlockEditorController {
     const [blocks, setBlocks] = useState<FileEditorBlock[]>([]);
     const selector = useBlockSelector();
     const inputRefs = useRef(new Map<string, HTMLTextAreaElement>());
@@ -252,5 +256,3 @@ export function useBlockEditor() {
         reset,
     };
 }
-
-export type BlockEditorController = ReturnType<typeof useBlockEditor>;

@@ -41,3 +41,5 @@ export interface FileFilters {
     search?: string;
     sortBy?: 'title' | 'createdAt' | 'updatedAt';
 }
+
+export type FilesViewMode = 'table' | 'cards';

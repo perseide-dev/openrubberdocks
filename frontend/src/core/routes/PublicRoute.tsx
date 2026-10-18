@@ -27,7 +27,7 @@ export function PublicRoute() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/workspaces" replace />;
   }
 
   return <Outlet />;

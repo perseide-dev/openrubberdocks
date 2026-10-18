@@ -36,7 +36,15 @@ export class UsersService {
   }
 
   async findByRubberHandle(rubberHandle: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { rubberHandle } });
+    const user = await this.usersRepository.findOne({
+      where: { rubberHandle },
+      relations: [
+        'scopes',
+        'scopes.role',
+        'scopes.role.permissions',
+        'scopes.workspace',
+      ],
+    });
     if (!user) {
       throw new NotFoundException(`User with handle ${rubberHandle} not found`);
     }
@@ -45,7 +53,15 @@ export class UsersService {
   }
 
   async findById(userUUID: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { uuid: userUUID } });
+    const user = await this.usersRepository.findOne({
+      where: { uuid: userUUID },
+      relations: [
+        'scopes',
+        'scopes.role',
+        'scopes.role.permissions',
+        'scopes.workspace',
+      ],
+    });
     if (!user) {
       throw new NotFoundException(`User with UUID ${userUUID} not found`);
     }

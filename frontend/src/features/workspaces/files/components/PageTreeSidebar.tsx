@@ -126,13 +126,13 @@ export const PageTreeSidebar: React.FC<PageTreeSidebarProps> = ({
             fontSize: '0.75rem',
           }}
         >
-          + NEW ROOT PAGE
+          + NEW ROOT FILE
         </Button>
       </Can>
 
       <Divider sx={{ marginBottom: 1.5 }} />
 
-      {/* Pages Section Header */}
+      {/* Files Section Header */}
       <Box
         sx={{
           display: 'flex',
@@ -151,17 +151,17 @@ export const PageTreeSidebar: React.FC<PageTreeSidebarProps> = ({
             color: 'text.secondary',
           }}
         >
-          // PAGES_TREE ({filesData.length})
+          // FILES_TREE ({filesData.length})
         </Typography>
       </Box>
 
-      {/* Page Tree list */}
+      {/* File Tree list */}
       <Box sx={{ flex: 1, overflowY: 'auto', paddingRight: 0.5 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, padding: 1 }}>
             <CircularProgress size={16} />
             <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-              // LOADING_PAGES...
+              // LOADING_FILES...
             </Typography>
           </Box>
         ) : pageTree.length === 0 ? (
@@ -175,7 +175,7 @@ export const PageTreeSidebar: React.FC<PageTreeSidebarProps> = ({
                 textAlign: 'center',
               }}
             >
-              // NO_PAGES_FOUND
+              // NO_FILES_FOUND
             </Typography>
           </Box>
         ) : (

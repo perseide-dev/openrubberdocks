@@ -1,11 +1,7 @@
 import { useCallback } from 'react';
 import { useWorkspacesService } from '@features/workspaces/manager/services/workspace.service';
 import { WORKSPACE_MESSAGES } from '@features/workspaces/manager/constants/workspace.constants';
-import type { Workspace } from '@features/workspaces/manager/types/workspace.types';
-
-interface UseWorkspaceListParams {
-    onOpenWorkspace?: (workspace: Workspace) => void;
-}
+import type { Workspace, UseWorkspaceListParams } from '@features/workspaces/manager/types/workspace.types';
 
 /**
  * View controller hook for the workspace card list.

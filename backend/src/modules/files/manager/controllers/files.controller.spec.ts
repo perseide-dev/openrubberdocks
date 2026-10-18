@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FilesController } from './files.controller';
-import { FilesService } from '../services/files.service';
+import { FilesService } from '@moduleFiles/manager/services/files.service';
 import { AuthGuard } from '@nestjs/passport';
 
 describe('FilesController', () => {

@@ -1,15 +1,13 @@
-import { Card, CardHeader, CardContent, Typography } from '@mui/material';
-import type { Workspace } from '@features/workspaces/manager/types/workspace.types';
-
-interface WorkspaceCardProps {
-    workspace: Workspace;
-    onOpen: (workspace: Workspace) => void;
-}
+import { Card, CardHeader, CardContent, Typography, IconButton } from '@mui/material';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import { Can } from '@components/ui/Can';
+import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
+import type { WorkspaceCardProps } from '@features/workspaces/manager/types/workspace.types';
 
 /**
- * Presentational card summarizing a single workspace.
+ * Presentational card summarizing a single workspace with optional deletion action.
  */
-export function WorkspaceCard({ workspace, onOpen }: WorkspaceCardProps) {
+export function WorkspaceCard({ workspace, onOpen, onDelete }: WorkspaceCardProps) {
     return (
         <Card
             onClick={() => onOpen(workspace)}
@@ -24,6 +22,24 @@ export function WorkspaceCard({ workspace, onOpen }: WorkspaceCardProps) {
             <CardHeader
                 title={workspace.name}
                 subheader="// WORKSPACE"
+                action={
+                    onDelete && (
+                        <Can action={BASE_PERMISSIONS_ACTIONS.WORKSPACE_WRITE} scope={workspace.uuid}>
+                            <IconButton
+                                size="small"
+                                color="inherit"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(workspace);
+                                }}
+                                sx={{ '&:hover': { color: 'error.main' } }}
+                                title="Delete Workspace"
+                            >
+                                <DeleteOutlinedIcon fontSize="small" />
+                            </IconButton>
+                        </Can>
+                    )
+                }
             />
             <CardContent>
                 <Typography variant="body2">

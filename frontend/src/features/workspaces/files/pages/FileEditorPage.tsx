@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
-import { WorkspaceHeader } from '@features/workspaces/manager/components/WorkspaceHeader';
+import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { FileEditor } from '@features/workspaces/files/components/FileEditor';
 import { useFileCreation } from '@features/workspaces/files/hooks/useFileCreation';
 

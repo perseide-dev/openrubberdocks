@@ -4,17 +4,17 @@ import {
     WORKSPACE_FORM_INITIAL_STATE,
     WORKSPACE_MESSAGES,
 } from '@features/workspaces/manager/constants/workspace.constants';
-import type { WorkspaceFormState } from '@features/workspaces/manager/types/workspace.types';
+import type {
+    WorkspaceFormState,
+    UseCreateWorkspaceFormParams,
+    CreateWorkspaceFormController,
+} from '@features/workspaces/manager/types/workspace.types';
 import type { AppError } from '@http-error/http-error.handler';
-
-interface UseCreateWorkspaceFormParams {
-    onSuccess?: () => void;
-}
 
 /**
  * Encapsulates the create-workspace form state, validation and submission flow.
  */
-export function useCreateWorkspaceForm({ onSuccess }: UseCreateWorkspaceFormParams = {}) {
+export function useCreateWorkspaceForm({ onSuccess }: UseCreateWorkspaceFormParams = {}): CreateWorkspaceFormController {
     const createWorkspaceMutation = useCreateWorkspaceService();
 
     const [formState, setFormState] = useState<WorkspaceFormState>(WORKSPACE_FORM_INITIAL_STATE);
@@ -85,5 +85,3 @@ export function useCreateWorkspaceForm({ onSuccess }: UseCreateWorkspaceFormPara
         reset,
     };
 }
-
-export type CreateWorkspaceFormController = ReturnType<typeof useCreateWorkspaceForm>;

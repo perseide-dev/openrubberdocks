@@ -1,10 +1,34 @@
 export type UserType = 'coreAdmin' | 'internal' | 'external';
 
+export interface Permission {
+  uuid: string;
+  action: string;
+}
+
+export interface Role {
+  uuid: string;
+  name: string;
+  description?: string;
+  isSystemDefined: boolean;
+  permissions: Permission[];
+}
+
+export interface UserRoleScope {
+  uuid: string;
+  role: Role;
+  workspace?: {
+    uuid: string;
+    name?: string;
+  } | null;
+  squadId?: number | null;
+}
+
 export interface AuthUser {
   uuid: string;
   username: string;
   rubberHandle: string;
   type: UserType;
+  scopes?: UserRoleScope[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -47,3 +71,29 @@ export interface AuthContextValue {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<AuthUser | null>;
 }
+
+export interface UsePermissionsReturn {
+  hasPermission: (action: string, workspaceUuid?: string) => boolean;
+  hasAnyPermission: (actions: string[], workspaceUuid?: string) => boolean;
+  canMutateInWorkspace: (workspaceUuid?: string) => boolean;
+  isCoreAdmin: boolean;
+  isExternal: boolean;
+  isInternal: boolean;
+  userType?: UserType;
+}
+
+export interface CanProps {
+  action: string;
+  scope?: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+
+export interface ScopedRouteGuardProps {
+  requiredPermission?: string;
+  scopeParamName?: string;
+  redirectTo?: string;
+  children?: React.ReactElement;
+}
+
+

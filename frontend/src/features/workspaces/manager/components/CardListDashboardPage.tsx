@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Card, Skeleton, Alert, Typography } from '@mui/material';
 import { useWorkspaceList } from '@features/workspaces/manager/hooks/useWorkspaceList';
 import { WorkspaceCard } from '@features/workspaces/manager/components/WorkspaceCard';
+import { WORKSPACE_SKELETON_KEYS } from '@features/workspaces/manager/constants/workspace.constants';
 import type { Workspace } from '@features/workspaces/manager/types/workspace.types';
-
-const SKELETON_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'] as const;
 
 /**
  * Renders the grid of available workspaces with loading, error and empty states.
@@ -30,7 +29,7 @@ export function CardListDashboardPage() {
                     gap: 3,
                 }}
             >
-                {SKELETON_KEYS.map((key) => (
+                {WORKSPACE_SKELETON_KEYS.map((key) => (
                     <Card key={key}>
                         <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <Skeleton variant="text" width="60%" height={32} />
@@ -49,22 +48,14 @@ export function CardListDashboardPage() {
 
     if (isEmpty) {
         return (
-            <Box
-                sx={{
-                    border: '1.5px solid',
-                    borderColor: 'divider',
-                    padding: 4,
-                    textAlign: 'center',
-                    backgroundColor: 'background.paper',
-                }}
-            >
+            <Card sx={{ padding: 4, textAlign: 'center' }}>
                 <Typography variant="h6" component="div">
                     // NO WORKSPACES YET
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', marginTop: 1 }}>
                     Use "Create Space" to provision your first workspace.
                 </Typography>
-            </Box>
+            </Card>
         );
     }
 

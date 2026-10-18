@@ -7,6 +7,7 @@ import {
 import {
   AUTH_QUERY_KEYS,
   AUTH_MUTATION_KEYS,
+  AUTH_DEFAULTS,
 } from '@features/auth/constants/auth.constants';
 import type { AuthUser, LoginCredentials } from '@features/auth/types/auth.types';
 import type { AppError } from '@http-error/http-error.handler';
@@ -19,7 +20,7 @@ export function useMeService(enabled = true) {
     queryKey: AUTH_QUERY_KEYS.ME,
     queryFn: getMeRepository,
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: AUTH_DEFAULTS.STALE_TIME,
     retry: false,
   });
 }

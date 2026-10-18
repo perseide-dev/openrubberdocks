@@ -3,6 +3,8 @@ export interface WorkspaceFile {
     uuid: string;
     workspaceUuid: string;
     parentPageUuid: string | null;
+    parentPage?: WorkspaceFile;
+    childPages?: WorkspaceFile[];
     title: string;
     icon: string | null;
     coverImage: string | null;
@@ -60,3 +62,26 @@ export interface FilesViewProps {
     onViewModeChange: (mode: FilesViewMode) => void;
     onDeleteFile?: (file: WorkspaceFile) => void;
 }
+
+export interface PageTreeNode {
+    file: WorkspaceFile;
+    children: PageTreeNode[];
+    level: number;
+}
+
+export interface PageTreeItemProps {
+    node: PageTreeNode;
+    activeFileUuid?: string;
+    workspaceUuid: string;
+    onSelectPage: (fileUuid: string) => void;
+    onCreateSubPage?: (parentPageUuid: string) => void;
+}
+
+export interface PageTreeSidebarProps {
+    workspaceUuid: string;
+    activeFileUuid?: string;
+    onCloseMobile?: () => void;
+}
+
+export type { BreadcrumbItem, BrutalistBreadcrumbsProps } from '@components/ui';
+

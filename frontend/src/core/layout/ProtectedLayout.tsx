@@ -119,6 +119,15 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {user?.type && (
+            <Chip
+              label={`// ${user.type.toUpperCase()}`}
+              size="small"
+              variant="outlined"
+              color={user.type === 'coreAdmin' ? 'error' : user.type === 'external' ? 'warning' : 'default'}
+              sx={{ fontWeight: 700 }}
+            />
+          )}
           <Chip icon={<TerminalOutlinedIcon sx={{ fontSize: '0.9rem !important' }} />} label={`@${user?.rubberHandle || 'unknown'}`} variant="outlined" size="small" />
           <Button variant="outlined" size="small" onClick={handleLogout} endIcon={<LogoutOutlinedIcon fontSize="small" />} sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>DISCONNECT</Button>
           <IconButton onClick={handleLogout} size="small" sx={{ display: { xs: 'inline-flex', sm: 'none' } }}><LogoutOutlinedIcon fontSize="small" /></IconButton>

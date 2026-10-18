@@ -83,12 +83,12 @@ export function SortableBlock({
                 padding: '4px 6px',
                 border: '1.5px solid',
                 borderColor: isDragging ? 'primary.main' : 'transparent',
-                backgroundColor: isDragging ? '#F0F0F0' : 'transparent',
+                backgroundColor: isDragging ? 'action.hover' : 'transparent',
                 opacity: isDragging ? 0.55 : 1,
                 transition: 'background-color 0.12s ease, border-color 0.12s ease',
                 '&:hover': {
                     borderColor: 'divider',
-                    backgroundColor: '#FAFAFA',
+                    backgroundColor: 'action.hover',
                 },
                 '&:hover .block-actions, &:focus-within .block-actions': {
                     opacity: 1,

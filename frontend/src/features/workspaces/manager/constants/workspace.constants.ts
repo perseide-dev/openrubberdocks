@@ -36,3 +36,5 @@ export const WORKSPACE_MESSAGES = {
     CREATE_ERROR: 'Unable to create workspace. Please try again.',
     LIST_ERROR: 'Unable to load workspaces. Please try again.',
 } as const;
+
+export const WORKSPACE_SKELETON_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'] as const;

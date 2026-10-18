@@ -22,7 +22,7 @@ import type { AppError } from '@http-error/http-error.handler';
 export function useFilesService() {
     return useQuery<WorkspaceFile[], AppError>({
         queryKey: FILE_QUERY_KEYS.ALL,
-        queryFn: getFilesRepository,
+        queryFn: () => getFilesRepository(),
         staleTime: FILE_DEFAULTS.STALE_TIME,
     });
 }

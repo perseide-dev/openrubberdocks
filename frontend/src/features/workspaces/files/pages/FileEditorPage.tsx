@@ -34,7 +34,7 @@ export function FileEditorPage() {
                 href: fileRoutes.view.build(workspaceUuid, anc.uuid),
             })),
             {
-                label: '// NEW_SUB_PAGE',
+                label: '// NEW_SUB_FILE',
             },
         ];
     }, [parentPageUuid, workspaceFiles, workspaceUuid]);
@@ -46,7 +46,7 @@ export function FileEditorPage() {
             )}
 
             <WorkspaceHeader
-                title={parentFile ? `Create Sub-Page of "${parentFile.title}"` : 'Create File'}
+                title={parentFile ? `Create Sub-File of "${parentFile.title}"` : 'Create File'}
                 subtitle={parentFile ? `// PARENT: ${parentFile.title} [${parentFile.uuid}]` : `// ${workspaceUuid}`}
                 action={
                     <Box sx={{ display: 'flex', gap: 1 }}>

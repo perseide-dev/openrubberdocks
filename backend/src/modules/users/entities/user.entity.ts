@@ -4,6 +4,7 @@ import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { WorkspaceMember } from '@moduleWorkspace/entities/workspace-member.entity';
+import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 
 @Entity('users')
 export class User {
@@ -57,4 +58,6 @@ export class User {
   @OneToMany(() => Workspace, (workspace) => workspace.createdBy)
   createdWorkspaces: Workspace[];
 
+  @OneToMany(() => UserRoleScope, (scope) => scope.user)
+  scopes: UserRoleScope[];
 }

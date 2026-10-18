@@ -1,6 +1,6 @@
 import { Alert, Box, TextField, Typography } from '@mui/material';
 import { BlockEditor } from '@features/workspaces/files/components/BlockEditor';
-import type { BlockEditorController } from '@features/workspaces/files/hooks/useBlockEditor';
+import type { BlockEditorController } from '@features/workspaces/files/types/block.types';
 import type { ChangeEvent } from 'react';
 
 interface FileEditorProps {

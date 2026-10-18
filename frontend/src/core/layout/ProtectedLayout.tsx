@@ -13,15 +13,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircleIcon from '@mui/icons-material/Circle';
 import { useAuth } from '@global-hooks/useAuth';
-
-export type NavHandle = {
-  label: string;
-  icon?: React.ElementType;
-};
-
-interface ProtectedLayoutProps {
-  navRoutes: RouteObject[]; // <- Acepta las rutas de AppRouter
-}
+import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();
@@ -115,8 +107,7 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
-      <Box component="header" sx={{ /* tu diseño actual */ paddingX: { xs: 2, md: 3 }, paddingY: 1.5, borderBottom: '2px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
-        {/* Tu código actual del Header */}
+      <Box component="header" sx={{ paddingX: { xs: 2, md: 3 }, paddingY: 1.5, borderBottom: '2px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton sx={{ display: { xs: 'inline-flex', md: 'none' } }} onClick={() => setMobileDrawerOpen(true)} size="small">
             <MenuOutlinedIcon fontSize="small" />

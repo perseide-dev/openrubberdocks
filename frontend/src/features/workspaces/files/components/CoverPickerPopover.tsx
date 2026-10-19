@@ -8,6 +8,7 @@ import {
   Divider,
 } from '@mui/material';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import { getCoverStyle } from '@utils-functions/media.utils';
 import { BRUTALIST_COVER_PRESETS } from '@features-workspaces/files/constants/media.constants';
 import type { CoverPickerPopoverProps } from '@features-workspaces/files/types/file.types';
 
@@ -102,10 +103,8 @@ export const CoverPickerPopover: React.FC<CoverPickerPopoverProps> = ({
                 <Box
                   sx={{
                     height: 48,
-                    backgroundImage: `url("${preset.url}")`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
                     backgroundColor: preset.previewColor,
+                    ...getCoverStyle(preset.url),
                     borderBottom: '1px solid',
                     borderColor: 'divider',
                   }}

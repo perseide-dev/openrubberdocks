@@ -2,12 +2,12 @@ import { useState, useMemo } from 'react';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
-import { FileViewer } from '@features/workspaces/files/components/FileViewer';
-import { useFileView } from '@features/workspaces/files/hooks/useFileView';
-import { useDeleteFileService, useWorkspaceFilesService } from '@features/workspaces/files/services/file.service';
+import { FileViewer } from '@features-workspaces/files/components/FileViewer';
+import { useFileView } from '@features-workspaces/files/hooks/useFileView';
+import { useDeleteFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import { ConfirmModal, BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
-import { files } from '@features/workspaces/files/routes/routes';
+import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
 
 export function FileViewPage() {
@@ -84,11 +84,16 @@ export function FileViewPage() {
             />
             <Box sx={{ padding: 2 }}>
                 {isLoading ? (
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Loading...
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                        // LOADING_DOCUMENT...
                     </Typography>
                 ) : (
-                    <FileViewer blocks={blocks} />
+                    <FileViewer
+                        blocks={blocks}
+                        icon={file?.icon}
+                        coverImage={file?.coverImage}
+                        isTemplate={file?.isTemplate}
+                    />
                 )}
             </Box>
 

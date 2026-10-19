@@ -3,7 +3,7 @@ import { IsString, IsUUID, IsOptional, IsBoolean } from 'class-validator';
 export class UpdateFileDto {
     @IsUUID()
     @IsOptional()
-    parentPageUuid?: string;
+    parentPageUuid?: string | null;
 
     @IsString()
     @IsOptional()
@@ -11,11 +11,11 @@ export class UpdateFileDto {
 
     @IsString()
     @IsOptional()
-    icon?: string;
+    icon?: string | null;
 
     @IsString()
     @IsOptional()
-    coverImage?: string;
+    coverImage?: string | null;
 
     @IsBoolean()
     @IsOptional()

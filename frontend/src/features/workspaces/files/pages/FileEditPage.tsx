@@ -3,17 +3,30 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { BrutalistBreadcrumbs } from '@components/ui';
-import { useWorkspaceFilesService } from '@features/workspaces/files/services/file.service';
+import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import { getPageAncestors } from '@utils-functions/tree.utils';
-import { FileEditor } from '@features/workspaces/files/components/FileEditor';
-import { useFileEdit } from '@features/workspaces/files/hooks/useFileEdit';
+import { FileEditor } from '@features-workspaces/files/components/FileEditor';
+import { useFileEdit } from '@features-workspaces/files/hooks/useFileEdit';
 
 export function FileEditPage() {
     const { workspaceUuid, fileUuid } = useParams<{ workspaceUuid: string; fileUuid: string }>();
     const navigate = useNavigate();
     const wsUuid = workspaceUuid ?? '';
     const fUuid = fileUuid ?? '';
-    const { title, errorMessage, isSaving, blockEditor, handleTitleChange, handleSave } = useFileEdit(wsUuid, fUuid);
+    const {
+        title,
+        icon,
+        coverImage,
+        isTemplate,
+        errorMessage,
+        isSaving,
+        blockEditor,
+        handleTitleChange,
+        setIcon,
+        setCoverImage,
+        setIsTemplate,
+        handleSave,
+    } = useFileEdit(wsUuid, fUuid);
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
 
     const breadcrumbItems = useMemo(() => {
@@ -58,7 +71,13 @@ export function FileEditPage() {
                 title={title}
                 errorMessage={errorMessage}
                 blockEditor={blockEditor}
+                icon={icon}
+                coverImage={coverImage}
+                isTemplate={isTemplate}
                 onTitleChange={handleTitleChange}
+                onIconChange={setIcon}
+                onCoverChange={setCoverImage}
+                onToggleTemplate={setIsTemplate}
             />
         </Box>
     );

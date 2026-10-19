@@ -11,3 +11,7 @@ export { FileViewer } from '@features-workspaces/files/components/FileViewer';
 
 export { PageTreeItem } from '@features-workspaces/files/components/PageTreeItem';
 export { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
+
+export { IconPickerPopover } from '@features-workspaces/files/components/IconPickerPopover';
+export { CoverPickerPopover } from '@features-workspaces/files/components/CoverPickerPopover';
+export { TemplateSelectorModal } from '@features-workspaces/files/components/TemplateSelectorModal';

@@ -17,6 +17,7 @@ import { BlockEditor } from '@features-workspaces/files/components/BlockEditor';
 import { IconPickerPopover } from '@features-workspaces/files/components/IconPickerPopover';
 import { CoverPickerPopover } from '@features-workspaces/files/components/CoverPickerPopover';
 import { TemplateSelectorModal } from '@features-workspaces/files/components/TemplateSelectorModal';
+import { getCoverStyle } from '@utils-functions/media.utils';
 import type { FileEditorProps } from '@features-workspaces/files/types/file.types';
 
 export const FileEditor: React.FC<FileEditorProps> = ({
@@ -52,9 +53,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
             position: 'relative',
             height: 180,
             width: '100%',
-            backgroundImage: `url("${coverImage}")`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            ...getCoverStyle(coverImage),
             border: '2px solid',
             borderColor: 'divider',
             display: 'flex',

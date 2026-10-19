@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react';
-import { Box, Checkbox, Divider, Typography } from '@mui/material';
-import type { BlockType, WorkspaceBlock } from '@features/workspaces/files/types/block.types';
-
-interface FileViewerProps {
-    blocks: WorkspaceBlock[];
-}
+import { Box, Checkbox, Chip, Divider, Typography } from '@mui/material';
+import type { BlockType } from '@features-workspaces/files/types/block.types';
+import type { FileViewerProps } from '@features-workspaces/files/types/file.types';
 
 interface BlockProperties {
     text?: unknown;
@@ -67,118 +64,159 @@ function PrefixRow({ prefix, children }: { prefix: string; children: ReactNode }
     );
 }
 
-export function FileViewer({ blocks }: FileViewerProps) {
+export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: FileViewerProps) {
     const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {sorted.map((block, index) => {
-                if (block.type === 'divider') {
-                    return <Divider key={block.uuid} sx={{ marginY: 1.5 }} />;
-                }
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Full-width brutalist cover banner */}
+            {coverImage && (
+                <Box
+                    sx={{
+                        width: '100%',
+                        height: 180,
+                        backgroundImage: `url("${coverImage}")`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        border: '2px solid',
+                        borderColor: 'divider',
+                    }}
+                />
+            )}
 
-                let numberedCounter = 0;
-                let currentIndex = index;
-                while (currentIndex >= 0 && sorted[currentIndex].type === 'numbered_list') {
-                    currentIndex -= 1;
-                    numberedCounter += 1;
-                }
-                const number = block.type === 'numbered_list' ? numberedCounter : undefined;
+            {/* Overlapping or standalone icon & badges */}
+            {(icon || isTemplate) && (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'space-between',
+                        marginTop: coverImage ? -5 : 0,
+                        paddingX: coverImage ? 2 : 0,
+                        marginBottom: 1,
+                        zIndex: 1,
+                    }}
+                >
+                    {icon ? (
+                        <Box
+                            sx={{
+                                width: 56,
+                                height: 56,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '2.25rem',
+                                border: '2px solid',
+                                borderColor: 'divider',
+                                backgroundColor: 'background.paper',
+                                userSelect: 'none',
+                            }}
+                        >
+                            {icon}
+                        </Box>
+                    ) : <Box />}
 
-                const text = getTextFromProperties(block.properties);
+                    {isTemplate && (
+                        <Chip
+                            label="// WORKSPACE TEMPLATE"
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            sx={{
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                borderRadius: 0,
+                                border: '1.5px solid',
+                            }}
+                        />
+                    )}
+                </Box>
+            )}
 
-                if (block.type === 'bullet_list') {
-                    return (
-                        <PrefixRow key={block.uuid} prefix="•">
-                            <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
-                        </PrefixRow>
-                    );
-                }
+            {/* Document Title if passed */}
+            {title && (
+                <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 1 }}>
+                    {title}
+                </Typography>
+            )}
 
-                if (block.type === 'numbered_list') {
-                    return (
-                        <PrefixRow key={block.uuid} prefix={`${number ?? 1}.`}>
-                            <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
-                        </PrefixRow>
-                    );
-                }
+            {/* Content blocks */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {sorted.map((block, index) => {
+                    if (block.type === 'divider') {
+                        return <Divider key={block.uuid} sx={{ marginY: 1.5 }} />;
+                    }
 
-                if (block.type === 'todo') {
-                    const checked = getCheckedFromProperties(block.properties);
-                    return (
-                        <Box key={block.uuid} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Checkbox
-                                size="small"
-                                checked={checked}
-                                disabled
-                                sx={{ padding: 0, '& .MuiSvgIcon-root': { fontSize: '1.125rem' } }}
-                            />
-                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    let numberedCounter = 0;
+                    let currentIndex = index;
+                    while (currentIndex >= 0 && sorted[currentIndex].type === 'numbered_list') {
+                        currentIndex -= 1;
+                        numberedCounter += 1;
+                    }
+                    const number = block.type === 'numbered_list' ? numberedCounter : undefined;
+
+                    const text = getTextFromProperties(block.properties);
+
+                    if (block.type === 'bullet_list') {
+                        return (
+                            <PrefixRow key={block.uuid} prefix="•">
+                                <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
+                            </PrefixRow>
+                        );
+                    }
+
+                    if (block.type === 'numbered_list') {
+                        return (
+                            <PrefixRow key={block.uuid} prefix={`${number ?? 1}.`}>
+                                <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
+                            </PrefixRow>
+                        );
+                    }
+
+                    if (block.type === 'todo') {
+                        const checked = getCheckedFromProperties(block.properties);
+                        return (
+                            <Box key={block.uuid} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Checkbox checked={checked} disabled sx={{ padding: 0.5, borderRadius: 0 }} />
                                 <Typography
                                     sx={{
                                         ...getViewSx(block.type),
                                         textDecoration: checked ? 'line-through' : 'none',
-                                        opacity: checked ? 0.6 : 1,
+                                        color: checked ? 'text.secondary' : 'inherit',
                                     }}
                                 >
                                     {text}
                                 </Typography>
                             </Box>
-                        </Box>
-                    );
-                }
+                        );
+                    }
 
-                if (block.type === 'quote') {
+                    if (block.type === 'image') {
+                        return (
+                            <Box key={block.uuid} sx={{ marginY: 1 }}>
+                                {text.trim() !== '' && (
+                                    <Box
+                                        component="img"
+                                        src={text.trim()}
+                                        alt=""
+                                        sx={{
+                                            maxWidth: '100%',
+                                            border: '1.5px solid',
+                                            borderColor: 'divider',
+                                        }}
+                                    />
+                                )}
+                            </Box>
+                        );
+                    }
+
                     return (
-                        <Box key={block.uuid} sx={{ borderLeft: '3px solid', borderColor: 'divider', paddingLeft: 2, display: 'flex', alignItems: 'center' }}>
-                            <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
-                        </Box>
+                        <Typography key={block.uuid} sx={{ ...getViewSx(block.type) }}>
+                            {text}
+                        </Typography>
                     );
-                }
-
-                if (block.type === 'code') {
-                    return (
-                        <Box
-                            key={block.uuid}
-                            sx={{
-                                backgroundColor: 'action.hover',
-                                border: '1.5px solid',
-                                borderColor: 'divider',
-                                padding: 1.5,
-                                display: 'flex',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Typography sx={{ ...getViewSx(block.type) }}>{text}</Typography>
-                        </Box>
-                    );
-                }
-
-                if (block.type === 'image') {
-                    return (
-                        <Box key={block.uuid} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            {text.trim() !== '' && (
-                                <Box
-                                    component="img"
-                                    src={text.trim()}
-                                    alt=""
-                                    sx={{
-                                        maxWidth: '100%',
-                                        border: '1.5px solid',
-                                        borderColor: 'divider',
-                                    }}
-                                />
-                            )}
-                        </Box>
-                    );
-                }
-
-                return (
-                    <Typography key={block.uuid} sx={{ ...getViewSx(block.type) }}>
-                        {text}
-                    </Typography>
-                );
-            })}
+                })}
+            </Box>
         </Box>
     );
 }

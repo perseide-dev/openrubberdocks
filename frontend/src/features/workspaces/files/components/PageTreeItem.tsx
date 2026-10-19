@@ -104,13 +104,26 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
           </Box>
         )}
 
-        <DescriptionOutlinedIcon
-          sx={{
-            fontSize: '1rem',
-            flexShrink: 0,
-            color: isActive ? 'primary.contrastText' : 'text.secondary',
-          }}
-        />
+        {node.file.icon ? (
+          <Typography
+            sx={{
+              fontSize: '1rem',
+              lineHeight: 1,
+              flexShrink: 0,
+              userSelect: 'none',
+            }}
+          >
+            {node.file.icon}
+          </Typography>
+        ) : (
+          <DescriptionOutlinedIcon
+            sx={{
+              fontSize: '1rem',
+              flexShrink: 0,
+              color: isActive ? 'primary.contrastText' : 'text.secondary',
+            }}
+          />
+        )}
 
         <Typography
           variant="body2"

@@ -3,6 +3,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Can } from '@components/ui';
 import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
+import { getCoverStyle } from '@utils-functions/media.utils';
 import type { FilesCardsProps } from '@features-workspaces/files/types/file.types';
 import { files as filesRoutes } from '@features-workspaces/files/routes/routes';
 
@@ -38,9 +39,7 @@ export function FilesCards({ files, onDelete }: FilesCardsProps) {
                             <Box
                                 sx={{
                                     height: 64,
-                                    backgroundImage: `url("${file.coverImage}")`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
+                                    ...getCoverStyle(file.coverImage),
                                     borderBottom: '1.5px solid',
                                     borderColor: 'divider',
                                 }}

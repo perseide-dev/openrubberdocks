@@ -38,6 +38,14 @@ export function useFileBlocksService(fileUuid: string) {
     });
 }
 
+export function fetchFileBlocks(queryClient: import('@tanstack/react-query').QueryClient, fileUuid: string): Promise<WorkspaceBlock[]> {
+    return queryClient.fetchQuery({
+        queryKey: [...BLOCK_QUERY_KEYS.ALL, { fileUuid }],
+        queryFn: () => getBlocksRepository({ fileUuid }),
+        staleTime: BLOCK_DEFAULTS.STALE_TIME,
+    });
+}
+
 export function useBlockDetailService(uuid: string) {
     return useQuery<WorkspaceBlock, AppError>({
         queryKey: BLOCK_QUERY_KEYS.DETAIL(uuid),

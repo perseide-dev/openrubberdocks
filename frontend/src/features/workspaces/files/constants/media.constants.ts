@@ -1,0 +1,113 @@
+import type { CoverPreset, IconPreset, BuiltInTemplate } from '@features-workspaces/files/types/file.types';
+
+export const BRUTALIST_COVER_PRESETS: CoverPreset[] = [
+  {
+    id: 'blueprint-grid',
+    label: '// BLUEPRINT_GRID',
+    previewColor: '#0c1017',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%230c1017"/><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%231e293b" stroke-width="1"/></svg>',
+  },
+  {
+    id: 'electric-yellow',
+    label: '// ELECTRIC_YELLOW',
+    previewColor: '#FFE600',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23FFE600"/><path d="M 0 60 L 60 0 M 30 60 L 60 30 M 0 30 L 30 0" stroke="%23000000" stroke-width="4"/></svg>',
+  },
+  {
+    id: 'terminal-scanline',
+    label: '// TERMINAL_MATRIX',
+    previewColor: '#021206',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="%23021206"/><rect y="10" width="20" height="1" fill="%2300ff41" opacity="0.3"/></svg>',
+  },
+  {
+    id: 'safety-orange',
+    label: '// SAFETY_ORANGE',
+    previewColor: '#FF5522',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%23FF5522"/><circle cx="25" cy="25" r="8" fill="none" stroke="%23000000" stroke-width="2"/></svg>',
+  },
+  {
+    id: 'dark-wireframe',
+    label: '// DARK_WIREFRAME',
+    previewColor: '#000000',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23000000"/><line x1="0" y1="40" x2="80" y2="40" stroke="%23222222" stroke-width="1"/><line x1="40" y1="0" x2="40" y2="80" stroke="%23222222" stroke-width="1"/></svg>',
+  },
+];
+
+export const BRUTALIST_ICON_PRESETS: IconPreset[] = [
+  { id: 'lightning', label: 'Lightning', icon: '⚡' },
+  { id: 'disk', label: 'Disk', icon: '💾' },
+  { id: 'tools', label: 'Tools', icon: '🛠️' },
+  { id: 'bot', label: 'Alien', icon: '👾' },
+  { id: 'measure', label: 'Ruler', icon: '📐' },
+  { id: 'lab', label: 'Test Tube', icon: '🧪' },
+  { id: 'folder', label: 'Folder', icon: '📁' },
+  { id: 'clipboard', label: 'Clipboard', icon: '📋' },
+  { id: 'lock', label: 'Lock', icon: '🔒' },
+  { id: 'satellite', label: 'Satellite', icon: '🛰️' },
+  { id: 'gear', label: 'Gear', icon: '⚙️' },
+  { id: 'antenna', label: 'Antenna', icon: '📡' },
+  { id: 'memo', label: 'Memo', icon: '📝' },
+  { id: 'target', label: 'Target', icon: '🎯' },
+  { id: 'rocket', label: 'Rocket', icon: '🚀' },
+  { id: 'shield', label: 'Shield', icon: '🛡️' },
+  { id: 'chart', label: 'Chart', icon: '📊' },
+  { id: 'construction', label: 'Structure', icon: '🏗️' },
+];
+
+export const BUILT_IN_FILE_TEMPLATES: BuiltInTemplate[] = [
+  {
+    id: 'engineering-rfc',
+    title: 'RFC: Architecture Specification',
+    description: 'Technical design document specifying system components, database models and APIs.',
+    icon: '📐',
+    coverImage: BRUTALIST_COVER_PRESETS[0].url,
+    blocks: [
+      { type: 'heading_1', content: '1. Executive Summary' },
+      { type: 'text', content: 'Describe the objective of this architectural change and the high-level technical scope.' },
+      { type: 'heading_1', content: '2. Motivation & Background' },
+      { type: 'text', content: 'Current architecture limitations, engineering requirements, and business goals.' },
+      { type: 'heading_1', content: '3. Technical Specification' },
+      { type: 'code', content: '// Data Schema / API Endpoints\ninterface ServiceContract {\n  id: string;\n  status: "ACTIVE" | "ARCHIVED";\n}' },
+      { type: 'heading_1', content: '4. Implementation Plan & Milestones' },
+      { type: 'todo', content: 'Define database migrations and repository methods', checked: false },
+      { type: 'todo', content: 'Enforce RBAC scoped permissions on controller endpoints', checked: false },
+      { type: 'todo', content: 'Build front-end 4-tier UI flow without relative imports', checked: false },
+    ],
+  },
+  {
+    id: 'sprint-sync',
+    title: 'Sprint Sync & Action Items',
+    description: 'Team agile sync agenda, completed deliverables, blockers, and assigned commitments.',
+    icon: '⚡',
+    coverImage: BRUTALIST_COVER_PRESETS[1].url,
+    blocks: [
+      { type: 'heading_1', content: 'Sprint Focus & Commitments' },
+      { type: 'text', content: 'Core objective to achieve before sprint closing.' },
+      { type: 'heading_2', content: 'Blockers & Technical Roadblocks' },
+      { type: 'bullet_list', content: 'Waiting for staging deployment credentials' },
+      { type: 'bullet_list', content: 'Third-party webhook rate limiting investigation' },
+      { type: 'heading_2', content: 'Action Items' },
+      { type: 'todo', content: 'Review and merge open pull requests', checked: false },
+      { type: 'todo', content: 'Run test suite verification in CI/CD pipeline', checked: false },
+      { type: 'todo', content: 'Update architecture documentation', checked: false },
+    ],
+  },
+  {
+    id: 'incident-postmortem',
+    title: 'Incident Post-Mortem & Root Cause',
+    description: 'Post-incident analysis log documenting timeline, root cause, and preventative action items.',
+    icon: '🛠️',
+    coverImage: BRUTALIST_COVER_PRESETS[2].url,
+    blocks: [
+      { type: 'heading_1', content: 'Incident Overview' },
+      { type: 'quote', content: '// SEVERITY: HIGH // SERVICE: CORE_STORAGE // TIME-TO-RESOLVE: 42m' },
+      { type: 'heading_2', content: 'Incident Timeline' },
+      { type: 'numbered_list', content: '14:02 UTC - Monitoring alerts elevated error rate.' },
+      { type: 'numbered_list', content: '14:15 UTC - Incident commander identified lock contention.' },
+      { type: 'numbered_list', content: '14:44 UTC - Rollback completed, health metrics returned to green.' },
+      { type: 'heading_2', content: 'Preventative Mitigations' },
+      { type: 'todo', content: 'Implement connection pool circuit breaker', checked: false },
+      { type: 'todo', content: 'Add automated regression test covering edge case', checked: false },
+    ],
+  },
+];

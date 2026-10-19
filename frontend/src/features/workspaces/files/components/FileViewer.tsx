@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Box, Checkbox, Chip, Divider, Typography } from '@mui/material';
 import type { BlockType } from '@features-workspaces/files/types/block.types';
 import type { FileViewerProps } from '@features-workspaces/files/types/file.types';
+import { getCoverStyle } from '@utils-functions/media.utils';
 
 interface BlockProperties {
     text?: unknown;
@@ -75,9 +76,7 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                     sx={{
                         width: '100%',
                         height: 180,
-                        backgroundImage: `url("${coverImage}")`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
+                        ...getCoverStyle(coverImage),
                         border: '2px solid',
                         borderColor: 'divider',
                     }}

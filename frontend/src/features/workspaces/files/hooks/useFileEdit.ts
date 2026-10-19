@@ -1,16 +1,16 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFileDetailService, useUpdateFileService } from '@features/workspaces/files/services/file.service';
+import { useFileDetailService, useUpdateFileService } from '@features-workspaces/files/services/file.service';
 import {
     useFileBlocksService,
     useCreateBlockService,
     useDeleteBlockService,
-} from '@features/workspaces/files/services/block.service';
-import { useBlockEditor } from '@features/workspaces/files/hooks/useBlockEditor';
-import { FILE_MESSAGES } from '@features/workspaces/files/constants/file.constants';
-import { files } from '@features/workspaces/files/routes/routes';
+} from '@features-workspaces/files/services/block.service';
+import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
+import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
+import { files } from '@features-workspaces/files/routes/routes';
 import type { AppError } from '@http-error/http-error.handler';
-import type { WorkspaceBlock } from '@features/workspaces/files/types/block.types';
+import type { WorkspaceBlock } from '@features-workspaces/files/types/block.types';
 
 function mapBlockToEditor(block: WorkspaceBlock) {
     const props = (block.properties ?? {}) as Record<string, unknown>;
@@ -34,15 +34,22 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const blockEditor = useBlockEditor();
 
     const [title, setTitle] = useState('');
+    const [icon, setIcon] = useState<string | null>(null);
+    const [coverImage, setCoverImage] = useState<string | null>(null);
+    const [isTemplate, setIsTemplate] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
     const hydratedKey = `${fileUuid}:${blocks.map((b) => b.uuid).join(',')}`;
     const lastHydratedKeyRef = useRef<string | null>(null);
-    const lastTitleRef = useRef<string | null>(null);
+    const lastFileRef = useRef<string | null>(null);
 
     useEffect(() => {
-        if (file?.title && lastTitleRef.current !== file.title) {
-            setTitle(file.title);
-            lastTitleRef.current = file.title;
+        if (file && lastFileRef.current !== file.uuid) {
+            setTitle(file.title || '');
+            setIcon(file.icon || null);
+            setCoverImage(file.coverImage || null);
+            setIsTemplate(Boolean(file.isTemplate));
+            lastFileRef.current = file.uuid;
         }
     }, [file]);
 
@@ -54,6 +61,9 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                 const e = mapBlockToEditor(b);
                 const id = blockEditor.addBlock(e.type);
                 blockEditor.updateBlock(id, e.content);
+                if (e.type === 'todo' && e.checked) {
+                    blockEditor.toggleChecked(id);
+                }
             });
             lastHydratedKeyRef.current = hydratedKey;
         }
@@ -73,7 +83,15 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         setErrorMessage(null);
         try {
             if (file) {
-                await updateFileMutation.mutateAsync({ uuid: file.uuid, payload: { title: trimmedTitle } });
+                await updateFileMutation.mutateAsync({
+                    uuid: file.uuid,
+                    payload: {
+                        title: trimmedTitle,
+                        icon: icon ?? undefined,
+                        coverImage: coverImage ?? undefined,
+                        isTemplate,
+                    },
+                });
             }
             for (let i = 0; i < blocks.length; i++) {
                 await deleteBlockMutation.mutateAsync(blocks[i].uuid);
@@ -94,14 +112,20 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             const errorDetail = appError?.errors?.[0]?.detail || appError?.message || FILE_MESSAGES.CREATE_ERROR;
             setErrorMessage(errorDetail);
         }
-    }, [title, file, blocks, blockEditor.blocks, updateFileMutation, deleteBlockMutation, createBlockMutation, navigate, workspaceUuid, fileUuid]);
+    }, [title, icon, coverImage, isTemplate, file, blocks, blockEditor.blocks, updateFileMutation, deleteBlockMutation, createBlockMutation, navigate, workspaceUuid, fileUuid]);
 
     return {
         title,
+        icon,
+        coverImage,
+        isTemplate,
         errorMessage,
         isSaving: updateFileMutation.isPending || createBlockMutation.isPending || deleteBlockMutation.isPending,
         blockEditor,
         handleTitleChange,
+        setIcon,
+        setCoverImage,
+        setIsTemplate,
         handleSave,
     };
 }

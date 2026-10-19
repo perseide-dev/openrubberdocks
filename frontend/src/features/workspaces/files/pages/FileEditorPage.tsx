@@ -4,9 +4,9 @@ import { Box, Button } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
-import { files as fileRoutes } from '@features/workspaces/files/routes/routes';
-import { FileEditor } from '@features/workspaces/files/components/FileEditor';
-import { useFileCreation } from '@features/workspaces/files/hooks/useFileCreation';
+import { files as fileRoutes } from '@features-workspaces/files/routes/routes';
+import { FileEditor } from '@features-workspaces/files/components/FileEditor';
+import { useFileCreation } from '@features-workspaces/files/hooks/useFileCreation';
 
 export function FileEditorPage() {
     const { uuid } = useParams<{ uuid: string }>();
@@ -15,13 +15,21 @@ export function FileEditorPage() {
 
     const {
         title,
+        icon,
+        coverImage,
+        isTemplate,
         errorMessage,
         isSaving,
         blockEditor,
         parentFile,
         parentPageUuid,
         workspaceFiles,
+        workspaceTemplates,
         handleTitleChange,
+        setIcon,
+        setCoverImage,
+        setIsTemplate,
+        handleApplyTemplate,
         handleSave,
     } = useFileCreation(workspaceUuid);
 
@@ -68,7 +76,15 @@ export function FileEditorPage() {
                 title={title}
                 errorMessage={errorMessage}
                 blockEditor={blockEditor}
+                icon={icon}
+                coverImage={coverImage}
+                isTemplate={isTemplate}
+                workspaceTemplates={workspaceTemplates}
                 onTitleChange={handleTitleChange}
+                onIconChange={setIcon}
+                onCoverChange={setCoverImage}
+                onToggleTemplate={setIsTemplate}
+                onApplyTemplate={handleApplyTemplate}
             />
         </Box>
     );

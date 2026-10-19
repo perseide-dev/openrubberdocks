@@ -27,10 +27,10 @@ export interface CreateFilePayload extends Record<string, unknown> {
 }
 
 export interface UpdateFilePayload extends Record<string, unknown> {
-    parentPageUuid?: string;
+    parentPageUuid?: string | null;
     title?: string;
-    icon?: string;
-    coverImage?: string;
+    icon?: string | null;
+    coverImage?: string | null;
     isTemplate?: boolean;
 }
 

@@ -87,8 +87,8 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                     uuid: file.uuid,
                     payload: {
                         title: trimmedTitle,
-                        icon: icon ?? undefined,
-                        coverImage: coverImage ?? undefined,
+                        icon,
+                        coverImage,
                         isTemplate,
                     },
                 });

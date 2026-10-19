@@ -1,17 +1,20 @@
 import { useState, useCallback, useMemo, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useCreateFileService, useWorkspaceFilesService } from '@features/workspaces/files/services/file.service';
-import { useCreateBlockService } from '@features/workspaces/files/services/block.service';
-import { useBlockEditor } from '@features/workspaces/files/hooks/useBlockEditor';
-import { FILE_MESSAGES } from '@features/workspaces/files/constants/file.constants';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCreateFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import { useCreateBlockService, fetchFileBlocks } from '@features-workspaces/files/services/block.service';
+import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
+import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
 import type { AppError } from '@http-error/http-error.handler';
+import type { BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
 /**
- * Orchestrates the file creation flow: title, block canvas and persistence of
- * the file followed by each of its blocks.
+ * Orchestrates the file creation flow: title, media (icon/cover), templates,
+ * block canvas and persistence of the file followed by each of its blocks.
  */
 export function useFileCreation(workspaceUuid: string) {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [searchParams] = useSearchParams();
     const parentPageUuid = searchParams.get('parent') || undefined;
 
@@ -25,13 +28,60 @@ export function useFileCreation(workspaceUuid: string) {
         return workspaceFiles.find((f) => f.uuid === parentPageUuid);
     }, [workspaceFiles, parentPageUuid]);
 
+    const workspaceTemplates = useMemo(() => {
+        return workspaceFiles.filter((f) => f.isTemplate);
+    }, [workspaceFiles]);
+
     const [title, setTitle] = useState('');
+    const [icon, setIcon] = useState<string | null>(null);
+    const [coverImage, setCoverImage] = useState<string | null>(null);
+    const [isTemplate, setIsTemplate] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
         setErrorMessage(null);
     }, []);
+
+    const handleApplyTemplate = useCallback(async (template: BuiltInTemplate | WorkspaceFile) => {
+        if ('blocks' in template && Array.isArray(template.blocks)) {
+            // Built-in system preset
+            setTitle(template.title);
+            setIcon(template.icon);
+            setCoverImage(template.coverImage);
+            blockEditor.reset();
+            template.blocks.forEach((b) => {
+                const id = blockEditor.addBlock(b.type);
+                blockEditor.updateBlock(id, b.content);
+                if (b.type === 'todo' && b.checked) {
+                    blockEditor.toggleChecked(id);
+                }
+            });
+        } else {
+            // Workspace template file
+            const fileTmpl = template as WorkspaceFile;
+            setTitle(`${fileTmpl.title} (Template Copy)`);
+            setIcon(fileTmpl.icon || null);
+            setCoverImage(fileTmpl.coverImage || null);
+            try {
+                const blocks = await fetchFileBlocks(queryClient, fileTmpl.uuid);
+                blockEditor.reset();
+                const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
+                sorted.forEach((b) => {
+                    const id = blockEditor.addBlock(b.type);
+                    const props = (b.properties ?? {}) as Record<string, unknown>;
+                    const text = typeof props.text === 'string' ? props.text : '';
+                    const checked = typeof props.checked === 'boolean' ? props.checked : false;
+                    blockEditor.updateBlock(id, text);
+                    if (b.type === 'todo' && checked) {
+                        blockEditor.toggleChecked(id);
+                    }
+                });
+            } catch {
+                // Keep empty blocks if template blocks couldn't be loaded
+            }
+        }
+    }, [blockEditor, queryClient]);
 
     const handleSave = useCallback(async () => {
         const trimmedTitle = title.trim();
@@ -48,6 +98,9 @@ export function useFileCreation(workspaceUuid: string) {
                 workspaceUuid,
                 title: trimmedTitle,
                 parentPageUuid,
+                icon: icon || undefined,
+                coverImage: coverImage || undefined,
+                isTemplate,
             });
 
             const blocks = blockEditor.blocks;
@@ -76,17 +129,25 @@ export function useFileCreation(workspaceUuid: string) {
 
             setErrorMessage(errorDetail);
         }
-    }, [title, workspaceUuid, parentPageUuid, createFileMutation, createBlockMutation, blockEditor, navigate]);
+    }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, createFileMutation, createBlockMutation, blockEditor, navigate]);
 
     return {
         title,
+        icon,
+        coverImage,
+        isTemplate,
         errorMessage,
         isSaving: createFileMutation.isPending || createBlockMutation.isPending,
         blockEditor,
         parentFile,
         parentPageUuid,
         workspaceFiles,
+        workspaceTemplates,
         handleTitleChange,
+        setIcon,
+        setCoverImage,
+        setIsTemplate,
+        handleApplyTemplate,
         handleSave,
     };
 }

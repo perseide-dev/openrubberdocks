@@ -7,9 +7,9 @@ import { RolesAdminPage } from '@features/admin/roles/pages/RolesAdminPage';
 
 export const AdminRouter: RouteObject[] = [
   {
-    path: '/admin',
+    path: '/rbac',
     handle: {
-      label: '// ACCESS_CONTROL',
+      label: '// RBAC',
       icon: AdminPanelSettingsOutlinedIcon,
     },
     children: [

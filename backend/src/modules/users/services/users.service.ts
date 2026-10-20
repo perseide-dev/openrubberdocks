@@ -73,4 +73,14 @@ export class UsersService {
       hashedRefreshToken,
     });
   }
+
+  async findAll(search?: string): Promise<User[]> {
+    const qb = this.usersRepository.createQueryBuilder('user');
+    if (search && search.trim()) {
+      const term = `%${search.trim().toLowerCase()}%`;
+      qb.where('LOWER(user.rubberHandle) LIKE :term OR LOWER(user.username) LIKE :term', { term });
+    }
+    qb.limit(20);
+    return await qb.getMany();
+  }
 }

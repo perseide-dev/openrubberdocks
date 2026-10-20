@@ -16,6 +16,13 @@ import { PermissionsGuard } from '@commonGuards/permissions.guard';
 export class AuthorizationController {
   constructor(private readonly roleService: RoleManagementService) {}
 
+  @UseInterceptors(new JsonApiInterceptor('permissions'))
+  @Get('permissions')
+  @RequirePermissions('role:read')
+  findAllPermissions() {
+    return this.roleService.findAllPermissions();
+  }
+
   @UseInterceptors(new JsonApiInterceptor('roles'))
   @Get('roles')
   @RequirePermissions('role:read') // Assuming you add this to permissions list

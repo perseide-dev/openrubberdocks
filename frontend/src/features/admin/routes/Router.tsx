@@ -1,4 +1,4 @@
-import type { RouteObject } from 'react-router-dom';
+import { Outlet, type RouteObject } from 'react-router-dom';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
@@ -7,9 +7,10 @@ import { RolesAdminPage } from '@features/admin/roles/pages/RolesAdminPage';
 
 export const AdminRouter: RouteObject[] = [
   {
-    path: '/rbac',
+    path: '/admin',
+    element: <Outlet />,
     handle: {
-      label: '// RBAC',
+      label: '// ACCESS_CONTROL',
       icon: AdminPanelSettingsOutlinedIcon,
     },
     children: [

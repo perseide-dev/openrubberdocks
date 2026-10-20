@@ -61,6 +61,7 @@ export function useRoleAdmin() {
     isFormModalOpen,
     setIsFormModalOpen,
     roleToEdit,
+    setRoleToEdit,
     roleToDelete,
     setRoleToDelete,
     errorMessage,

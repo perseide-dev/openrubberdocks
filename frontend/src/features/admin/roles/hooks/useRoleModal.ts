@@ -7,6 +7,7 @@ import type { AdminRoleItem } from '@features/admin/roles/types/role-admin.types
 
 export function useRoleModal(
   roleToEdit: AdminRoleItem | null,
+  open: boolean,
   onSuccess: () => void,
 ) {
   const [name, setName] = useState('');
@@ -17,13 +18,18 @@ export function useRoleModal(
   const createMutation = useCreateAdminRoleService();
   const updateMutation = useUpdateAdminRoleService();
 
+  const [prevOpen, setPrevOpen] = useState(open);
   const [prevRoleToEdit, setPrevRoleToEdit] = useState<AdminRoleItem | null>(roleToEdit);
-  if (roleToEdit !== prevRoleToEdit) {
+
+  if (open !== prevOpen || roleToEdit !== prevRoleToEdit) {
+    setPrevOpen(open);
     setPrevRoleToEdit(roleToEdit);
-    setName(roleToEdit?.name || '');
-    setDescription(roleToEdit?.description || '');
-    setSelectedPermissionUuids(roleToEdit?.permissions?.map((p) => p.uuid) || []);
-    setErrorMessage(null);
+    if (open) {
+      setName(roleToEdit?.name || '');
+      setDescription(roleToEdit?.description || '');
+      setSelectedPermissionUuids(roleToEdit?.permissions?.map((p) => p.uuid) || []);
+      setErrorMessage(null);
+    }
   }
 
   const togglePermission = useCallback((uuid: string) => {

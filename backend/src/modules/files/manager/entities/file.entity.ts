@@ -52,10 +52,10 @@ export class File {
     title: string;
 
     @Column({ type: 'varchar', nullable: true, comment: 'Emoji o URL' })
-    icon: string;
+    icon: string | null;
 
     @Column({ type: 'varchar', nullable: true, comment: 'URL' })
-    coverImage: string;
+    coverImage: string | null;
 
     @Column({ type: 'boolean', default: false, comment: 'Clave para el sistema de templates' })
     isTemplate: boolean;

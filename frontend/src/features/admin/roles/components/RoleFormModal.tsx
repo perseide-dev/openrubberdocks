@@ -39,7 +39,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({
     isSubmitting,
     handleSubmit,
     reset,
-  } = useRoleModal(roleToEdit, onSuccess);
+  } = useRoleModal(roleToEdit, open, onSuccess);
 
   const handleClose = () => {
     reset();

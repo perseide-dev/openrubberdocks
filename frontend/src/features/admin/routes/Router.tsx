@@ -10,7 +10,7 @@ export const AdminRouter: RouteObject[] = [
     path: '/admin',
     element: <Outlet />,
     handle: {
-      label: '// ACCESS_CONTROL',
+      label: '// RBAC',
       icon: AdminPanelSettingsOutlinedIcon,
     },
     children: [

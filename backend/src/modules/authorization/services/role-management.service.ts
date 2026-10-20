@@ -27,17 +27,28 @@ export class RoleManagementService {
     private readonly workspaceRepository: Repository<Workspace>,
   ) {}
 
-  async findAll(query: JsonApiQueryOptions) {
+  async findAll(query?: JsonApiQueryOptions) {
+    const relations = query?.relations && query.relations.length > 0
+      ? query.relations
+      : ['permissions'];
     return this.roleRepository.find({
-      relations: query.relations || [],
-      // In a full JSON:API implementation you would also map query.filters here
+      relations,
     });
   }
 
-  async findOne(uuid: string, query: JsonApiQueryOptions) {
+  async findAllPermissions() {
+    return this.permissionRepository.find({
+      order: { action: 'ASC' },
+    });
+  }
+
+  async findOne(uuid: string, query?: JsonApiQueryOptions) {
+    const relations = query?.relations && query.relations.length > 0
+      ? query.relations
+      : ['permissions'];
     const role = await this.roleRepository.findOne({
       where: { uuid },
-      relations: query.relations || [],
+      relations,
     });
 
     if (!role) {

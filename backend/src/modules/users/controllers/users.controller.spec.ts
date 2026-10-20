@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from '../services/users.service';
 import { UserType } from '../enums/users.enum';
+import { AccessControlService } from '@moduleAuthorization/services/access-control.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -16,6 +17,10 @@ describe('UsersController', () => {
       controllers: [UsersController],
       providers: [
         { provide: UsersService, useValue: service },
+        {
+          provide: AccessControlService,
+          useValue: { hasPermission: jest.fn().mockResolvedValue(true) },
+        },
       ],
     }).compile();
 

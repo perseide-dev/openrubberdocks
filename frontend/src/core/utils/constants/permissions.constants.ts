@@ -7,8 +7,11 @@ export const BASE_PERMISSIONS_ACTIONS = {
   WORKSPACE_DELETE: 'workspace:delete',
   DOCUMENT_READ: 'document:read',
   DOCUMENT_WRITE: 'document:write',
+  DOCUMENT_DELETE: 'document:delete',
   ROLE_READ: 'role:read',
   ROLE_CREATE: 'role:create',
+  ROLE_UPDATE: 'role:update',
+  ROLE_DELETE: 'role:delete',
   ROLE_ASSIGN: 'role:assign',
   GLOBAL_AUDIT: 'global:audit',
 } as const;

@@ -3,6 +3,7 @@ import { Box, Button, Tooltip } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { FilesView } from '@features/workspaces/files/components/FilesView';
+import { MembersTabContent } from '@features-workspaces/members/components/MembersTabContent';
 import { useWorkspaceFiles } from '@features/workspaces/files/hooks/useWorkspaceFiles';
 import { useWorkspaceDetailService, useDeleteWorkspaceService } from '@features/workspaces/manager/services/workspace.service';
 import { useDeleteFileService } from '@features/workspaces/files/services/file.service';
@@ -16,6 +17,7 @@ export function WorkspaceDetailPage() {
     const navigate = useNavigate();
     const wsUuid = uuid ?? '';
 
+    const [activeTab, setActiveTab] = useState<'files' | 'members'>('files');
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { files: workspaceFiles, viewMode, setViewMode } = useWorkspaceFiles(wsUuid);
     const { canMutateInWorkspace } = usePermissions();
@@ -78,12 +80,60 @@ export function WorkspaceDetailPage() {
                     )
                 }
             />
-            <FilesView
-                files={workspaceFiles}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                onDeleteFile={canMutate ? setFileToDelete : undefined}
-            />
+
+            {/* Brutalist Section Tabs */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 1,
+                    borderBottom: '2px solid',
+                    borderColor: 'divider',
+                    paddingBottom: 1,
+                }}
+            >
+                <Button
+                    variant={activeTab === 'files' ? 'contained' : 'outlined'}
+                    color="inherit"
+                    onClick={() => setActiveTab('files')}
+                    sx={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        borderRadius: 0,
+                    }}
+                >
+                    // FILES
+                </Button>
+                <Button
+                    variant={activeTab === 'members' ? 'contained' : 'outlined'}
+                    color="inherit"
+                    onClick={() => setActiveTab('members')}
+                    sx={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        borderRadius: 0,
+                    }}
+                >
+                    // MEMBERS
+                </Button>
+            </Box>
+
+            {activeTab === 'files' && (
+                <FilesView
+                    files={workspaceFiles}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    onDeleteFile={canMutate ? setFileToDelete : undefined}
+                />
+            )}
+
+            {activeTab === 'members' && (
+                <MembersTabContent
+                    workspaceUuid={wsUuid}
+                    canManage={canMutate}
+                />
+            )}
 
             {/* Modal: Delete Workspace */}
             <ConfirmModal

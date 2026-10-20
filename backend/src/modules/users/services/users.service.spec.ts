@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
+import { Role } from '@moduleAuthorization/entities/role.entity';
+import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { UserType } from '../enums/users.enum';
 
@@ -23,6 +25,14 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: repository,
+        },
+        {
+          provide: getRepositoryToken(Role),
+          useValue: { findOne: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(UserRoleScope),
+          useValue: { create: jest.fn(), save: jest.fn() },
         },
       ],
     }).compile();

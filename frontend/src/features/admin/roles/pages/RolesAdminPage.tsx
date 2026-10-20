@@ -26,6 +26,7 @@ export const RolesAdminPage: React.FC = () => {
     isFormModalOpen,
     setIsFormModalOpen,
     roleToEdit,
+    setRoleToEdit,
     roleToDelete,
     setRoleToDelete,
     errorMessage,
@@ -110,9 +111,13 @@ export const RolesAdminPage: React.FC = () => {
         open={isFormModalOpen}
         roleToEdit={roleToEdit}
         availablePermissions={availablePermissions}
-        onClose={() => setIsFormModalOpen(false)}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setRoleToEdit(null);
+        }}
         onSuccess={() => {
           setIsFormModalOpen(false);
+          setRoleToEdit(null);
           refetch();
         }}
       />

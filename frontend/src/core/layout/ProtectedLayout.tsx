@@ -13,11 +13,18 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircleIcon from '@mui/icons-material/Circle';
 import { useAuth } from '@global-hooks/useAuth';
+import { usePermissions } from '@global-hooks/usePermissions';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();
+  const { hasPermission } = usePermissions();
+  const isAdmin =
+    user?.type === 'coreAdmin' ||
+    hasPermission('role:create') ||
+    hasPermission('role:assign');
+
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -59,6 +66,10 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
       if (!handle || !handle.label) return null;
 
       const fullPath = buildPath(basePath, route.path);
+      if (fullPath.startsWith('/admin') && !isAdmin) {
+        return null;
+      }
+
       const IconComponent = handle.icon || CircleIcon;
 
       // Filtrar subrutas que tengan label

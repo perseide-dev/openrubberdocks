@@ -33,7 +33,8 @@
       "@moduleUsers/*": ["src/modules/users/*"],
       "@moduleWorkspace/*": ["src/modules/workspace/*"],
       "@moduleFiles/*": ["src/modules/files/*"],
-      "@moduleAuthorization/*": ["src/modules/authorization/*"]
+      "@moduleAuthorization/*": ["src/modules/authorization/*"],
+      "@moduleProjects/*": ["src/modules/projects/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

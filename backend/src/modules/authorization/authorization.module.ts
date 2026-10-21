@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from '@moduleAuthorization/entities/role.entity';
 import { Permission } from '@moduleAuthorization/entities/permission.entity';
@@ -9,6 +9,7 @@ import { AuthorizationController } from '@moduleAuthorization/controllers/author
 import { User } from '@moduleUsers/entities/user.entity';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([Role, Permission, UserRoleScope, User, Workspace])

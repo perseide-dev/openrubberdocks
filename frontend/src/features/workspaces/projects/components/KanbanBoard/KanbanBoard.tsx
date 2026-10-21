@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import {
     DndContext,
+    DragOverlay,
     PointerSensor,
     KeyboardSensor,
     useSensor,
     useSensors,
     closestCorners,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { KanbanColumn } from '@features-workspaces/projects/components/KanbanBoard/KanbanColumn';
-import type { KanbanBoardProps } from '@features-workspaces/projects/types/project.types';
+import { TaskCard } from '@features-workspaces/projects/components/KanbanBoard/TaskCard';
+import type { KanbanBoardProps, Task } from '@features-workspaces/projects/types/project.types';
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     statuses,
@@ -21,13 +23,26 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     onQuickAddTask,
     onMoveTask,
 }) => {
+    const [activeTask, setActiveTask] = useState<Task | null>(null);
+
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
     );
 
+    const handleDragStart = (event: DragStartEvent) => {
+        if (!canManage) return;
+        const task = tasks.find((t) => t.uuid === event.active.id);
+        setActiveTask(task || null);
+    };
+
+    const handleDragCancel = () => {
+        setActiveTask(null);
+    };
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+        setActiveTask(null);
         if (!over || !canManage) return;
 
         const activeTaskUuid = String(active.id);
@@ -42,7 +57,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         const isOverColumn = statuses.some((s) => s.uuid === overId);
         if (isOverColumn) {
             targetStatusUuid = overId;
-            const columnTasks = tasks.filter((t) => t.statusUuid === targetStatusUuid);
+            const columnTasks = tasks.filter(
+                (t) => t.statusUuid === targetStatusUuid && t.uuid !== activeTaskUuid,
+            );
             targetOrderIndex = columnTasks.length;
         } else {
             // Dropped on another task
@@ -50,7 +67,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             if (overTask) {
                 targetStatusUuid = overTask.statusUuid;
                 const columnTasks = tasks
-                    .filter((t) => t.statusUuid === targetStatusUuid)
+                    .filter((t) => t.statusUuid === targetStatusUuid && t.uuid !== activeTaskUuid)
                     .sort((a, b) => a.orderIndex - b.orderIndex);
                 const overIndex = columnTasks.findIndex((t) => t.uuid === overId);
                 targetOrderIndex = overIndex >= 0 ? overIndex : columnTasks.length;
@@ -66,7 +83,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
         >
             <Box
                 sx={{
@@ -105,6 +124,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     })
                 )}
             </Box>
+
+            <DragOverlay dropAnimation={null}>
+                {activeTask ? (
+                    <Box sx={{ width: 280, cursor: 'grabbing', opacity: 0.95 }}>
+                        <TaskCard task={activeTask} onTaskClick={() => {}} isOverlay />
+                    </Box>
+                ) : null}
+            </DragOverlay>
         </DndContext>
     );
 };

@@ -291,6 +291,9 @@ export function useCreateTaskService() {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
             });
+            queryClient.invalidateQueries({
+                queryKey: PROJECT_QUERY_KEYS.DETAIL(projectUuid),
+            });
         },
     });
 }
@@ -302,6 +305,9 @@ export function useUpdateTaskService() {
         onSuccess: (task, { projectUuid }) => {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
+            });
+            queryClient.invalidateQueries({
+                queryKey: PROJECT_QUERY_KEYS.DETAIL(projectUuid),
             });
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(task.uuid),
@@ -318,6 +324,9 @@ export function useMoveTaskService() {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
             });
+            queryClient.invalidateQueries({
+                queryKey: PROJECT_QUERY_KEYS.DETAIL(projectUuid),
+            });
         },
     });
 }
@@ -329,6 +338,9 @@ export function useDeleteTaskService() {
         onSuccess: (_data, { projectUuid }) => {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
+            });
+            queryClient.invalidateQueries({
+                queryKey: PROJECT_QUERY_KEYS.DETAIL(projectUuid),
             });
         },
     });

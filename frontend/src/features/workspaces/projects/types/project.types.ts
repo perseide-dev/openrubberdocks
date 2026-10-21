@@ -264,6 +264,7 @@ export interface CreateProjectModalProps {
 export interface TaskCardProps {
     task: Task;
     onTaskClick: (task: Task) => void;
+    isOverlay?: boolean;
 }
 
 export interface KanbanColumnProps {

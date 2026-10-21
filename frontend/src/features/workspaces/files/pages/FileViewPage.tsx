@@ -9,6 +9,8 @@ import { ConfirmModal, BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
+import { RevisionHistoryDrawer } from '@features-workspaces/files/components/RevisionHistoryDrawer';
+import { REVISION_LABELS } from '@features-workspaces/files/constants/revision.constants';
 
 export function FileViewPage() {
     const { workspaceUuid, fileUuid } = useParams<{ workspaceUuid: string; fileUuid: string }>();
@@ -17,10 +19,13 @@ export function FileViewPage() {
     const fUuid = fileUuid ?? '';
     const { file, blocks, isLoading } = useFileView(wsUuid, fUuid);
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
-    const { canMutateInWorkspace } = usePermissions();
+    const { canMutateInWorkspace, hasPermission } = usePermissions();
     const canMutate = canMutateInWorkspace(wsUuid);
+    const canReadHistory = hasPermission('document:read', wsUuid);
+    const canRestore = canMutate && hasPermission('document:write', wsUuid);
 
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const deleteFileMutation = useDeleteFileService();
 
     const breadcrumbItems = useMemo(() => {
@@ -55,6 +60,16 @@ export function FileViewPage() {
                 action={
                     canMutate ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>
+                            {canReadHistory && (
+                                <Button
+                                    color="inherit"
+                                    variant="outlined"
+                                    onClick={() => setIsHistoryOpen(true)}
+                                    disabled={isLoading || !file}
+                                >
+                                    {REVISION_LABELS.BUTTON_HISTORY}
+                                </Button>
+                            )}
                             <Button
                                 color="inherit"
                                 onClick={() => navigate(files.edit.build(wsUuid, fUuid))}
@@ -72,13 +87,25 @@ export function FileViewPage() {
                             </Button>
                         </Box>
                     ) : (
-                        <Tooltip title="// ACCESS: READ ONLY - MUTATION LOCKED">
-                            <span>
-                                <Button color="inherit" disabled>
-                                    // READ ONLY
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                            {canReadHistory && (
+                                <Button
+                                    color="inherit"
+                                    variant="outlined"
+                                    onClick={() => setIsHistoryOpen(true)}
+                                    disabled={isLoading || !file}
+                                >
+                                    {REVISION_LABELS.BUTTON_HISTORY}
                                 </Button>
-                            </span>
-                        </Tooltip>
+                            )}
+                            <Tooltip title="// ACCESS: READ ONLY - MUTATION LOCKED">
+                                <span>
+                                    <Button color="inherit" disabled>
+                                        // READ ONLY
+                                    </Button>
+                                </span>
+                            </Tooltip>
+                        </Box>
                     )
                 }
             />
@@ -104,6 +131,14 @@ export function FileViewPage() {
                 isLoading={deleteFileMutation.isPending}
                 onConfirm={handleConfirmDelete}
                 onClose={() => setIsDeleteOpen(false)}
+            />
+
+            <RevisionHistoryDrawer
+                open={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
+                fileUuid={fUuid}
+                workspaceUuid={wsUuid}
+                canRestore={canRestore}
             />
         </Box>
     );

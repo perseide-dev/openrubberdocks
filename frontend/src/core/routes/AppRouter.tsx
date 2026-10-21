@@ -11,11 +11,13 @@ import { ProtectedLayout } from '@layout/ProtectedLayout';
 import { LoginPage } from '@features/auth/pages/LoginPage';
 import { DashboardRouter } from '@features-workspaces/manager/routes/Router';
 import { FilesRouter } from '@features-workspaces/files/routes/Router';
+import { ProjectsRouter } from '@features-workspaces/projects/routes/Router';
 import { AdminRouter } from '@features/admin/routes/Router';
 
 const protectedModules = [
   ...DashboardRouter,
   ...FilesRouter,
+  ...ProjectsRouter,
   ...AdminRouter,
 ];
 

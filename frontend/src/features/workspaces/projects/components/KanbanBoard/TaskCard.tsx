@@ -13,7 +13,11 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskCardProps } from '@features-workspaces/projects/types/project.types';
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskClick }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({
+    task,
+    onTaskClick,
+    isOverlay = false,
+}) => {
     const {
         attributes,
         listeners,
@@ -21,27 +25,34 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskClick }) => {
         transform,
         transition,
         isDragging,
-    } = useSortable({ id: task.uuid });
+    } = useSortable({
+        id: task.uuid,
+        disabled: isOverlay,
+    });
 
     const subtaskCount = task.subtasks?.length || 0;
     const formattedDue = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : null;
 
-    const style: React.CSSProperties = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.4 : 1,
-        cursor: 'grab',
-    };
+    const style: React.CSSProperties = isOverlay
+        ? {
+              cursor: 'grabbing',
+          }
+        : {
+              transform: isDragging ? undefined : CSS.Translate.toString(transform),
+              transition,
+              opacity: isDragging ? 0.25 : 1,
+              cursor: 'grab',
+          };
 
     return (
         <Card
             ref={setNodeRef}
             style={style}
-            {...attributes}
-            {...listeners}
+            {...(!isOverlay ? attributes : {})}
+            {...(!isOverlay ? listeners : {})}
             variant="outlined"
         >
-            <CardActionArea onClick={() => onTaskClick(task)}>
+            <CardActionArea onClick={() => !isOverlay && onTaskClick(task)}>
                 <CardContent
                     sx={{
                         display: 'flex',

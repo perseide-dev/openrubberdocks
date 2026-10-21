@@ -6,6 +6,7 @@ import {
     useCreateBlockService,
     useDeleteBlockService,
 } from '@features-workspaces/files/services/block.service';
+import { useCreateFileRevisionService } from '@features-workspaces/files/services/revision.service';
 import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
 import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
 import { files } from '@features-workspaces/files/routes/routes';
@@ -31,6 +32,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const updateFileMutation = useUpdateFileService();
     const createBlockMutation = useCreateBlockService();
     const deleteBlockMutation = useDeleteBlockService();
+    const createRevisionMutation = useCreateFileRevisionService();
     const blockEditor = useBlockEditor();
 
     const [title, setTitle] = useState('');
@@ -106,13 +108,18 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                     orderIndex: i,
                 });
             }
+            try {
+                await createRevisionMutation.mutateAsync(fileUuid);
+            } catch {
+                // Non-fatal if revision creation fails
+            }
             navigate(files.view.build(workspaceUuid, fileUuid));
         } catch (err) {
             const appError = err as AppError;
             const errorDetail = appError?.errors?.[0]?.detail || appError?.message || FILE_MESSAGES.CREATE_ERROR;
             setErrorMessage(errorDetail);
         }
-    }, [title, icon, coverImage, isTemplate, file, blocks, blockEditor.blocks, updateFileMutation, deleteBlockMutation, createBlockMutation, navigate, workspaceUuid, fileUuid]);
+    }, [title, icon, coverImage, isTemplate, file, blocks, blockEditor.blocks, updateFileMutation, deleteBlockMutation, createBlockMutation, createRevisionMutation, navigate, workspaceUuid, fileUuid]);
 
     return {
         title,
@@ -120,7 +127,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         coverImage,
         isTemplate,
         errorMessage,
-        isSaving: updateFileMutation.isPending || createBlockMutation.isPending || deleteBlockMutation.isPending,
+        isSaving: updateFileMutation.isPending || createBlockMutation.isPending || deleteBlockMutation.isPending || createRevisionMutation.isPending,
         blockEditor,
         handleTitleChange,
         setIcon,

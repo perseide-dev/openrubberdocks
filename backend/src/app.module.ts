@@ -1,5 +1,3 @@
-import { FilesModule } from './modules/files/manager/files.module';
-import { BlocksModule } from './modules/files/blocks/blocks.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -8,10 +6,16 @@ import { validate, dataSourceOptions } from '@config/index';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule, UsersModule, WorkspaceModule } from '@modules/index';
 import { AuthorizationModule } from '@moduleAuthorization/authorization.module';
+import { FilesModule } from '@moduleFiles/manager/files.module';
+import { BlocksModule } from '@moduleFiles/blocks/blocks.module';
+import { ProjectsModule } from '@moduleProjects/projects.module';
 import { CreateCoreUserCommand } from '@commands/launch.command';
 
 @Module({
-  imports: [FilesModule, BlocksModule,
+  imports: [
+    FilesModule,
+    BlocksModule,
+    ProjectsModule,
     TypeOrmModule.forRoot(dataSourceOptions),
     ConfigModule.forRoot({
       validate,

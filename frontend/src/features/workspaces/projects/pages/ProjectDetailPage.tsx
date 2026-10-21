@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePermissions } from '@global-hooks/usePermissions';
 import { useProjectDetail } from '@features-workspaces/projects/hooks/useProjectDetail';
+import { useCreateTaskService } from '@features-workspaces/projects/services/project.service';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { KanbanBoard } from '@features-workspaces/projects/components/KanbanBoard/KanbanBoard';
 import { TimelineView } from '@features-workspaces/projects/components/TimelineView/TimelineView';
@@ -34,13 +35,25 @@ export const ProjectDetailPage: React.FC = () => {
     const pUuid = projectUuid ?? '';
     const wsUuid = workspaceUuid ?? '';
 
-    const { project, isLoading, isError, activeTab, setActiveTab } = useProjectDetail(pUuid);
+    const { project, tasks, isLoading, isError, activeTab, setActiveTab } = useProjectDetail(pUuid);
     const { canMutateInWorkspace } = usePermissions();
     const canManage = canMutateInWorkspace(wsUuid);
+
+    const createTaskMutation = useCreateTaskService();
 
     const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [timeLogTask, setTimeLogTask] = useState<Task | null>(null);
+
+    const handleQuickAddTask = async (statusUuid: string, title: string) => {
+        await createTaskMutation.mutateAsync({
+            projectUuid: pUuid,
+            payload: {
+                title,
+                statusUuid,
+            },
+        });
+    };
 
     const handleOpenCreateTask = () => {
         setSelectedTaskUuid(null);
@@ -85,7 +98,6 @@ export const ProjectDetailPage: React.FC = () => {
     const statuses = project.statuses ?? [];
     const types = project.types ?? [];
     const properties = project.propertyDefinitions ?? [];
-    const tasks = project.tasks ?? [];
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -160,7 +172,7 @@ export const ProjectDetailPage: React.FC = () => {
                     tasks={tasks}
                     canManage={canManage}
                     onTaskClick={handleTaskClick}
-                    onAddTask={() => handleOpenCreateTask()}
+                    onQuickAddTask={handleQuickAddTask}
                     onMoveTask={() => {}}
                 />
             )}

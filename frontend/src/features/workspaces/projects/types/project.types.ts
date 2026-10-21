@@ -271,7 +271,7 @@ export interface KanbanColumnProps {
     tasks: Task[];
     canManage: boolean;
     onTaskClick: (task: Task) => void;
-    onAddTask: (statusUuid: string) => void;
+    onQuickAddTask: (statusUuid: string, title: string) => Promise<void> | void;
     onMoveTask: (taskUuid: string, targetStatusUuid: string, newOrderIndex: number) => void;
 }
 
@@ -281,7 +281,7 @@ export interface KanbanBoardProps {
     tasks: Task[];
     canManage: boolean;
     onTaskClick: (task: Task) => void;
-    onAddTask: (statusUuid: string) => void;
+    onQuickAddTask: (statusUuid: string, title: string) => Promise<void> | void;
     onMoveTask: (taskUuid: string, targetStatusUuid: string, newOrderIndex: number) => void;
 }
 

@@ -16,17 +16,27 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
     tasks,
     canManage,
     onTaskClick,
-    onAddTask,
+    onQuickAddTask,
 }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [quickTitle, setQuickTitle] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleQuickSubmit = (e: React.FormEvent) => {
+    const handleQuickSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!quickTitle.trim()) return;
-        onAddTask(status.uuid);
-        setIsAdding(false);
-        setQuickTitle('');
+        const trimmed = quickTitle.trim();
+        if (!trimmed || isSubmitting) return;
+
+        try {
+            setIsSubmitting(true);
+            await onQuickAddTask(status.uuid, trimmed);
+            setQuickTitle('');
+            setIsAdding(false);
+        } catch {
+            // Keep open on error
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -80,11 +90,18 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                         autoFocus
                         fullWidth
                         size="small"
-                        placeholder="Task title..."
+                        placeholder="Task title... (Enter to save)"
                         value={quickTitle}
                         onChange={(e) => setQuickTitle(e.target.value)}
+                        disabled={isSubmitting}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                                setIsAdding(false);
+                                setQuickTitle('');
+                            }
+                        }}
                         onBlur={() => {
-                            if (!quickTitle.trim()) setIsAdding(false);
+                            if (!quickTitle.trim() && !isSubmitting) setIsAdding(false);
                         }}
                     />
                 </Box>

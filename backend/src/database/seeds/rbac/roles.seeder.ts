@@ -24,6 +24,9 @@ export class RolesSeeder implements Seeder {
         permissions: allPermissions,
       });
       await roleRepository.save(superAdminRole);
+    } else {
+      superAdminRole.permissions = allPermissions;
+      await roleRepository.save(superAdminRole);
     }
 
     // 2. External Reader Role
@@ -32,14 +35,17 @@ export class RolesSeeder implements Seeder {
       relations: ['permissions'],
     });
 
+    const readPermissions = allPermissions.filter((p) => p.action.includes('read'));
     if (!externalReaderRole) {
-      const readPermissions = allPermissions.filter((p) => p.action.includes('read'));
       externalReaderRole = roleRepository.create({
         name: 'External Reader',
         description: 'External user with read-only access to specific scopes',
         isSystemDefined: true,
         permissions: readPermissions,
       });
+      await roleRepository.save(externalReaderRole);
+    } else {
+      externalReaderRole.permissions = readPermissions;
       await roleRepository.save(externalReaderRole);
     }
   }

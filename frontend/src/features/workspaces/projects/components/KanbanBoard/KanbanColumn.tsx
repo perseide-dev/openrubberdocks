@@ -7,6 +7,8 @@ import {
     Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { TaskCard } from '@features-workspaces/projects/components/KanbanBoard/TaskCard';
 import { PROJECT_LABELS } from '@features-workspaces/projects/constants/project.constants';
 import type { KanbanColumnProps } from '@features-workspaces/projects/types/project.types';
@@ -18,6 +20,10 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
     onTaskClick,
     onQuickAddTask,
 }) => {
+    const { setNodeRef, isOver } = useDroppable({
+        id: status.uuid,
+    });
+
     const [isAdding, setIsAdding] = useState(false);
     const [quickTitle, setQuickTitle] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,35 +115,46 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
             {/* Tasks Container */}
             <Box
+                ref={setNodeRef}
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 1.5,
                     overflowY: 'auto',
                     maxHeight: 'calc(100vh - 280px)',
+                    minHeight: 120,
+                    padding: 0.5,
+                    border: '1.5px dashed',
+                    borderColor: isOver ? 'primary.main' : 'divider',
+                    transition: 'border-color 0.15s ease',
                 }}
             >
-                {tasks.length === 0 ? (
-                    <Box sx={{ padding: 2, textAlign: 'center' }}>
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                fontFamily: 'monospace',
-                                color: 'text.secondary',
-                            }}
-                        >
-                            {PROJECT_LABELS.NO_TASKS}
-                        </Typography>
-                    </Box>
-                ) : (
-                    tasks.map((task) => (
-                        <TaskCard
-                            key={task.uuid}
-                            task={task}
-                            onTaskClick={onTaskClick}
-                        />
-                    ))
-                )}
+                <SortableContext
+                    items={tasks.map((t) => t.uuid)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {tasks.length === 0 ? (
+                        <Box sx={{ padding: 2, textAlign: 'center' }}>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    fontFamily: 'monospace',
+                                    color: 'text.secondary',
+                                }}
+                            >
+                                {PROJECT_LABELS.NO_TASKS}
+                            </Typography>
+                        </Box>
+                    ) : (
+                        tasks.map((task) => (
+                            <TaskCard
+                                key={task.uuid}
+                                task={task}
+                                onTaskClick={onTaskClick}
+                            />
+                        ))
+                    )}
+                </SortableContext>
             </Box>
         </Box>
     );

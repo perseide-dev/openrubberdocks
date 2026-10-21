@@ -56,6 +56,8 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
     // New property form state
     const [propertyName, setPropertyName] = useState('');
     const [propertyType, setPropertyType] = useState<TaskPropertyType>('text');
+    const [optionTags, setOptionTags] = useState<string[]>([]);
+    const [currentOptionInput, setCurrentOptionInput] = useState('');
 
     // Confirm modal states
     const [itemToDelete, setItemToDelete] = useState<{
@@ -63,6 +65,19 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
         uuid: string;
         name: string;
     } | null>(null);
+
+    const handleAddOption = () => {
+        const trimmed = currentOptionInput.trim();
+        if (!trimmed) return;
+        if (!optionTags.includes(trimmed)) {
+            setOptionTags((prev) => [...prev, trimmed]);
+        }
+        setCurrentOptionInput('');
+    };
+
+    const handleRemoveOption = (indexToRemove: number) => {
+        setOptionTags((prev) => prev.filter((_, i) => i !== indexToRemove));
+    };
 
     const onAddStatus = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,12 +105,28 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
     const onAddProperty = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!propertyName.trim()) return;
+        const isSelect = propertyType === 'select' || propertyType === 'multi_select';
+        if (isSelect && optionTags.length === 0) {
+            return;
+        }
+
+        const options = isSelect
+            ? optionTags.map((opt, idx) => ({
+                  id: `opt_${Date.now()}_${idx}`,
+                  label: opt,
+                  value: opt,
+              }))
+            : undefined;
+
         await handleCreateProperty({
             name: propertyName.trim(),
             type: propertyType,
+            options,
             orderIndex: properties.length,
         });
         setPropertyName('');
+        setOptionTags([]);
+        setCurrentOptionInput('');
     };
 
     const onConfirmDelete = async () => {
@@ -281,57 +312,138 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
                     </Typography>
 
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, my: 1 }}>
-                        {properties.map((p) => (
-                            <Chip
-                                key={p.uuid}
-                                label={`${p.name} (${p.type})`}
-                                onDelete={canManage ? () => setItemToDelete({ type: 'property', uuid: p.uuid, name: p.name }) : undefined}
-                                deleteIcon={canManage ? <DeleteOutlinedIcon /> : undefined}
-                                sx={{
-                                    fontFamily: 'monospace',
-                                    fontWeight: 600,
-                                }}
-                            />
-                        ))}
+                        {properties.map((p) => {
+                            const optionsLabel =
+                                p.options && p.options.length > 0
+                                    ? `: [${p.options.map((o) => o.label || o.value).join(', ')}]`
+                                    : '';
+                            return (
+                                <Chip
+                                    key={p.uuid}
+                                    label={`${p.name} (${p.type}${optionsLabel})`}
+                                    onDelete={
+                                        canManage
+                                            ? () =>
+                                                  setItemToDelete({
+                                                      type: 'property',
+                                                      uuid: p.uuid,
+                                                      name: p.name,
+                                                  })
+                                            : undefined
+                                    }
+                                    deleteIcon={canManage ? <DeleteOutlinedIcon /> : undefined}
+                                    sx={{
+                                        fontFamily: 'monospace',
+                                        fontWeight: 600,
+                                    }}
+                                />
+                            );
+                        })}
                     </Box>
 
                     {canManage && (
                         <Box
                             component="form"
                             onSubmit={onAddProperty}
-                            sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mt: 1 }}
+                            sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}
                         >
-                            <TextField
-                                size="small"
-                                label="Property Name"
-                                value={propertyName}
-                                onChange={(e) => setPropertyName(e.target.value)}
-                                placeholder="e.g. Impact Score"
-                                required
-                                sx={{ minWidth: 160 }}
-                            />
-                            <TextField
-                                size="small"
-                                select
-                                label="Field Type"
-                                value={propertyType}
-                                onChange={(e) => setPropertyType(e.target.value as TaskPropertyType)}
-                                sx={{ minWidth: 140 }}
-                            >
-                                {PROPERTY_TYPE_OPTIONS.map((opt) => (
-                                    <MenuItem key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                disabled={isSubmitting || !propertyName.trim()}
-                            >
-                                ADD PROPERTY
-                            </Button>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <TextField
+                                    size="small"
+                                    label="Property Name"
+                                    value={propertyName}
+                                    onChange={(e) => setPropertyName(e.target.value)}
+                                    placeholder="e.g. Impact Score"
+                                    required
+                                    sx={{ minWidth: 160 }}
+                                />
+                                <TextField
+                                    size="small"
+                                    select
+                                    label="Field Type"
+                                    value={propertyType}
+                                    onChange={(e) => setPropertyType(e.target.value as TaskPropertyType)}
+                                    sx={{ minWidth: 140 }}
+                                >
+                                    {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                                        <MenuItem key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    disabled={
+                                        isSubmitting ||
+                                        !propertyName.trim() ||
+                                        ((propertyType === 'select' || propertyType === 'multi_select') &&
+                                            optionTags.length === 0)
+                                    }
+                                >
+                                    ADD PROPERTY
+                                </Button>
+                            </Box>
+
+                            {/* Option Builder for Select & Multi-Select */}
+                            {(propertyType === 'select' || propertyType === 'multi_select') && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 1.5,
+                                        p: 2,
+                                        border: '1px dashed',
+                                        borderColor: 'divider',
+                                    }}
+                                >
+                                    <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                                        // DEFINE_OPTIONS (Required for {propertyType.toUpperCase()}):
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <TextField
+                                            size="small"
+                                            label="Option Label"
+                                            placeholder="e.g. High Priority"
+                                            value={currentOptionInput}
+                                            onChange={(e) => setCurrentOptionInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleAddOption();
+                                                }
+                                            }}
+                                            sx={{ minWidth: 200 }}
+                                        />
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            onClick={handleAddOption}
+                                            disabled={!currentOptionInput.trim()}
+                                        >
+                                            + ADD OPTION
+                                        </Button>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {optionTags.map((tag, idx) => (
+                                            <Chip
+                                                key={idx}
+                                                size="small"
+                                                label={tag}
+                                                onDelete={() => handleRemoveOption(idx)}
+                                                deleteIcon={<DeleteOutlinedIcon />}
+                                                sx={{ fontFamily: 'monospace' }}
+                                            />
+                                        ))}
+                                        {optionTags.length === 0 && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                Add at least one option before saving this property.
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            )}
                         </Box>
                     )}
                 </CardContent>

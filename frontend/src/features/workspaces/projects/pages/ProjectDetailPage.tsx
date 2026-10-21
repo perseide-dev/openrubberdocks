@@ -13,7 +13,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePermissions } from '@global-hooks/usePermissions';
 import { useProjectDetail } from '@features-workspaces/projects/hooks/useProjectDetail';
-import { useCreateTaskService } from '@features-workspaces/projects/services/project.service';
+import {
+    useCreateTaskService,
+    useMoveTaskService,
+} from '@features-workspaces/projects/services/project.service';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { KanbanBoard } from '@features-workspaces/projects/components/KanbanBoard/KanbanBoard';
 import { TimelineView } from '@features-workspaces/projects/components/TimelineView/TimelineView';
@@ -40,6 +43,7 @@ export const ProjectDetailPage: React.FC = () => {
     const canManage = canMutateInWorkspace(wsUuid);
 
     const createTaskMutation = useCreateTaskService();
+    const moveTaskMutation = useMoveTaskService();
 
     const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -51,6 +55,21 @@ export const ProjectDetailPage: React.FC = () => {
             payload: {
                 title,
                 statusUuid,
+            },
+        });
+    };
+
+    const handleMoveTask = async (
+        taskUuid: string,
+        targetStatusUuid: string,
+        newOrderIndex: number,
+    ) => {
+        await moveTaskMutation.mutateAsync({
+            taskUuid,
+            projectUuid: pUuid,
+            payload: {
+                statusUuid: targetStatusUuid,
+                orderIndex: newOrderIndex,
             },
         });
     };
@@ -173,7 +192,7 @@ export const ProjectDetailPage: React.FC = () => {
                     canManage={canManage}
                     onTaskClick={handleTaskClick}
                     onQuickAddTask={handleQuickAddTask}
-                    onMoveTask={() => {}}
+                    onMoveTask={handleMoveTask}
                 />
             )}
 

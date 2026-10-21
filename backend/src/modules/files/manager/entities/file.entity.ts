@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Block } from '@moduleFiles/blocks/entities/block.entity';
+import { FileRevision } from '@moduleFiles/manager/entities/file-revision.entity';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 import { User } from '@moduleUsers/entities/user.entity';
 
@@ -73,6 +74,9 @@ export class File {
     // Relación con los bloques
     @OneToMany(() => Block, (block) => block.file)
     blocks: Block[];
+
+    @OneToMany(() => FileRevision, (revision) => revision.file)
+    revisions: FileRevision[];
 
     @CreateDateColumn()
     createdAt: Date;

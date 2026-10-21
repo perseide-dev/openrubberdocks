@@ -15,3 +15,6 @@ export { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeS
 export { IconPickerPopover } from '@features-workspaces/files/components/IconPickerPopover';
 export { CoverPickerPopover } from '@features-workspaces/files/components/CoverPickerPopover';
 export { TemplateSelectorModal } from '@features-workspaces/files/components/TemplateSelectorModal';
+export { RevisionItemCard } from '@features-workspaces/files/components/RevisionItemCard';
+export { RevisionHistoryDrawer } from '@features-workspaces/files/components/RevisionHistoryDrawer';
+

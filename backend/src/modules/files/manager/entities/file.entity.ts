@@ -12,6 +12,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { Block } from '@moduleFiles/blocks/entities/block.entity';
 import { FileRevision } from '@moduleFiles/manager/entities/file-revision.entity';
+import { ProjectFileLink } from '@moduleProjects/entities/project-file-link.entity';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 import { User } from '@moduleUsers/entities/user.entity';
 
@@ -77,6 +78,9 @@ export class File {
 
     @OneToMany(() => FileRevision, (revision) => revision.file)
     revisions: FileRevision[];
+
+    @OneToMany(() => ProjectFileLink, (link) => link.file)
+    projectLinks: ProjectFileLink[];
 
     @CreateDateColumn()
     createdAt: Date;

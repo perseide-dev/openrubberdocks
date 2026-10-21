@@ -106,7 +106,7 @@ export class ProjectsService {
     async findOne(uuid: string): Promise<Project> {
         const project = await this.projectRepository.findOne({
             where: { uuid },
-            relations: ['statuses', 'types', 'propertyDefinitions'],
+            relations: ['statuses', 'types', 'propertyDefinitions', 'tasks'],
         });
 
         if (!project) {

@@ -8,7 +8,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     tasks,
     canManage,
     onTaskClick,
-    onAddTask,
+    onQuickAddTask,
     onMoveTask,
 }) => {
     return (
@@ -42,7 +42,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             tasks={columnTasks}
                             canManage={canManage}
                             onTaskClick={onTaskClick}
-                            onAddTask={onAddTask}
+                            onQuickAddTask={onQuickAddTask}
                             onMoveTask={onMoveTask}
                         />
                     );

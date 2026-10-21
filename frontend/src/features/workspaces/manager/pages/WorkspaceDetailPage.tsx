@@ -2,22 +2,23 @@ import { useState } from 'react';
 import { Box, Button, Tooltip } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
-import { FilesView } from '@features/workspaces/files/components/FilesView';
+import { FilesView } from '@features-workspaces/files/components/FilesView';
 import { MembersTabContent } from '@features-workspaces/members/components/MembersTabContent';
-import { useWorkspaceFiles } from '@features/workspaces/files/hooks/useWorkspaceFiles';
-import { useWorkspaceDetailService, useDeleteWorkspaceService } from '@features/workspaces/manager/services/workspace.service';
-import { useDeleteFileService } from '@features/workspaces/files/services/file.service';
+import { ProjectsTabContent } from '@features-workspaces/projects/components/ProjectsTabContent';
+import { useWorkspaceFiles } from '@features-workspaces/files/hooks/useWorkspaceFiles';
+import { useWorkspaceDetailService, useDeleteWorkspaceService } from '@features-workspaces/manager/services/workspace.service';
+import { useDeleteFileService } from '@features-workspaces/files/services/file.service';
 import { ConfirmModal } from '@components/ui/ConfirmModal';
-import { files } from '@features/workspaces/files/routes/routes';
+import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
-import type { WorkspaceFile } from '@features/workspaces/files/types/file.types';
+import type { WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
 export function WorkspaceDetailPage() {
     const { uuid } = useParams<{ uuid: string }>();
     const navigate = useNavigate();
     const wsUuid = uuid ?? '';
 
-    const [activeTab, setActiveTab] = useState<'files' | 'members'>('files');
+    const [activeTab, setActiveTab] = useState<'files' | 'members' | 'projects'>('files');
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { files: workspaceFiles, viewMode, setViewMode } = useWorkspaceFiles(wsUuid);
     const { canMutateInWorkspace } = usePermissions();
@@ -117,6 +118,19 @@ export function WorkspaceDetailPage() {
                 >
                     // MEMBERS
                 </Button>
+                <Button
+                    variant={activeTab === 'projects' ? 'contained' : 'outlined'}
+                    color="inherit"
+                    onClick={() => setActiveTab('projects')}
+                    sx={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        borderRadius: 0,
+                    }}
+                >
+                    // PROJECTS
+                </Button>
             </Box>
 
             {activeTab === 'files' && (
@@ -130,6 +144,13 @@ export function WorkspaceDetailPage() {
 
             {activeTab === 'members' && (
                 <MembersTabContent
+                    workspaceUuid={wsUuid}
+                    canManage={canMutate}
+                />
+            )}
+
+            {activeTab === 'projects' && (
+                <ProjectsTabContent
                     workspaceUuid={wsUuid}
                     canManage={canMutate}
                 />

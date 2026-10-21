@@ -9,14 +9,38 @@ import {
 } from '@mui/material';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { TaskCardProps } from '@features-workspaces/projects/types/project.types';
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskClick }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: task.uuid });
+
     const subtaskCount = task.subtasks?.length || 0;
     const formattedDue = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : null;
 
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        cursor: 'grab',
+    };
+
     return (
-        <Card variant="outlined">
+        <Card
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            variant="outlined"
+        >
             <CardActionArea onClick={() => onTaskClick(task)}>
                 <CardContent
                     sx={{

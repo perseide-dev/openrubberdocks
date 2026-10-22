@@ -59,9 +59,18 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                         {blocks.map((block, index) => {
                             let numberedCounter = 0;
                             let currentIndex = index;
-                            while (currentIndex >= 0 && blocks[currentIndex].type === 'numbered_list') {
-                                currentIndex -= 1;
-                                numberedCounter += 1;
+                            while (currentIndex >= 0) {
+                                if (blocks[currentIndex].type === 'numbered_list') {
+                                    numberedCounter += 1;
+                                    currentIndex -= 1;
+                                } else if (
+                                    blocks[currentIndex].type === 'text' &&
+                                    blocks[currentIndex].content.trim() === ''
+                                ) {
+                                    currentIndex -= 1;
+                                } else {
+                                    break;
+                                }
                             }
                             const number = block.type === 'numbered_list' ? numberedCounter : undefined;
 
@@ -108,7 +117,16 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                     <Button
                         variant="text"
                         size="small"
-                        onClick={() => addBlock('text')}
+                        onClick={() => {
+                            const lastBlock = blocks[blocks.length - 1];
+                            const nextType =
+                                lastBlock &&
+                                ['numbered_list', 'bullet_list', 'todo'].includes(lastBlock.type) &&
+                                lastBlock.content.trim() !== ''
+                                    ? lastBlock.type
+                                    : 'text';
+                            addBlock(nextType);
+                        }}
                         sx={{ alignSelf: 'flex-start' }}
                     >
                         + Add block

@@ -10,6 +10,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useBlockSelector } from '@features/workspaces/files/hooks/useBlockSelector';
 import { BLOCK_SLASH_TRIGGER } from '@features/workspaces/files/constants/block.constants';
+import { parseMarkdownToBlocks, serializeBlocksToMarkdown } from '@features/workspaces/files/utils/markdown-block.parser';
 import type {
     BlockType,
     FileEditorBlock,
@@ -23,9 +24,35 @@ import type {
  */
 export function useBlockEditor(): BlockEditorController {
     const [blocks, setBlocks] = useState<FileEditorBlock[]>([]);
+    const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]);
     const selector = useBlockSelector();
     const inputRefs = useRef(new Map<string, HTMLTextAreaElement>());
     const pendingFocusId = useRef<string | null>(null);
+
+    const selectAllBlocks = useCallback(() => {
+        setSelectedBlockIds(blocks.map((b) => b.id));
+    }, [blocks]);
+
+    const clearBlockSelection = useCallback(() => {
+        setSelectedBlockIds([]);
+    }, []);
+
+    const deleteSelectedBlocks = useCallback(() => {
+        setSelectedBlockIds((prevSelected) => {
+            if (prevSelected.length === 0) return prevSelected;
+            setBlocks((prevBlocks) => {
+                const remaining = prevBlocks.filter((b) => !prevSelected.includes(b.id));
+                if (remaining.length === 0) {
+                    const newId = crypto.randomUUID();
+                    pendingFocusId.current = newId;
+                    return [{ id: newId, type: 'text', content: '' }];
+                }
+                pendingFocusId.current = remaining[0].id;
+                return remaining;
+            });
+            return [];
+        });
+    }, []);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -230,15 +257,102 @@ export function useBlockEditor(): BlockEditorController {
                 }
             }
 
+            if (selectedBlockIds.length > 0) {
+                setSelectedBlockIds([]);
+            }
             updateBlock(id, content);
         },
-        [selector, blocks, updateBlock, convertBlock]
+        [selector, blocks, updateBlock, convertBlock, selectedBlockIds.length]
+    );
+
+    const handleBlockPaste = useCallback(
+        (id: string, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+            const clipboardText = event.clipboardData.getData('text/plain');
+            if (!clipboardText) return;
+
+            const hasNewlines = clipboardText.includes('\n');
+            const hasMarkdownTriggers = /^(\s*[-*+]|\s*\d+[.)]|\s*#|\s*>|\s*```|!\[)/m.test(clipboardText);
+
+            if (!hasNewlines && !hasMarkdownTriggers) {
+                return;
+            }
+
+            event.preventDefault();
+            const parsed = parseMarkdownToBlocks(clipboardText);
+            if (parsed.length === 0) return;
+
+            setBlocks((prev) => {
+                const targetIndex = prev.findIndex((b) => b.id === id);
+                if (targetIndex === -1) {
+                    return prev;
+                }
+
+                const targetBlock = prev[targetIndex];
+                const shouldReplace = targetBlock.content.trim() === '' && targetBlock.type === 'text';
+
+                const newBlocks: FileEditorBlock[] = parsed.map((p) => ({
+                    id: crypto.randomUUID(),
+                    type: p.type,
+                    content: p.content,
+                    checked: p.checked,
+                }));
+
+                const nextBlocks = [...prev];
+                if (shouldReplace) {
+                    nextBlocks.splice(targetIndex, 1, ...newBlocks);
+                } else {
+                    nextBlocks.splice(targetIndex + 1, 0, ...newBlocks);
+                }
+
+                const lastNewBlock = newBlocks[newBlocks.length - 1];
+                if (lastNewBlock) {
+                    pendingFocusId.current = lastNewBlock.id;
+                }
+
+                return nextBlocks;
+            });
+            setSelectedBlockIds([]);
+        },
+        []
     );
 
     const handleBlockKeyDown = useCallback(
         (id: string, event: KeyboardEvent<HTMLElement>) => {
             if (selector.isOpen) {
                 return;
+            }
+
+            // Full file selection via Ctrl+A / Cmd+A
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+                event.preventDefault();
+                selectAllBlocks();
+                return;
+            }
+
+            // Actions when multiple/all blocks are selected
+            if (selectedBlockIds.length > 0) {
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                    event.preventDefault();
+                    deleteSelectedBlocks();
+                    return;
+                }
+                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+                    event.preventDefault();
+                    const selected = blocks.filter((b) => selectedBlockIds.includes(b.id));
+                    const md = serializeBlocksToMarkdown(selected);
+                    void navigator.clipboard.writeText(md);
+                    return;
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    clearBlockSelection();
+                    return;
+                }
+                if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                    event.preventDefault();
+                    deleteSelectedBlocks();
+                    return;
+                }
             }
 
             const block = blocks.find((item) => item.id === id);
@@ -281,13 +395,27 @@ export function useBlockEditor(): BlockEditorController {
 
             if (event.key === 'Escape') {
                 closeSelector();
+                clearBlockSelection();
             }
         },
-        [selector.isOpen, blocks, addBlock, convertBlock, removeBlock, closeSelector, focusBlock]
+        [
+            selector.isOpen,
+            selectAllBlocks,
+            selectedBlockIds,
+            deleteSelectedBlocks,
+            blocks,
+            clearBlockSelection,
+            addBlock,
+            convertBlock,
+            removeBlock,
+            closeSelector,
+            focusBlock,
+        ]
     );
 
     const reset = useCallback(() => {
         setBlocks([]);
+        setSelectedBlockIds([]);
         inputRefs.current.clear();
         pendingFocusId.current = null;
     }, []);
@@ -308,6 +436,11 @@ export function useBlockEditor(): BlockEditorController {
         openInsertSelector,
         closeSelector,
         handleSelectBlockType,
+        selectedBlockIds,
+        selectAllBlocks,
+        clearBlockSelection,
+        deleteSelectedBlocks,
+        handleBlockPaste,
         registerInput,
         focusBlock,
         reset,

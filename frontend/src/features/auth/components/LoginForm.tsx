@@ -47,7 +47,7 @@ export function LoginForm() {
               component="img"
               src={appLogo}
               alt="OpenRubberDocks"
-              sx={{ width: 28, height: 28, objectFit: 'contain' }}
+              sx={{ width: 42, height: 42, objectFit: 'contain' }}
             />
           }
           title="IDENTITY AUTHORIZATION"

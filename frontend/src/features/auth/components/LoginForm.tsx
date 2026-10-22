@@ -17,7 +17,7 @@ import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import AlternateEmailOutlinedIcon from '@mui/icons-material/AlternateEmailOutlined';
 import { useLoginForm } from '@features/auth/hooks/useLoginForm';
-import appLogo from '@assets/logo.png';
+import appLogo from '@assets/openrubberdocs.svg';
 
 export function LoginForm() {
   const {

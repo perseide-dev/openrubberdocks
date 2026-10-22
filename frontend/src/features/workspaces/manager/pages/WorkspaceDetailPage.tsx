@@ -54,8 +54,8 @@ export function WorkspaceDetailPage() {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <WorkspaceHeader
-                title={workspace?.name || 'Work Space'}
-                subtitle={`// ${wsUuid || 'UNKNOWN'}`}
+                title={workspace?.name || 'Workspace'}
+                subtitle={workspace?.description ? `// ${workspace.description}` : '// WORKSPACE OVERVIEW'}
                 action={
                     canMutate ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>

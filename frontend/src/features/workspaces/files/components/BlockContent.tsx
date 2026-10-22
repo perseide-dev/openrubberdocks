@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { KeyboardEvent, ChangeEvent, ReactNode } from 'react';
+import type { KeyboardEvent, ChangeEvent, ClipboardEvent, ReactNode } from 'react';
 import { Box, Checkbox, Divider, InputBase } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { BLOCK_CONTENT_PLACEHOLDERS } from '@features/workspaces/files/constants/block.constants';
@@ -40,6 +40,7 @@ interface BlockContentProps {
   inputRef: (element: HTMLTextAreaElement | null) => void;
   onChange: (content: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
+  onPaste?: (event: ClipboardEvent<HTMLTextAreaElement>) => void;
   onToggleChecked: () => void;
 }
 
@@ -74,6 +75,7 @@ export function BlockContent({
   inputRef,
   onChange,
   onKeyDown,
+  onPaste,
   onToggleChecked,
 }: BlockContentProps) {
   const handleChange = useCallback(
@@ -94,6 +96,7 @@ export function BlockContent({
       placeholder={BLOCK_CONTENT_PLACEHOLDERS[block.type]}
       onChange={handleChange}
       onKeyDown={onKeyDown}
+      onPaste={onPaste}
       sx={{
         width: '100%',
         fontFamily: '"Space Grotesk", sans-serif',

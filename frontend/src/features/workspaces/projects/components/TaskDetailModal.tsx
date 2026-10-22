@@ -255,7 +255,20 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                 >
                                     {statuses.map((s) => (
                                         <MenuItem key={s.uuid} value={s.uuid}>
-                                            {s.name} [{s.category}]
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 10,
+                                                        height: 10,
+                                                        backgroundColor: s.color || '#71717A',
+                                                        border: '1px solid #000000',
+                                                        flexShrink: 0,
+                                                    }}
+                                                />
+                                                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                                                    {s.name} [{s.category}]
+                                                </Typography>
+                                            </Box>
                                         </MenuItem>
                                     ))}
                                 </TextField>
@@ -271,7 +284,22 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                 >
                                     {types.map((t) => (
                                         <MenuItem key={t.uuid} value={t.uuid}>
-                                            {t.icon ? `${t.icon} ` : ''}{t.name}
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {t.color && (
+                                                    <Box
+                                                        sx={{
+                                                            width: 10,
+                                                            height: 10,
+                                                            backgroundColor: t.color,
+                                                            border: '1px solid #000000',
+                                                            flexShrink: 0,
+                                                        }}
+                                                    />
+                                                )}
+                                                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                                                    {t.icon ? `${t.icon} ` : ''}{t.name}
+                                                </Typography>
+                                            </Box>
                                         </MenuItem>
                                     ))}
                                 </TextField>

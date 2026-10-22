@@ -16,6 +16,7 @@ import { useAuth } from '@global-hooks/useAuth';
 import { usePermissions } from '@global-hooks/usePermissions';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
+import appLogo from '@assets/logo.png';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();
@@ -126,10 +127,21 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
       <Box component="header" sx={{ paddingX: { xs: 2, md: 3 }, paddingY: 1.5, borderBottom: '2px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton sx={{ display: { xs: 'inline-flex', md: 'none' } }} onClick={() => setMobileDrawerOpen(true)} size="small">
             <MenuOutlinedIcon fontSize="small" />
           </IconButton>
+          <Box
+            component="img"
+            src={appLogo}
+            alt="OpenRubberDocks"
+            sx={{
+              width: 32,
+              height: 32,
+              objectFit: 'contain',
+              flexShrink: 0,
+            }}
+          />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>OPENRUBBERDOCKS</Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>// WORKSPACE TEMPLATE // 2026</Typography>
@@ -169,7 +181,15 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
 
         <Drawer anchor="left" open={mobileDrawerOpen} onClose={() => setMobileDrawerOpen(false)} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: 280, padding: 2.5 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>NAVIGATION</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                component="img"
+                src={appLogo}
+                alt="OpenRubberDocks"
+                sx={{ width: 24, height: 24, objectFit: 'contain' }}
+              />
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>NAVIGATION</Typography>
+            </Box>
             <IconButton onClick={() => setMobileDrawerOpen(false)} size="small"><LogoutOutlinedIcon fontSize="small" /></IconButton>
           </Box>
           {workspaceUuid ? (

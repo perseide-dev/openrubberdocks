@@ -23,6 +23,7 @@ import {
 } from '@features-workspaces/projects/services/project.service';
 import { ConfirmModal } from '@components/ui/ConfirmModal';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import { KanbanBoard } from '@features-workspaces/projects/components/KanbanBoard/KanbanBoard';
 import { TimelineView } from '@features-workspaces/projects/components/TimelineView/TimelineView';
 import { TasksTable } from '@features-workspaces/projects/components/TasksListView/TasksTable';
@@ -44,6 +45,7 @@ export const ProjectDetailPage: React.FC = () => {
     const wsUuid = workspaceUuid ?? '';
 
     const { project, tasks, isLoading, isError, activeTab, setActiveTab } = useProjectDetail(pUuid);
+    const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { canMutateInWorkspace } = usePermissions();
     const canManage = canMutateInWorkspace(wsUuid);
 
@@ -143,7 +145,7 @@ export const ProjectDetailPage: React.FC = () => {
             {/* Header */}
             <WorkspaceHeader
                 title={`${project.icon ? `${project.icon} ` : ''}${project.name}`}
-                subtitle={`// PROJECT: ${pUuid} | WS: ${wsUuid}`}
+                subtitle={workspace?.name ? `// WORKSPACE: ${workspace.name.toUpperCase()} // PROJECT` : '// PROJECT'}
                 action={
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button

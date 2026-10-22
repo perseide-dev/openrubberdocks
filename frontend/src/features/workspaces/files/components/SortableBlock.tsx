@@ -1,4 +1,4 @@
-import { useCallback, type KeyboardEvent } from 'react';
+import { useCallback, type KeyboardEvent, type ClipboardEvent } from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -11,8 +11,10 @@ import type { FileEditorBlock } from '@features/workspaces/files/types/block.typ
 interface SortableBlockProps {
     block: FileEditorBlock;
     number?: number;
+    isSelected?: boolean;
     onChange: (id: string, content: string) => void;
     onKeyDown: (id: string, event: KeyboardEvent<HTMLElement>) => void;
+    onPaste?: (id: string, event: ClipboardEvent<HTMLTextAreaElement>) => void;
     onRemove: (id: string) => void;
     onToggleChecked: (id: string) => void;
     onInsert: (element: HTMLElement, blockId: string) => void;
@@ -34,8 +36,10 @@ const ghostButtonSx = {
 export function SortableBlock({
     block,
     number,
+    isSelected,
     onChange,
     onKeyDown,
+    onPaste,
     onRemove,
     onToggleChecked,
     onInsert,
@@ -82,13 +86,21 @@ export function SortableBlock({
                 gap: 0.5,
                 padding: '4px 6px',
                 border: '1.5px solid',
-                borderColor: isDragging ? 'primary.main' : 'transparent',
-                backgroundColor: isDragging ? 'action.hover' : 'transparent',
+                borderColor: isDragging
+                    ? 'primary.main'
+                    : isSelected
+                    ? 'primary.main'
+                    : 'transparent',
+                backgroundColor: isDragging
+                    ? 'action.hover'
+                    : isSelected
+                    ? 'action.selected'
+                    : 'transparent',
                 opacity: isDragging ? 0.55 : 1,
                 transition: 'background-color 0.12s ease, border-color 0.12s ease',
                 '&:hover': {
-                    borderColor: 'divider',
-                    backgroundColor: 'action.hover',
+                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    backgroundColor: isSelected ? 'action.selected' : 'action.hover',
                 },
                 '&:hover .block-actions, &:focus-within .block-actions': {
                     opacity: 1,
@@ -138,6 +150,7 @@ export function SortableBlock({
                     inputRef={setInputRef}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    onPaste={(event) => onPaste?.(block.id, event)}
                     onToggleChecked={() => onToggleChecked(block.id)}
                 />
             </Box>

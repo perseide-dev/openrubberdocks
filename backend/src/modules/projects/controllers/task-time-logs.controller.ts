@@ -7,6 +7,8 @@ import {
     UseGuards,
     UseInterceptors,
     Req,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
@@ -42,6 +44,7 @@ export class TaskTimeLogsController {
     }
 
     @Delete(':logUuid')
+    @HttpCode(HttpStatus.NO_CONTENT)
     @RequirePermissions('task:time_log')
     remove(
         @Param('taskUuid') taskUuid: string,

@@ -27,6 +27,8 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         handleSelectBlockType,
         selectedBlockIds,
         handleBlockPaste,
+        handleBlockMouseDown,
+        handleBlockMouseEnter,
         clearBlockSelection,
         registerInput,
     } = blockEditor;
@@ -91,6 +93,8 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                                     onChange={handleBlockChange}
                                     onKeyDown={handleBlockKeyDown}
                                     onPaste={handleBlockPaste}
+                                    onMouseDown={handleBlockMouseDown}
+                                    onMouseEnter={handleBlockMouseEnter}
                                     onRemove={removeBlock}
                                     onToggleChecked={toggleChecked}
                                     onInsert={openInsertSelector}

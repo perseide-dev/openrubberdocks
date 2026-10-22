@@ -16,7 +16,12 @@ import { useProjectDetail } from '@features-workspaces/projects/hooks/useProject
 import {
     useCreateTaskService,
     useMoveTaskService,
+    useDeleteTaskService,
+    useProjectPropertiesService,
+    useProjectStatusesService,
+    useProjectTypesService,
 } from '@features-workspaces/projects/services/project.service';
+import { ConfirmModal } from '@components/ui/ConfirmModal';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { KanbanBoard } from '@features-workspaces/projects/components/KanbanBoard/KanbanBoard';
 import { TimelineView } from '@features-workspaces/projects/components/TimelineView/TimelineView';
@@ -44,10 +49,25 @@ export const ProjectDetailPage: React.FC = () => {
 
     const createTaskMutation = useCreateTaskService();
     const moveTaskMutation = useMoveTaskService();
+    const deleteTaskMutation = useDeleteTaskService();
+
+    const { data: projectProperties } = useProjectPropertiesService(pUuid);
+    const { data: projectStatuses } = useProjectStatusesService(pUuid);
+    const { data: projectTypes } = useProjectTypesService(pUuid);
 
     const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [timeLogTask, setTimeLogTask] = useState<Task | null>(null);
+    const [taskToDelete, setTaskToDelete] = useState<{ uuid: string; title: string } | null>(null);
+
+    const handleDeleteTaskFromTable = async () => {
+        if (!taskToDelete) return;
+        await deleteTaskMutation.mutateAsync({
+            taskUuid: taskToDelete.uuid,
+            projectUuid: pUuid,
+        });
+        setTaskToDelete(null);
+    };
 
     const handleQuickAddTask = async (statusUuid: string, title: string) => {
         await createTaskMutation.mutateAsync({
@@ -114,9 +134,9 @@ export const ProjectDetailPage: React.FC = () => {
         );
     }
 
-    const statuses = project.statuses ?? [];
-    const types = project.types ?? [];
-    const properties = project.propertyDefinitions ?? [];
+    const statuses = projectStatuses ?? project.statuses ?? [];
+    const types = projectTypes ?? project.types ?? [];
+    const properties = projectProperties ?? project.propertyDefinitions ?? [];
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -212,6 +232,10 @@ export const ProjectDetailPage: React.FC = () => {
                     properties={properties}
                     canManage={canManage}
                     onTaskClick={handleTaskClick}
+                    onDeleteTask={(taskUuid) => {
+                        const found = tasks.find((t) => t.uuid === taskUuid);
+                        setTaskToDelete({ uuid: taskUuid, title: found?.title || taskUuid });
+                    }}
                 />
             )}
 
@@ -249,6 +273,16 @@ export const ProjectDetailPage: React.FC = () => {
                 open={Boolean(timeLogTask)}
                 task={timeLogTask}
                 onClose={() => setTimeLogTask(null)}
+            />
+
+            {/* Confirm task deletion from TasksTable */}
+            <ConfirmModal
+                open={Boolean(taskToDelete)}
+                title="DELETE TASK"
+                description={`Are you sure you want to delete task "${taskToDelete?.title}"? All subtasks and logged hours will be removed.`}
+                isLoading={deleteTaskMutation.isPending}
+                onConfirm={handleDeleteTaskFromTable}
+                onClose={() => setTaskToDelete(null)}
             />
         </Box>
     );

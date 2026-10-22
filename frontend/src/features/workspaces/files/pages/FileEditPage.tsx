@@ -4,6 +4,7 @@ import { Box, Button } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { BrutalistBreadcrumbs } from '@components/ui';
 import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { FileEditor } from '@features-workspaces/files/components/FileEditor';
 import { useFileEdit } from '@features-workspaces/files/hooks/useFileEdit';
@@ -28,6 +29,7 @@ export function FileEditPage() {
         handleSave,
     } = useFileEdit(wsUuid, fUuid);
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
+    const { data: workspace } = useWorkspaceDetailService(wsUuid);
 
     const breadcrumbItems = useMemo(() => {
         if (!fUuid || allFiles.length === 0) return [];
@@ -50,8 +52,8 @@ export function FileEditPage() {
             )}
 
             <WorkspaceHeader
-                title="Edit File"
-                subtitle={`// ${wsUuid}`}
+                title={`Edit File: ${title || 'Untitled'}`}
+                subtitle={workspace?.name ? `// WORKSPACE: ${workspace.name.toUpperCase()} // EDITING` : '// EDITING DOCUMENT'}
                 action={
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button

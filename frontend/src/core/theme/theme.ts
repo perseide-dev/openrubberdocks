@@ -82,7 +82,7 @@ export const brutalistTheme: Theme = createTheme({
     action: {
       active: activeColors.text.primary,
       hover: 'rgba(0, 0, 0, 0.05)',
-      selected: activeColors.primary.main,
+      selected: 'rgba(0, 0, 0, 0.08)',
       disabled: activeColors.text.disabled,
       disabledBackground: '#E0E0E0',
     },
@@ -544,6 +544,16 @@ export const brutalistTheme: Theme = createTheme({
     // 7. Select & Menus (Flat popover)
     MuiSelect: {
       styleOverrides: {
+        root: {
+          backgroundColor: activeColors.background.paper,
+        },
+        select: {
+          backgroundColor: `${activeColors.background.paper} !important`,
+          color: activeColors.text.primary,
+          '&:focus': {
+            backgroundColor: `${activeColors.background.paper} !important`,
+          },
+        },
         icon: {
           color: activeColors.text.primary,
         },
@@ -572,20 +582,29 @@ export const brutalistTheme: Theme = createTheme({
           fontSize: '0.875rem',
           fontWeight: 600,
           padding: '10px 16px',
+          color: activeColors.text.primary,
           borderBottom: `1px solid ${activeColors.border.light}`,
           '&:last-child': {
             borderBottom: 'none',
           },
           '&:hover': {
-            backgroundColor: activeColors.primary.main,
-            color: activeColors.primary.contrastText,
+            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+            color: activeColors.text.primary,
           },
           '&.Mui-selected': {
-            backgroundColor: activeColors.primary.main,
-            color: activeColors.primary.contrastText,
+            backgroundColor: 'rgba(0, 0, 0, 0.08)',
+            color: activeColors.text.primary,
             fontWeight: 700,
+            borderLeft: `4px solid ${activeColors.primary.main}`,
             '&:hover': {
-              backgroundColor: '#222222',
+              backgroundColor: 'rgba(0, 0, 0, 0.12)',
+            },
+            '& .MuiTypography-root': {
+              fontWeight: 700,
+              color: activeColors.text.primary,
+            },
+            '& .MuiCheckbox-root': {
+              color: activeColors.border.main,
             },
           },
         },

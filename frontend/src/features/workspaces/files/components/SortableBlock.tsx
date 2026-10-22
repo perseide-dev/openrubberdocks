@@ -1,4 +1,4 @@
-import { useCallback, type KeyboardEvent, type ClipboardEvent } from 'react';
+import { useCallback, type KeyboardEvent, type ClipboardEvent, type MouseEvent } from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -15,6 +15,8 @@ interface SortableBlockProps {
     onChange: (id: string, content: string) => void;
     onKeyDown: (id: string, event: KeyboardEvent<HTMLElement>) => void;
     onPaste?: (id: string, event: ClipboardEvent<HTMLElement>) => void;
+    onMouseDown?: (id: string, event: MouseEvent<HTMLElement>) => void;
+    onMouseEnter?: (id: string) => void;
     onRemove: (id: string) => void;
     onToggleChecked: (id: string) => void;
     onInsert: (element: HTMLElement, blockId: string) => void;
@@ -40,6 +42,8 @@ export function SortableBlock({
     onChange,
     onKeyDown,
     onPaste,
+    onMouseDown,
+    onMouseEnter,
     onRemove,
     onToggleChecked,
     onInsert,
@@ -79,12 +83,15 @@ export function SortableBlock({
         <Box
             ref={setNodeRef}
             style={style}
+            onMouseDown={(event) => onMouseDown?.(block.id, event)}
+            onMouseEnter={() => onMouseEnter?.(block.id)}
             sx={{
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.5,
                 padding: '4px 6px',
+                userSelect: isSelected ? 'none' : 'auto',
                 border: '1.5px solid',
                 borderColor: isDragging
                     ? 'primary.main'

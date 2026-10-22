@@ -86,6 +86,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                                         fontFamily: 'monospace',
                                                         fontSize: '0.7rem',
                                                         height: 20,
+                                                        borderLeft: task.type.color ? `3px solid ${task.type.color}` : undefined,
                                                     }}
                                                 />
                                             )}
@@ -98,6 +99,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                                         fontFamily: 'monospace',
                                                         fontSize: '0.7rem',
                                                         height: 20,
+                                                        borderLeft: `4px solid ${task.status.color || '#71717A'}`,
                                                     }}
                                                 />
                                             )}

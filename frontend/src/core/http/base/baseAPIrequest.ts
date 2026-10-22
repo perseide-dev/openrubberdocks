@@ -185,7 +185,12 @@ export const baseAPIrequest = {
         return undefined as TResponse;
       }
 
-      const data = await response.json<unknown>();
+      const text = await response.text();
+      if (!text || !text.trim()) {
+        return undefined as TResponse;
+      }
+
+      const data = JSON.parse(text);
       const unwrap = options?.unwrapJsonApi ?? true;
       return (unwrap ? deserializeJsonApi<TResponse>(data) : data) as TResponse;
     } catch (error) {

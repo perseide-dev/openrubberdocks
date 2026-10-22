@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type KeyboardEvent } from 'react';
+import { useState, useCallback, useRef, useEffect, type KeyboardEvent } from 'react';
 import {
     PointerSensor,
     KeyboardSensor,
@@ -53,6 +53,68 @@ export function useBlockEditor(): BlockEditorController {
             return [];
         });
     }, []);
+
+    const dragStartBlockId = useRef<string | null>(null);
+
+    const handleBlockMouseDown = useCallback(
+        (id: string, e: React.MouseEvent<HTMLElement>) => {
+            if (e.button === 0) {
+                dragStartBlockId.current = id;
+                if (selectedBlockIds.length > 0 && !selectedBlockIds.includes(id)) {
+                    setSelectedBlockIds([]);
+                }
+            }
+        },
+        [selectedBlockIds]
+    );
+
+    const handleBlockMouseEnter = useCallback(
+        (id: string) => {
+            if (!dragStartBlockId.current) return;
+            if (dragStartBlockId.current === id) return;
+
+            const startIndex = blocks.findIndex((b) => b.id === dragStartBlockId.current);
+            const currentIndex = blocks.findIndex((b) => b.id === id);
+
+            if (startIndex !== -1 && currentIndex !== -1) {
+                const min = Math.min(startIndex, currentIndex);
+                const max = Math.max(startIndex, currentIndex);
+                const range = blocks.slice(min, max + 1).map((b) => b.id);
+                setSelectedBlockIds(range);
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            }
+        },
+        [blocks]
+    );
+
+    useEffect(() => {
+        const handleWindowMouseUp = () => {
+            dragStartBlockId.current = null;
+        };
+
+        const handleCopy = (e: ClipboardEvent) => {
+            if (selectedBlockIds.length > 0) {
+                e.preventDefault();
+                const selected = blocks.filter((b) => selectedBlockIds.includes(b.id));
+                const md = serializeBlocksToMarkdown(selected);
+                if (e.clipboardData) {
+                    e.clipboardData.setData('text/plain', md);
+                } else {
+                    void navigator.clipboard.writeText(md);
+                }
+            }
+        };
+
+        window.addEventListener('mouseup', handleWindowMouseUp);
+        document.addEventListener('copy', handleCopy);
+
+        return () => {
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+            document.removeEventListener('copy', handleCopy);
+        };
+    }, [selectedBlockIds, blocks]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -441,6 +503,8 @@ export function useBlockEditor(): BlockEditorController {
         clearBlockSelection,
         deleteSelectedBlocks,
         handleBlockPaste,
+        handleBlockMouseDown,
+        handleBlockMouseEnter,
         registerInput,
         focusBlock,
         reset,

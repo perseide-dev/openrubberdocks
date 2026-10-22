@@ -279,7 +279,7 @@ export function useTaskDetailService(taskUuid: string | null) {
         queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(taskUuid || ''),
         queryFn: () => getTaskByUuidRepository(taskUuid!),
         enabled: Boolean(taskUuid),
-        staleTime: PROJECT_DEFAULTS.STALE_TIME,
+        staleTime: 0,
     });
 }
 
@@ -287,13 +287,23 @@ export function useCreateTaskService() {
     const queryClient = useQueryClient();
     return useMutation<Task, AppError, { projectUuid: string; payload: CreateTaskPayload }>({
         mutationFn: ({ projectUuid, payload }) => createTaskRepository(projectUuid, payload),
-        onSuccess: (_data, { projectUuid }) => {
+        onSuccess: (_data, { projectUuid, payload }) => {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
             });
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.DETAIL(projectUuid),
             });
+            if (payload.parentTaskUuid) {
+                queryClient.invalidateQueries({
+                    queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(payload.parentTaskUuid),
+                });
+            }
+            if (_data?.uuid) {
+                queryClient.invalidateQueries({
+                    queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(_data.uuid),
+                });
+            }
         },
     });
 }
@@ -302,7 +312,7 @@ export function useUpdateTaskService() {
     const queryClient = useQueryClient();
     return useMutation<Task, AppError, { taskUuid: string; projectUuid: string; payload: UpdateTaskPayload }>({
         mutationFn: ({ taskUuid, payload }) => updateTaskRepository(taskUuid, payload),
-        onSuccess: (task, { projectUuid }) => {
+        onSuccess: (task, { projectUuid, payload }) => {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
             });
@@ -312,6 +322,11 @@ export function useUpdateTaskService() {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(task.uuid),
             });
+            if (payload.parentTaskUuid) {
+                queryClient.invalidateQueries({
+                    queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(payload.parentTaskUuid),
+                });
+            }
         },
     });
 }
@@ -333,15 +348,23 @@ export function useMoveTaskService() {
 
 export function useDeleteTaskService() {
     const queryClient = useQueryClient();
-    return useMutation<void, AppError, { taskUuid: string; projectUuid: string }>({
+    return useMutation<void, AppError, { taskUuid: string; projectUuid: string; parentTaskUuid?: string }>({
         mutationFn: ({ taskUuid }) => deleteTaskRepository(taskUuid),
-        onSuccess: (_data, { projectUuid }) => {
+        onSuccess: (_data, { projectUuid, taskUuid, parentTaskUuid }) => {
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.TASKS(projectUuid),
             });
             queryClient.invalidateQueries({
                 queryKey: PROJECT_QUERY_KEYS.DETAIL(projectUuid),
             });
+            queryClient.invalidateQueries({
+                queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(taskUuid),
+            });
+            if (parentTaskUuid) {
+                queryClient.invalidateQueries({
+                    queryKey: PROJECT_QUERY_KEYS.TASK_DETAIL(parentTaskUuid),
+                });
+            }
         },
     });
 }

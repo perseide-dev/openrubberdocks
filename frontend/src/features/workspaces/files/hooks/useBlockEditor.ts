@@ -89,14 +89,14 @@ export function useBlockEditor(): BlockEditorController {
         );
     }, []);
 
-    const convertBlock = useCallback((id: string, type: BlockType) => {
+    const convertBlock = useCallback((id: string, type: BlockType, content?: string) => {
         setBlocks((prev) =>
             prev.map((block) =>
                 block.id === id
                     ? {
                           ...block,
                           type,
-                          content: '',
+                          content: content !== undefined ? content : '',
                           checked: type === 'todo' ? block.checked ?? false : undefined,
                       }
                     : block
@@ -189,9 +189,50 @@ export function useBlockEditor(): BlockEditorController {
                 return;
             }
 
+            const currentBlock = blocks.find((b) => b.id === id);
+
+            if (currentBlock?.type === 'text') {
+                const matchNumbered = content.match(/^(\d+)[.)]\s(.*)$/);
+                if (matchNumbered) {
+                    convertBlock(id, 'numbered_list', matchNumbered[2]);
+                    return;
+                }
+                if (content.startsWith('- ') || content.startsWith('* ')) {
+                    convertBlock(id, 'bullet_list', content.slice(2));
+                    return;
+                }
+                if (content.startsWith('[] ') || content.startsWith('[ ] ')) {
+                    const remaining = content.startsWith('[] ') ? content.slice(3) : content.slice(4);
+                    convertBlock(id, 'todo', remaining);
+                    return;
+                }
+                if (content.startsWith('### ')) {
+                    convertBlock(id, 'heading_3', content.slice(4));
+                    return;
+                }
+                if (content.startsWith('## ')) {
+                    convertBlock(id, 'heading_2', content.slice(3));
+                    return;
+                }
+                if (content.startsWith('# ')) {
+                    convertBlock(id, 'heading_1', content.slice(2));
+                    return;
+                }
+                if (content.startsWith('> ')) {
+                    convertBlock(id, 'quote', content.slice(2));
+                    return;
+                }
+            } else if (currentBlock?.type === 'numbered_list') {
+                const matchNumbered = content.match(/^(\d+)[.)]\s(.*)$/);
+                if (matchNumbered) {
+                    updateBlock(id, matchNumbered[2]);
+                    return;
+                }
+            }
+
             updateBlock(id, content);
         },
-        [selector, updateBlock]
+        [selector, blocks, updateBlock, convertBlock]
     );
 
     const handleBlockKeyDown = useCallback(
@@ -207,12 +248,28 @@ export function useBlockEditor(): BlockEditorController {
 
             if (event.key === 'Enter' && !event.shiftKey && block.type !== 'code') {
                 event.preventDefault();
+
+                if (['numbered_list', 'bullet_list', 'todo'].includes(block.type)) {
+                    if (block.content.trim() === '') {
+                        convertBlock(id, 'text');
+                        return;
+                    }
+                    addBlock(block.type, id);
+                    return;
+                }
+
                 addBlock('text', id);
                 return;
             }
 
             if (event.key === 'Backspace' && block.content === '') {
                 event.preventDefault();
+
+                if (block.type !== 'text') {
+                    convertBlock(id, 'text');
+                    return;
+                }
+
                 const index = blocks.findIndex((item) => item.id === id);
                 const previous = blocks[index - 1];
                 removeBlock(id);
@@ -226,7 +283,7 @@ export function useBlockEditor(): BlockEditorController {
                 closeSelector();
             }
         },
-        [selector.isOpen, blocks, addBlock, removeBlock, closeSelector, focusBlock]
+        [selector.isOpen, blocks, addBlock, convertBlock, removeBlock, closeSelector, focusBlock]
     );
 
     const reset = useCallback(() => {

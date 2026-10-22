@@ -136,8 +136,8 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
             src={appLogo}
             alt="OpenRubberDocks"
             sx={{
-              width: 32,
-              height: 32,
+              width: 44,
+              height: 44,
               objectFit: 'contain',
               flexShrink: 0,
             }}
@@ -186,7 +186,7 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
                 component="img"
                 src={appLogo}
                 alt="OpenRubberDocks"
-                sx={{ width: 24, height: 24, objectFit: 'contain' }}
+                sx={{ width: 36, height: 36, objectFit: 'contain' }}
               />
               <Typography variant="h6" sx={{ fontWeight: 800 }}>NAVIGATION</Typography>
             </Box>

@@ -116,7 +116,7 @@ export interface BlockEditorController {
     selectAllBlocks: () => void;
     clearBlockSelection: () => void;
     deleteSelectedBlocks: () => void;
-    handleBlockPaste: (id: string, event: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+    handleBlockPaste: (id: string, event: React.ClipboardEvent<HTMLElement>) => void;
     registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
     focusBlock: (id: string) => void;
     reset: () => void;

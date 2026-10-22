@@ -103,7 +103,7 @@ export interface BlockEditorController {
     selector: BlockSelectorController;
     addBlock: (type: BlockType, overId?: string) => string;
     updateBlock: (id: string, content: string, properties?: Record<string, unknown>) => void;
-    convertBlock: (id: string, type: BlockType) => void;
+    convertBlock: (id: string, type: BlockType, content?: string) => void;
     toggleChecked: (id: string) => void;
     removeBlock: (id: string) => void;
     handleDragEnd: (event: DragEndEvent) => void;

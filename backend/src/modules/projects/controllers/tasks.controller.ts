@@ -8,6 +8,8 @@ import {
     UseGuards,
     UseInterceptors,
     Req,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
@@ -72,6 +74,7 @@ export class TasksController {
     }
 
     @Delete('tasks/:taskUuid')
+    @HttpCode(HttpStatus.NO_CONTENT)
     @RequirePermissions('task:delete')
     remove(@Param('taskUuid') taskUuid: string) {
         return this.tasksService.delete(taskUuid);

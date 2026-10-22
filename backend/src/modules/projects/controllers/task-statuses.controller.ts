@@ -6,6 +6,8 @@ import {
     Param,
     UseGuards,
     UseInterceptors,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
@@ -38,6 +40,7 @@ export class TaskStatusesController {
     }
 
     @Delete(':statusUuid')
+    @HttpCode(HttpStatus.NO_CONTENT)
     @RequirePermissions('task_status:manage')
     remove(
         @Param('projectUuid') projectUuid: string,

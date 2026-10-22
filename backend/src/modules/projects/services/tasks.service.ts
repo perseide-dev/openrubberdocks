@@ -129,7 +129,7 @@ export class TasksService {
     async findAll(projectUuid: string): Promise<Task[]> {
         return this.taskRepository.find({
             where: { projectUuid },
-            relations: ['status', 'type', 'assignees', 'subtasks'],
+            relations: ['status', 'type', 'assignees', 'subtasks', 'subtasks.status', 'subtasks.type'],
             order: { orderIndex: 'ASC', createdAt: 'ASC' },
         });
     }
@@ -137,7 +137,17 @@ export class TasksService {
     async findOne(taskUuid: string): Promise<Task> {
         const task = await this.taskRepository.findOne({
             where: { uuid: taskUuid },
-            relations: ['status', 'type', 'assignees', 'subtasks', 'timeLogs', 'dependencies', 'project'],
+            relations: [
+                'status',
+                'type',
+                'assignees',
+                'subtasks',
+                'subtasks.status',
+                'subtasks.type',
+                'timeLogs',
+                'dependencies',
+                'project',
+            ],
         });
 
         if (!task) {

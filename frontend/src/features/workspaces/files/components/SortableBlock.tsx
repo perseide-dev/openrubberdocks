@@ -14,7 +14,7 @@ interface SortableBlockProps {
     isSelected?: boolean;
     onChange: (id: string, content: string) => void;
     onKeyDown: (id: string, event: KeyboardEvent<HTMLElement>) => void;
-    onPaste?: (id: string, event: ClipboardEvent<HTMLTextAreaElement>) => void;
+    onPaste?: (id: string, event: ClipboardEvent<HTMLElement>) => void;
     onRemove: (id: string) => void;
     onToggleChecked: (id: string) => void;
     onInsert: (element: HTMLElement, blockId: string) => void;

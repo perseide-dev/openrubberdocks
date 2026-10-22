@@ -17,6 +17,7 @@ import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import AlternateEmailOutlinedIcon from '@mui/icons-material/AlternateEmailOutlined';
 import { useLoginForm } from '@features/auth/hooks/useLoginForm';
+import appLogo from '@assets/logo.png';
 
 export function LoginForm() {
   const {
@@ -41,6 +42,14 @@ export function LoginForm() {
     >
       <Card>
         <CardHeader
+          avatar={
+            <Box
+              component="img"
+              src={appLogo}
+              alt="OpenRubberDocks"
+              sx={{ width: 28, height: 28, objectFit: 'contain' }}
+            />
+          }
           title="IDENTITY AUTHORIZATION"
           subheader="// SUPPLY CREDENTIALS TO ACCESS WORKSPACE"
           action={

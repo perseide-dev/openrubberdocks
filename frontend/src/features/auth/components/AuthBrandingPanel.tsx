@@ -12,7 +12,7 @@ import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import AllInclusiveOutlinedIcon from '@mui/icons-material/AllInclusiveOutlined';
 import DnsOutlinedIcon from '@mui/icons-material/DnsOutlined';
-import appLogo from '@assets/logo.png';
+import appLogo from '@assets/openrubberdocs.svg';
 
 export function AuthBrandingPanel() {
   return (

@@ -6,6 +6,8 @@ import {
     Param,
     UseGuards,
     UseInterceptors,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
@@ -38,6 +40,7 @@ export class ProjectFilesController {
     }
 
     @Delete(':fileUuid')
+    @HttpCode(HttpStatus.NO_CONTENT)
     @RequirePermissions('project:update')
     unlinkFile(
         @Param('projectUuid') projectUuid: string,

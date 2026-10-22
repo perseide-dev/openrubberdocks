@@ -51,6 +51,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {...(!isOverlay ? attributes : {})}
             {...(!isOverlay ? listeners : {})}
             variant="outlined"
+            sx={{
+                borderLeft: `4px solid ${task.status?.color || '#71717A'}`,
+            }}
         >
             <CardActionArea onClick={() => !isOverlay && onTaskClick(task)}>
                 <CardContent
@@ -76,6 +79,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                                     fontFamily: 'monospace',
                                     fontSize: '0.7rem',
                                     height: 20,
+                                    borderLeft: task.type.color ? `3px solid ${task.type.color}` : undefined,
                                 }}
                             />
                         )}

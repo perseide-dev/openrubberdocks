@@ -124,6 +124,15 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
         await deleteTaskMutation.mutateAsync({ taskUuid, projectUuid });
     }, [taskUuid, projectUuid, deleteTaskMutation]);
 
+    const handleDeleteSubtask = useCallback(async (stUuid: string) => {
+        if (!taskUuid) return;
+        await deleteTaskMutation.mutateAsync({
+            taskUuid: stUuid,
+            projectUuid,
+            parentTaskUuid: taskUuid,
+        });
+    }, [taskUuid, projectUuid, deleteTaskMutation]);
+
     const handleCustomPropertyChange = useCallback((key: string, value: unknown) => {
         setCustomProperties((prev) => ({
             ...prev,
@@ -155,6 +164,7 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
         subtaskTitle,
         setSubtaskTitle,
         handleAddSubtask,
+        handleDeleteSubtask,
         handleSaveTask,
         handleDeleteTask,
         isSaving: createTaskMutation.isPending || updateTaskMutation.isPending,

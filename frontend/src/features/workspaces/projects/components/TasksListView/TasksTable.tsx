@@ -106,6 +106,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                                             sx={{
                                                 fontFamily: 'monospace',
                                                 fontSize: '0.75rem',
+                                                borderLeft: `4px solid ${task.status.color || '#71717A'}`,
                                             }}
                                         />
                                     )}
@@ -119,6 +120,7 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                                             sx={{
                                                 fontFamily: 'monospace',
                                                 fontSize: '0.75rem',
+                                                borderLeft: task.type.color ? `4px solid ${task.type.color}` : undefined,
                                             }}
                                         />
                                     )}

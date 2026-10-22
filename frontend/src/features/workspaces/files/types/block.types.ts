@@ -117,6 +117,8 @@ export interface BlockEditorController {
     clearBlockSelection: () => void;
     deleteSelectedBlocks: () => void;
     handleBlockPaste: (id: string, event: React.ClipboardEvent<HTMLElement>) => void;
+    handleBlockMouseDown: (id: string, event: React.MouseEvent<HTMLElement>) => void;
+    handleBlockMouseEnter: (id: string) => void;
     registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
     focusBlock: (id: string) => void;
     reset: () => void;

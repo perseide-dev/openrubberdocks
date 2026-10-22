@@ -54,6 +54,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                 flexDirection: 'column',
                 gap: 1.5,
                 padding: 1.5,
+                borderTop: `4px solid ${status.color || '#71717A'}`,
+                backgroundColor: 'background.paper',
             }}
         >
             {/* Column Header */}
@@ -62,9 +64,20 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    paddingBottom: 0.5,
+                    borderBottom: `2px solid ${status.color || '#71717A'}`,
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box
+                        sx={{
+                            width: 12,
+                            height: 12,
+                            backgroundColor: status.color || '#71717A',
+                            border: '1.5px solid #000000',
+                            flexShrink: 0,
+                        }}
+                    />
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {status.name}
                     </Typography>
@@ -75,6 +88,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                             fontFamily: 'monospace',
                             fontSize: '0.75rem',
                             height: 20,
+                            borderLeft: `3px solid ${status.color || '#71717A'}`,
                         }}
                     />
                 </Box>
@@ -126,7 +140,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                     flexGrow: 1,
                     padding: 0.5,
                     border: '1.5px dashed',
-                    borderColor: isOver ? 'primary.main' : 'divider',
+                    borderColor: isOver ? (status.color || 'primary.main') : 'divider',
                     transition: 'border-color 0.15s ease',
                 }}
             >

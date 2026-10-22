@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import { BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files as fileRoutes } from '@features-workspaces/files/routes/routes';
@@ -12,6 +13,7 @@ export function FileEditorPage() {
     const { uuid } = useParams<{ uuid: string }>();
     const navigate = useNavigate();
     const workspaceUuid = uuid ?? '';
+    const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
 
     const {
         title,
@@ -55,7 +57,13 @@ export function FileEditorPage() {
 
             <WorkspaceHeader
                 title={parentFile ? `Create Sub-File of "${parentFile.title}"` : 'Create File'}
-                subtitle={parentFile ? `// PARENT: ${parentFile.title} [${parentFile.uuid}]` : `// ${workspaceUuid}`}
+                subtitle={
+                    parentFile
+                        ? `// PARENT: ${parentFile.title}`
+                        : workspace?.name
+                        ? `// WORKSPACE: ${workspace.name.toUpperCase()} // NEW DOCUMENT`
+                        : '// NEW DOCUMENT'
+                }
                 action={
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button

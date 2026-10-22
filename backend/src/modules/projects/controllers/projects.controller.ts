@@ -9,6 +9,8 @@ import {
     UseGuards,
     UseInterceptors,
     Req,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
@@ -55,6 +57,7 @@ export class ProjectsController {
     }
 
     @Delete(':uuid')
+    @HttpCode(HttpStatus.NO_CONTENT)
     @RequirePermissions('project:delete')
     remove(@Param('uuid') uuid: string) {
         return this.projectsService.delete(uuid);

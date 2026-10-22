@@ -5,6 +5,7 @@ import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader
 import { FileViewer } from '@features-workspaces/files/components/FileViewer';
 import { useFileView } from '@features-workspaces/files/hooks/useFileView';
 import { useDeleteFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import { ConfirmModal, BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files } from '@features-workspaces/files/routes/routes';
@@ -19,6 +20,7 @@ export function FileViewPage() {
     const fUuid = fileUuid ?? '';
     const { file, blocks, isLoading } = useFileView(wsUuid, fUuid);
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
+    const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { canMutateInWorkspace, hasPermission } = usePermissions();
     const canMutate = canMutateInWorkspace(wsUuid);
     const canReadHistory = hasPermission('document:read', wsUuid);
@@ -56,7 +58,7 @@ export function FileViewPage() {
 
             <WorkspaceHeader
                 title={file?.title || 'Untitled'}
-                subtitle={`// ${wsUuid}`}
+                subtitle={workspace?.name ? `// WORKSPACE: ${workspace.name.toUpperCase()}` : '// DOCUMENT'}
                 action={
                     canMutate ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>

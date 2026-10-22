@@ -38,7 +38,7 @@ export function AuthBrandingPanel() {
               component="img"
               src={appLogo}
               alt="OpenRubberDocks"
-              sx={{ width: 32, height: 32, objectFit: 'contain' }}
+              sx={{ width: 48, height: 48, objectFit: 'contain' }}
             />
             <Typography variant="overline" sx={{ letterSpacing: '0.15em', fontWeight: 700 }}>
               // OPENRUBBERDOCKS // DEV DOCS

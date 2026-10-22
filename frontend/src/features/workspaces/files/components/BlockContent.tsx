@@ -40,7 +40,7 @@ interface BlockContentProps {
   inputRef: (element: HTMLTextAreaElement | null) => void;
   onChange: (content: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
-  onPaste?: (event: ClipboardEvent<HTMLTextAreaElement>) => void;
+  onPaste?: (event: ClipboardEvent<HTMLElement>) => void;
   onToggleChecked: () => void;
 }
 

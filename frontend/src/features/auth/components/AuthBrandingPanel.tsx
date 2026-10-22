@@ -12,6 +12,7 @@ import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import AllInclusiveOutlinedIcon from '@mui/icons-material/AllInclusiveOutlined';
 import DnsOutlinedIcon from '@mui/icons-material/DnsOutlined';
+import appLogo from '@assets/logo.png';
 
 export function AuthBrandingPanel() {
   return (
@@ -31,10 +32,18 @@ export function AuthBrandingPanel() {
     >
       {/* Header section */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="overline" sx={{ letterSpacing: '0.15em' }}>
-            // OPENRUBBERDOCKS // SELF-HOSTED DEV DOCS
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              component="img"
+              src={appLogo}
+              alt="OpenRubberDocks"
+              sx={{ width: 32, height: 32, objectFit: 'contain' }}
+            />
+            <Typography variant="overline" sx={{ letterSpacing: '0.15em', fontWeight: 700 }}>
+              // OPENRUBBERDOCKS // DEV DOCS
+            </Typography>
+          </Box>
           <Chip
             icon={<AllInclusiveOutlinedIcon sx={{ fontSize: '1rem !important' }} />}
             label="100% FREE & SELF-HOSTED"

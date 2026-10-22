@@ -266,7 +266,7 @@ export function useBlockEditor(): BlockEditorController {
     );
 
     const handleBlockPaste = useCallback(
-        (id: string, event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        (id: string, event: React.ClipboardEvent<HTMLElement>) => {
             const clipboardText = event.clipboardData.getData('text/plain');
             if (!clipboardText) return;
 

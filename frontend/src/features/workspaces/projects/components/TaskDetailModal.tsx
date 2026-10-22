@@ -58,6 +58,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         subtaskTitle,
         setSubtaskTitle,
         handleAddSubtask,
+        handleDeleteSubtask,
         handleSaveTask,
         handleDeleteTask,
         isSaving,
@@ -162,33 +163,75 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                         <>
                                             {task?.subtasks && task.subtasks.length > 0 ? (
                                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                    {task.subtasks.map((st) => (
-                                                        <Box
-                                                            key={st.uuid}
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                                p: 1.5,
-                                                            }}
-                                                        >
-                                                            <SubdirectoryArrowRightIcon fontSize="small" color="action" />
-                                                            <Typography variant="body2" sx={{ fontWeight: 500, flexGrow: 1 }}>
-                                                                {st.title}
-                                                            </Typography>
-                                                            {st.status && (
-                                                                <Chip
-                                                                    size="small"
-                                                                    label={st.status.name}
-                                                                    sx={{ fontFamily: 'monospace' }}
-                                                                />
-                                                            )}
-                                                        </Box>
-                                                    ))}
+                                                    {task.subtasks.map((st) => {
+                                                        const stStatus = st.status || statuses.find((s) => s.uuid === st.statusUuid);
+                                                        const stType = st.type || types.find((t) => t.uuid === st.typeUuid);
+
+                                                        return (
+                                                            <Box
+                                                                key={st.uuid || st.id}
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'space-between',
+                                                                    gap: 1.5,
+                                                                    p: 1.5,
+                                                                    border: '1.5px solid',
+                                                                    borderColor: 'divider',
+                                                                    backgroundColor: 'background.paper',
+                                                                    borderLeft: `4px solid ${stStatus?.color || '#71717A'}`,
+                                                                }}
+                                                            >
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1, minWidth: 0 }}>
+                                                                    <SubdirectoryArrowRightIcon fontSize="small" sx={{ color: 'text.secondary', flexShrink: 0 }} />
+                                                                    <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: 'break-word' }}>
+                                                                        {st.title}
+                                                                    </Typography>
+                                                                </Box>
+
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                                                                    {stType && (
+                                                                        <Chip
+                                                                            size="small"
+                                                                            label={stType.name}
+                                                                            variant="outlined"
+                                                                            sx={{
+                                                                                fontFamily: 'monospace',
+                                                                                fontSize: '0.65rem',
+                                                                                height: 20,
+                                                                                borderLeft: stType.color ? `3px solid ${stType.color}` : undefined,
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    {stStatus && (
+                                                                        <Chip
+                                                                            size="small"
+                                                                            label={stStatus.name}
+                                                                            sx={{
+                                                                                fontFamily: 'monospace',
+                                                                                fontSize: '0.7rem',
+                                                                                height: 20,
+                                                                                borderLeft: `3px solid ${stStatus.color || '#71717A'}`,
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    {canManage && (
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            onClick={() => handleDeleteSubtask(st.uuid)}
+                                                                            sx={{ padding: 0.5 }}
+                                                                        >
+                                                                            <DeleteOutlinedIcon fontSize="small" />
+                                                                        </IconButton>
+                                                                    )}
+                                                                </Box>
+                                                            </Box>
+                                                        );
+                                                    })}
                                                 </Box>
                                             ) : (
                                                 <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                                                    NO_SUBTASKS_FOUND
+                                                    // NO_SUBTASKS_FOUND
                                                 </Typography>
                                             )}
 

@@ -16,7 +16,7 @@ import { useAuth } from '@global-hooks/useAuth';
 import { usePermissions } from '@global-hooks/usePermissions';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
-import appLogo from '@assets/logo.png';
+import appLogo from '@assets/openrubberdocs.svg';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();

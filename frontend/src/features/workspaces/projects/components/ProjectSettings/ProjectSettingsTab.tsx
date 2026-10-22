@@ -210,10 +210,31 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
                             </TextField>
                             <TextField
                                 size="small"
-                                label="Color Hex"
+                                label="Color"
                                 value={statusColor}
                                 onChange={(e) => setStatusColor(e.target.value)}
-                                sx={{ width: 120 }}
+                                sx={{ width: 140 }}
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <Box
+                                                component="input"
+                                                type="color"
+                                                value={statusColor}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatusColor(e.target.value)}
+                                                sx={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    padding: 0,
+                                                    border: '1px solid #000',
+                                                    cursor: 'pointer',
+                                                    mr: 1,
+                                                    backgroundColor: 'transparent',
+                                                }}
+                                            />
+                                        ),
+                                    },
+                                }}
                             />
                             <Button
                                 type="submit"
@@ -251,6 +272,7 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
                                 sx={{
                                     fontFamily: 'monospace',
                                     fontWeight: 600,
+                                    borderLeft: t.color ? `4px solid ${t.color}` : undefined,
                                 }}
                             />
                         ))}
@@ -280,10 +302,31 @@ export const ProjectSettingsTab: React.FC<ProjectSettingsTabProps> = ({
                             />
                             <TextField
                                 size="small"
-                                label="Color Hex"
+                                label="Color"
                                 value={typeColor}
                                 onChange={(e) => setTypeColor(e.target.value)}
-                                sx={{ width: 120 }}
+                                sx={{ width: 140 }}
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <Box
+                                                component="input"
+                                                type="color"
+                                                value={typeColor}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTypeColor(e.target.value)}
+                                                sx={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    padding: 0,
+                                                    border: '1px solid #000',
+                                                    cursor: 'pointer',
+                                                    mr: 1,
+                                                    backgroundColor: 'transparent',
+                                                }}
+                                            />
+                                        ),
+                                    },
+                                }}
                             />
                             <Button
                                 type="submit"

@@ -148,9 +148,18 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
 
                     let numberedCounter = 0;
                     let currentIndex = index;
-                    while (currentIndex >= 0 && sorted[currentIndex].type === 'numbered_list') {
-                        currentIndex -= 1;
-                        numberedCounter += 1;
+                    while (currentIndex >= 0) {
+                        if (sorted[currentIndex].type === 'numbered_list') {
+                            numberedCounter += 1;
+                            currentIndex -= 1;
+                        } else if (
+                            sorted[currentIndex].type === 'text' &&
+                            getTextFromProperties(sorted[currentIndex].properties).trim() === ''
+                        ) {
+                            currentIndex -= 1;
+                        } else {
+                            break;
+                        }
                     }
                     const number = block.type === 'numbered_list' ? numberedCounter : undefined;
 

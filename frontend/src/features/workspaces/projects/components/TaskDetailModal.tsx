@@ -468,6 +468,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                                                                 key={v}
                                                                                 label={v}
                                                                                 size="small"
+                                                                                variant="outlined"
                                                                                 sx={{ fontFamily: 'monospace' }}
                                                                             />
                                                                         ))}
@@ -484,8 +485,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                                                         <Checkbox
                                                                             checked={multiVal.includes(optVal)}
                                                                             size="small"
+                                                                            sx={{ p: 0.5, mr: 1 }}
                                                                         />
-                                                                        <Typography variant="body2">{opt.label ?? opt.value}</Typography>
+                                                                        <Typography variant="body2" sx={{ color: 'inherit' }}>
+                                                                            {opt.label ?? opt.value}
+                                                                        </Typography>
                                                                     </MenuItem>
                                                                 );
                                                             })

@@ -25,6 +25,9 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         openInsertSelector,
         closeSelector,
         handleSelectBlockType,
+        selectedBlockIds,
+        handleBlockPaste,
+        clearBlockSelection,
         registerInput,
     } = blockEditor;
 
@@ -39,6 +42,11 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box
                     ref={setNodeRef}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            clearBlockSelection();
+                        }
+                    }}
                     sx={{
                         minHeight: 240,
                         display: 'flex',
@@ -79,8 +87,10 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                                     key={block.id}
                                     block={block}
                                     number={number}
+                                    isSelected={selectedBlockIds.includes(block.id)}
                                     onChange={handleBlockChange}
                                     onKeyDown={handleBlockKeyDown}
+                                    onPaste={handleBlockPaste}
                                     onRemove={removeBlock}
                                     onToggleChecked={toggleChecked}
                                     onInsert={openInsertSelector}

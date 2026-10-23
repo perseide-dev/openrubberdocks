@@ -17,7 +17,7 @@ import type { BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/
  * Orchestrates the file creation flow: title, media (icon/cover), templates,
  * block canvas and persistence of the file followed by each of its blocks.
  */
-export function useFileCreation(workspaceUuid: string) {
+export function useFileCreation(workspaceUuid: string, draftId: string = 'new') {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [searchParams] = useSearchParams();
@@ -36,14 +36,26 @@ export function useFileCreation(workspaceUuid: string) {
         return workspaceFiles.filter((f) => f.isTemplate);
     }, [workspaceFiles]);
 
-    const [title, setTitle] = useState(() => loadDraft(workspaceUuid, 'new')?.title || '');
-    const [icon, setIcon] = useState<string | null>(() => loadDraft(workspaceUuid, 'new')?.icon || null);
-    const [coverImage, setCoverImage] = useState<string | null>(() => loadDraft(workspaceUuid, 'new')?.coverImage || null);
-    const [isTemplate, setIsTemplate] = useState<boolean>(() => Boolean(loadDraft(workspaceUuid, 'new')?.isTemplate));
+    const [title, setTitle] = useState(() => loadDraft(workspaceUuid, draftId)?.title || '');
+    const [icon, setIcon] = useState<string | null>(() => loadDraft(workspaceUuid, draftId)?.icon || null);
+    const [coverImage, setCoverImage] = useState<string | null>(() => loadDraft(workspaceUuid, draftId)?.coverImage || null);
+    const [isTemplate, setIsTemplate] = useState<boolean>(() => Boolean(loadDraft(workspaceUuid, draftId)?.isTemplate));
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const [initialDraftBlocks] = useState(() => loadDraft(workspaceUuid, 'new')?.blocks);
+    const [initialDraftBlocks] = useState(() => loadDraft(workspaceUuid, draftId)?.blocks);
     const blockEditor = useBlockEditor(initialDraftBlocks);
+
+    // Sync state when switching between different drafts during render
+    const [syncedDraftId, setSyncedDraftId] = useState(draftId);
+    if (draftId !== syncedDraftId) {
+        setSyncedDraftId(draftId);
+        const draft = loadDraft(workspaceUuid, draftId);
+        setTitle(draft?.title || '');
+        setIcon(draft?.icon || null);
+        setCoverImage(draft?.coverImage || null);
+        setIsTemplate(Boolean(draft?.isTemplate));
+        blockEditor.setBlocksState(draft?.blocks || []);
+    }
 
     const isInitialMount = useRef(true);
 
@@ -56,7 +68,7 @@ export function useFileCreation(workspaceUuid: string) {
 
         // Only save draft if there is meaningful content
         if (title.trim() || blockEditor.blocks.length > 0 || icon || coverImage) {
-            saveDraft(workspaceUuid, 'new', {
+            saveDraft(workspaceUuid, draftId, {
                 title,
                 icon,
                 coverImage,
@@ -65,7 +77,7 @@ export function useFileCreation(workspaceUuid: string) {
                 updatedAt: Date.now(),
             });
         }
-    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, workspaceUuid]);
+    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, workspaceUuid, draftId]);
 
     const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
@@ -146,7 +158,7 @@ export function useFileCreation(workspaceUuid: string) {
                 });
             }
 
-            clearDraft(workspaceUuid, 'new');
+            clearDraft(workspaceUuid, draftId);
             blockEditor.reset();
             navigate(`/workspaces/${workspaceUuid}/files/${file.uuid}`);
         } catch (err) {
@@ -159,7 +171,7 @@ export function useFileCreation(workspaceUuid: string) {
 
             setErrorMessage(errorDetail);
         }
-    }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, createFileMutation, createBlockMutation, blockEditor, navigate]);
+    }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, draftId, createFileMutation, createBlockMutation, blockEditor, navigate]);
 
     // Ctrl+S / Cmd+S shortcut
     useEffect(() => {

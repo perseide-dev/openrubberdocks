@@ -55,7 +55,9 @@ export function useBlockEditor(): BlockEditorController {
     }, []);
 
     const dragStartBlockId = useRef<string | null>(null);
+    const dragStartPos = useRef<{ x: number; y: number } | null>(null);
     const isDraggingRange = useRef(false);
+    const justFinishedDrag = useRef(false);
 
     const handleBlockMouseDown = useCallback(
         (id: string, e: React.MouseEvent<HTMLElement>) => {
@@ -65,6 +67,37 @@ export function useBlockEditor(): BlockEditorController {
                     return;
                 }
                 dragStartBlockId.current = id;
+                dragStartPos.current = { x: e.clientX, y: e.clientY };
+                isDraggingRange.current = false;
+            }
+        },
+        []
+    );
+
+    const handleCanvasMouseDown = useCallback(
+        (e: React.MouseEvent<HTMLElement>) => {
+            if (e.button === 0) {
+                const target = e.target as HTMLElement | null;
+                if (target?.closest('[data-block="true"]') || target?.closest('button')) {
+                    return;
+                }
+                const blockElements = Array.from(
+                    document.querySelectorAll<HTMLElement>('[data-block="true"]')
+                );
+                let closestId: string | null = null;
+                if (blockElements.length > 0) {
+                    let minDiff = Infinity;
+                    for (const bEl of blockElements) {
+                        const rect = bEl.getBoundingClientRect();
+                        const diff = Math.abs(e.clientY - (rect.top + rect.height / 2));
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestId = bEl.getAttribute('data-block-id');
+                        }
+                    }
+                }
+                dragStartBlockId.current = closestId;
+                dragStartPos.current = { x: e.clientX, y: e.clientY };
                 isDraggingRange.current = false;
             }
         },
@@ -94,10 +127,80 @@ export function useBlockEditor(): BlockEditorController {
     );
 
     useEffect(() => {
+        const handleWindowMouseMove = (e: MouseEvent) => {
+            if (!dragStartPos.current) return;
+
+            const dist = Math.hypot(
+                e.clientX - dragStartPos.current.x,
+                e.clientY - dragStartPos.current.y
+            );
+            if (dist < 6) return;
+
+            const blockElements = Array.from(
+                document.querySelectorAll<HTMLElement>('[data-block="true"]')
+            );
+            if (blockElements.length === 0 || blocks.length === 0) return;
+
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            const currentBlockEl = el?.closest<HTMLElement>('[data-block="true"]');
+            let currentId = currentBlockEl?.getAttribute('data-block-id');
+
+            if (!currentId) {
+                const firstRect = blockElements[0].getBoundingClientRect();
+                const lastRect = blockElements[blockElements.length - 1].getBoundingClientRect();
+                if (e.clientY >= lastRect.top) {
+                    currentId = blockElements[blockElements.length - 1].getAttribute('data-block-id');
+                } else if (e.clientY <= firstRect.bottom) {
+                    currentId = blockElements[0].getAttribute('data-block-id');
+                } else {
+                    let minDiff = Infinity;
+                    let closest = blockElements[0];
+                    for (const bEl of blockElements) {
+                        const rect = bEl.getBoundingClientRect();
+                        const diff = Math.abs(e.clientY - (rect.top + rect.height / 2));
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closest = bEl;
+                        }
+                    }
+                    currentId = closest.getAttribute('data-block-id');
+                }
+            }
+
+            if (!currentId) return;
+
+            if (!dragStartBlockId.current) {
+                dragStartBlockId.current = currentId;
+            }
+
+            if (currentId !== dragStartBlockId.current || isDraggingRange.current) {
+                isDraggingRange.current = true;
+                window.getSelection()?.removeAllRanges();
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+
+                const startIndex = blocks.findIndex((b) => b.id === dragStartBlockId.current);
+                const currentIndex = blocks.findIndex((b) => b.id === currentId);
+
+                if (startIndex !== -1 && currentIndex !== -1) {
+                    const min = Math.min(startIndex, currentIndex);
+                    const max = Math.max(startIndex, currentIndex);
+                    const range = blocks.slice(min, max + 1).map((b) => b.id);
+                    setSelectedBlockIds(range);
+                }
+            }
+        };
+
         const handleWindowMouseUp = () => {
-            const clickedId = dragStartBlockId.current;
-            if (clickedId && !isDraggingRange.current) {
+            if (isDraggingRange.current) {
+                justFinishedDrag.current = true;
+                setTimeout(() => {
+                    justFinishedDrag.current = false;
+                }, 250);
+            } else if (dragStartBlockId.current) {
                 if (selectedBlockIds.length > 0) {
+                    const clickedId = dragStartBlockId.current;
                     setSelectedBlockIds([]);
                     const input = inputRefs.current.get(clickedId);
                     if (input) {
@@ -106,10 +209,12 @@ export function useBlockEditor(): BlockEditorController {
                 }
             }
             dragStartBlockId.current = null;
+            dragStartPos.current = null;
             isDraggingRange.current = false;
         };
 
         const handleDocumentMouseDown = (e: MouseEvent) => {
+            if (justFinishedDrag.current) return;
             if (selectedBlockIds.length === 0) return;
             const target = e.target as HTMLElement | null;
             if (!target) return;
@@ -127,6 +232,7 @@ export function useBlockEditor(): BlockEditorController {
         };
 
         const handleDocumentDblClick = (e: MouseEvent) => {
+            if (justFinishedDrag.current) return;
             if (selectedBlockIds.length === 0) return;
             const target = e.target as HTMLElement | null;
             if (!target || !target.closest('[data-block="true"]')) {
@@ -147,12 +253,14 @@ export function useBlockEditor(): BlockEditorController {
             }
         };
 
+        window.addEventListener('mousemove', handleWindowMouseMove);
         window.addEventListener('mouseup', handleWindowMouseUp);
         window.addEventListener('mousedown', handleDocumentMouseDown);
         window.addEventListener('dblclick', handleDocumentDblClick);
         document.addEventListener('copy', handleCopy);
 
         return () => {
+            window.removeEventListener('mousemove', handleWindowMouseMove);
             window.removeEventListener('mouseup', handleWindowMouseUp);
             window.removeEventListener('mousedown', handleDocumentMouseDown);
             window.removeEventListener('dblclick', handleDocumentDblClick);
@@ -551,6 +659,7 @@ export function useBlockEditor(): BlockEditorController {
         handleBlockPaste,
         handleBlockMouseDown,
         handleBlockMouseEnter,
+        handleCanvasMouseDown,
         registerInput,
         focusBlock,
         reset,

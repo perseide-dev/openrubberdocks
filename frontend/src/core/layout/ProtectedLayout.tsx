@@ -16,6 +16,7 @@ import { useAuth } from '@global-hooks/useAuth';
 import { usePermissions } from '@global-hooks/usePermissions';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
+import { CliampRadio } from '@components/ui/CliampRadio';
 import appLogo from '@assets/openrubberdocs.svg';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
@@ -126,6 +127,7 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
+      <CliampRadio />
       <Box component="header" sx={{ paddingX: { xs: 2, md: 3 }, paddingY: 1.5, borderBottom: '2px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton sx={{ display: { xs: 'inline-flex', md: 'none' } }} onClick={() => setMobileDrawerOpen(true)} size="small">

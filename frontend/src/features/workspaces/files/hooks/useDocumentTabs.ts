@@ -25,9 +25,15 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                 const existingIndex = prev.findIndex((t) => t.uuid === currentFile.uuid);
                 let updated: DocumentTab[];
                 if (existingIndex >= 0) {
+                    const existing = prev[existingIndex];
+                    const nextTitle = currentFile.title || existing.title;
+                    const nextIcon = currentFile.icon ?? existing.icon;
+                    if (existing.title === nextTitle && existing.icon === nextIcon) {
+                        return prev;
+                    }
                     updated = prev.map((t, idx) =>
                         idx === existingIndex
-                            ? { ...t, title: currentFile.title || t.title, icon: currentFile.icon ?? t.icon }
+                            ? { ...t, title: nextTitle, icon: nextIcon }
                             : t
                     );
                 } else {

@@ -123,5 +123,10 @@ export interface BlockEditorController {
     handlePointerMove: (event: React.PointerEvent<HTMLElement> | PointerEvent | MouseEvent) => void;
     registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
     focusBlock: (id: string) => void;
+    undo: () => void;
+    redo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    setBlocksState: (blocks: FileEditorBlock[]) => void;
     reset: () => void;
 }

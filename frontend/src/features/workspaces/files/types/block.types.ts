@@ -120,6 +120,7 @@ export interface BlockEditorController {
     handleBlockMouseDown: (id: string, event: React.MouseEvent<HTMLElement>) => void;
     handleBlockMouseEnter: (id: string) => void;
     handleCanvasMouseDown: (event: React.MouseEvent<HTMLElement>) => void;
+    handlePointerMove: (event: React.PointerEvent<HTMLElement> | PointerEvent | MouseEvent) => void;
     registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
     focusBlock: (id: string) => void;
     reset: () => void;

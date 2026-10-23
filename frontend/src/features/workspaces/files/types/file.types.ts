@@ -18,6 +18,7 @@ export interface DocumentTab {
     icon: string | null;
     isNew?: boolean;
     isDirty?: boolean;
+    mode?: 'view' | 'edit';
 }
 
 export interface DocumentTabsBarProps {

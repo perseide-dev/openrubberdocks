@@ -30,6 +30,7 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         handleBlockMouseDown,
         handleBlockMouseEnter,
         handleCanvasMouseDown,
+        handlePointerMove,
         clearBlockSelection,
         registerInput,
     } = blockEditor;
@@ -44,6 +45,7 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         >
             <Box
                 onMouseDown={handleCanvasMouseDown}
+                onPointerMove={handlePointerMove}
                 onClick={(e) => {
                     const target = e.target as HTMLElement | null;
                     if (!target?.closest('[data-block="true"]')) {
@@ -61,6 +63,7 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                 <Box
                     ref={setNodeRef}
                     onMouseDown={handleCanvasMouseDown}
+                    onPointerMove={handlePointerMove}
                     onClick={(e) => {
                         const target = e.target as HTMLElement | null;
                         if (!target?.closest('[data-block="true"]')) {
@@ -118,6 +121,7 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                                     onKeyDown={handleBlockKeyDown}
                                     onPaste={handleBlockPaste}
                                     onMouseDown={handleBlockMouseDown}
+                                    onPointerMove={handlePointerMove}
                                     onMouseEnter={handleBlockMouseEnter}
                                     onRemove={removeBlock}
                                     onToggleChecked={toggleChecked}

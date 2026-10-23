@@ -36,15 +36,14 @@ export function useFileCreation(workspaceUuid: string) {
         return workspaceFiles.filter((f) => f.isTemplate);
     }, [workspaceFiles]);
 
-    const initialDraft = useRef(loadDraft(workspaceUuid, 'new'));
-
-    const [title, setTitle] = useState(() => initialDraft.current?.title || '');
-    const [icon, setIcon] = useState<string | null>(() => initialDraft.current?.icon || null);
-    const [coverImage, setCoverImage] = useState<string | null>(() => initialDraft.current?.coverImage || null);
-    const [isTemplate, setIsTemplate] = useState<boolean>(() => Boolean(initialDraft.current?.isTemplate));
+    const [title, setTitle] = useState(() => loadDraft(workspaceUuid, 'new')?.title || '');
+    const [icon, setIcon] = useState<string | null>(() => loadDraft(workspaceUuid, 'new')?.icon || null);
+    const [coverImage, setCoverImage] = useState<string | null>(() => loadDraft(workspaceUuid, 'new')?.coverImage || null);
+    const [isTemplate, setIsTemplate] = useState<boolean>(() => Boolean(loadDraft(workspaceUuid, 'new')?.isTemplate));
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const blockEditor = useBlockEditor(initialDraft.current?.blocks);
+    const [initialDraftBlocks] = useState(() => loadDraft(workspaceUuid, 'new')?.blocks);
+    const blockEditor = useBlockEditor(initialDraftBlocks);
 
     const isInitialMount = useRef(true);
 

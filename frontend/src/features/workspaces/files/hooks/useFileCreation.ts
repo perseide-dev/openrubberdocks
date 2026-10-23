@@ -45,17 +45,18 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
     const [initialDraftBlocks] = useState(() => loadDraft(workspaceUuid, draftId)?.blocks);
     const blockEditor = useBlockEditor(initialDraftBlocks);
 
-    // Sync state when switching between different drafts during render
-    const [syncedDraftId, setSyncedDraftId] = useState(draftId);
-    if (draftId !== syncedDraftId) {
-        setSyncedDraftId(draftId);
+    const lastDraftIdRef = useRef(draftId);
+    useEffect(() => {
+        if (lastDraftIdRef.current === draftId) return;
+        lastDraftIdRef.current = draftId;
+
         const draft = loadDraft(workspaceUuid, draftId);
         setTitle(draft?.title || '');
         setIcon(draft?.icon || null);
         setCoverImage(draft?.coverImage || null);
         setIsTemplate(Boolean(draft?.isTemplate));
         blockEditor.setBlocksState(draft?.blocks || []);
-    }
+    }, [draftId, workspaceUuid, blockEditor]);
 
     const isInitialMount = useRef(true);
 

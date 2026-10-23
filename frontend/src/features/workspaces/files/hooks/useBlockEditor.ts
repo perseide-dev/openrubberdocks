@@ -22,8 +22,8 @@ import type {
  * removal, drag-and-drop ordering, the floating block selector and the keyboard
  * shortcuts that keep the editing flow uninterrupted.
  */
-export function useBlockEditor(): BlockEditorController {
-    const [blocks, setBlocks] = useState<FileEditorBlock[]>([]);
+export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorController {
+    const [blocks, setBlocks] = useState<FileEditorBlock[]>(() => initialBlocks ?? []);
     const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]);
     const selector = useBlockSelector();
     const inputRefs = useRef(new Map<string, HTMLTextAreaElement>());

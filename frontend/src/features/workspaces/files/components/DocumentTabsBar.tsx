@@ -77,6 +77,7 @@ export function DocumentTabsBar({
                             }}
                         >
                             {tab.title || (tab.isNew ? 'Untitled Draft' : 'Untitled')}
+                            {tab.mode === 'edit' && !tab.isNew && ' [EDIT]'}
                             {tab.isDirty && ' *'}
                         </Typography>
 

@@ -57,7 +57,6 @@ export function useBlockEditor(): BlockEditorController {
     const dragStartBlockId = useRef<string | null>(null);
     const dragStartPos = useRef<{ x: number; y: number } | null>(null);
     const isDraggingRange = useRef(false);
-    const justFinishedDrag = useRef(false);
 
     const handleBlockMouseDown = useCallback(
         (id: string, e: React.MouseEvent<HTMLElement>) => {
@@ -214,21 +213,6 @@ export function useBlockEditor(): BlockEditorController {
     useEffect(() => {
 
         const handlePointerUp = () => {
-            if (isDraggingRange.current) {
-                justFinishedDrag.current = true;
-                setTimeout(() => {
-                    justFinishedDrag.current = false;
-                }, 300);
-            } else if (dragStartBlockId.current) {
-                if (selectedBlockIds.length > 0) {
-                    const clickedId = dragStartBlockId.current;
-                    setSelectedBlockIds([]);
-                    const input = inputRefs.current.get(clickedId);
-                    if (input) {
-                        setTimeout(() => input.focus(), 0);
-                    }
-                }
-            }
             dragStartBlockId.current = null;
             dragStartPos.current = null;
             isDraggingRange.current = false;
@@ -241,26 +225,7 @@ export function useBlockEditor(): BlockEditorController {
             }
         };
 
-        const handleDocumentMouseDown = (e: MouseEvent) => {
-            if (justFinishedDrag.current) return;
-            if (selectedBlockIds.length === 0) return;
-            const target = e.target as HTMLElement | null;
-            if (!target) return;
-
-            const blockEl = target.closest('[data-block="true"]');
-            if (!blockEl) {
-                setSelectedBlockIds([]);
-                return;
-            }
-
-            const blockId = blockEl.getAttribute('data-block-id');
-            if (blockId && !selectedBlockIds.includes(blockId)) {
-                setSelectedBlockIds([]);
-            }
-        };
-
         const handleDocumentDblClick = (e: MouseEvent) => {
-            if (justFinishedDrag.current) return;
             if (selectedBlockIds.length === 0) return;
             const target = e.target as HTMLElement | null;
             if (!target || !target.closest('[data-block="true"]')) {
@@ -286,7 +251,6 @@ export function useBlockEditor(): BlockEditorController {
         window.addEventListener('mousemove', handlePointerMove);
         window.addEventListener('mouseup', handlePointerUp);
         window.addEventListener('dragstart', handleDragStart, { capture: true });
-        window.addEventListener('mousedown', handleDocumentMouseDown);
         window.addEventListener('dblclick', handleDocumentDblClick);
         document.addEventListener('copy', handleCopy);
 
@@ -296,7 +260,6 @@ export function useBlockEditor(): BlockEditorController {
             window.removeEventListener('mousemove', handlePointerMove);
             window.removeEventListener('mouseup', handlePointerUp);
             window.removeEventListener('dragstart', handleDragStart, { capture: true });
-            window.removeEventListener('mousedown', handleDocumentMouseDown);
             window.removeEventListener('dblclick', handleDocumentDblClick);
             document.removeEventListener('copy', handleCopy);
         };

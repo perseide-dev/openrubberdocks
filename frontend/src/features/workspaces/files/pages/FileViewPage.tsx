@@ -22,7 +22,7 @@ export function FileViewPage() {
     const { file, blocks, isLoading } = useFileView(wsUuid, fUuid);
 
     const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
-        useDocumentTabs(wsUuid, file ? { uuid: fUuid, title: file.title, icon: file.icon } : undefined);
+        useDocumentTabs(wsUuid, file ? { uuid: fUuid, title: file.title, icon: file.icon, mode: 'view' } : undefined);
 
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
     const { data: workspace } = useWorkspaceDetailService(wsUuid);

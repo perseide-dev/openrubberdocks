@@ -1,5 +1,33 @@
 import type { ChangeEvent } from 'react';
-import type { BlockType, BlockEditorController, WorkspaceBlock } from '@features-workspaces/files/types/block.types';
+import type { BlockType, BlockEditorController, WorkspaceBlock, FileEditorBlock } from '@features-workspaces/files/types/block.types';
+
+export interface DocumentDraft {
+    title: string;
+    icon: string | null;
+    coverImage: string | null;
+    isTemplate: boolean;
+    blocks: FileEditorBlock[];
+    updatedAt: number;
+}
+
+export type AutosaveStatus = 'saved' | 'saving' | 'unsaved';
+
+export interface DocumentTab {
+    uuid: string;
+    title: string;
+    icon: string | null;
+    isNew?: boolean;
+    isDirty?: boolean;
+}
+
+export interface DocumentTabsBarProps {
+    workspaceUuid: string;
+    tabs: DocumentTab[];
+    activeTabUuid: string;
+    onSelectTab: (tab: DocumentTab) => void;
+    onCloseTab: (tabUuid: string) => void;
+    onNewTab: () => void;
+}
 
 export interface WorkspaceFile {
     id: string;

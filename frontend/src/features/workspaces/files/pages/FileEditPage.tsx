@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { BrutalistBreadcrumbs } from '@components/ui';
 import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import { getPageAncestors } from '@utils-functions/tree.utils';
-import { FileEditor } from '@features-workspaces/files/components/FileEditor';
+import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/components';
 import { useFileEdit } from '@features-workspaces/files/hooks/useFileEdit';
+import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
 
 export function FileEditPage() {
     const { workspaceUuid, fileUuid } = useParams<{ workspaceUuid: string; fileUuid: string }>();
@@ -22,12 +23,19 @@ export function FileEditPage() {
         errorMessage,
         isSaving,
         blockEditor,
+        autosaveEnabled,
+        autosaveStatus,
+        toggleAutosave,
         handleTitleChange,
         setIcon,
         setCoverImage,
         setIsTemplate,
         handleSave,
     } = useFileEdit(wsUuid, fUuid);
+
+    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
+        useDocumentTabs(wsUuid, { uuid: fUuid, title, icon });
+
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
 
@@ -47,6 +55,14 @@ export function FileEditPage() {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <DocumentTabsBar
+                tabs={tabs}
+                activeTabUuid={activeTabUuid}
+                onSelectTab={handleSelectTab}
+                onCloseTab={handleCloseTab}
+                onNewTab={handleNewTab}
+            />
+
             {breadcrumbItems.length > 0 && (
                 <BrutalistBreadcrumbs items={breadcrumbItems} />
             )}
@@ -55,7 +71,21 @@ export function FileEditPage() {
                 title={`Edit File: ${title || 'Untitled'}`}
                 subtitle={workspace?.name ? `// WORKSPACE: ${workspace.name.toUpperCase()} // EDITING` : '// EDITING DOCUMENT'}
                 action={
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center' }}>
+                            {autosaveStatus === 'saving'
+                                ? '// SAVING...'
+                                : autosaveStatus === 'unsaved'
+                                ? '// UNSAVED'
+                                : '// SAVED'}
+                        </Typography>
+                        <Button
+                            size="small"
+                            color={autosaveEnabled ? 'primary' : 'inherit'}
+                            onClick={() => toggleAutosave(!autosaveEnabled)}
+                        >
+                            {autosaveEnabled ? 'AUTOSAVE: ON' : 'AUTOSAVE: OFF'}
+                        </Button>
                         <Button
                             color="inherit"
                             onClick={() => navigate(`/workspaces/${wsUuid}/files/${fUuid}`)}
@@ -64,7 +94,7 @@ export function FileEditPage() {
                             Cancel
                         </Button>
                         <Button color="inherit" onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? 'Saving...' : 'Save File'}
+                            {isSaving ? 'Saving...' : 'Save File (Ctrl+S)'}
                         </Button>
                     </Box>
                 }

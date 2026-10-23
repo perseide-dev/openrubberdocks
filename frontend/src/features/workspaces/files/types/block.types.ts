@@ -119,6 +119,7 @@ export interface BlockEditorController {
     handleBlockPaste: (id: string, event: React.ClipboardEvent<HTMLElement>) => void;
     handleBlockMouseDown: (id: string, event: React.MouseEvent<HTMLElement>) => void;
     handleBlockMouseEnter: (id: string) => void;
+    handleCanvasMouseDown: (event: React.MouseEvent<HTMLElement>) => void;
     registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
     focusBlock: (id: string) => void;
     reset: () => void;

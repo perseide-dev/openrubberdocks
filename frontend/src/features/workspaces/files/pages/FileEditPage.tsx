@@ -16,6 +16,7 @@ export function FileEditPage() {
     const wsUuid = workspaceUuid ?? '';
     const fUuid = fileUuid ?? '';
     const {
+        isLoading,
         title,
         icon,
         coverImage,
@@ -95,28 +96,36 @@ export function FileEditPage() {
                         <Button
                             color="inherit"
                             onClick={() => navigate(`/workspaces/${wsUuid}/files/${fUuid}`)}
-                            disabled={isSaving}
+                            disabled={isLoading || isSaving}
                         >
                             Cancel
                         </Button>
-                        <Button color="inherit" onClick={handleSave} disabled={isSaving}>
+                        <Button color="inherit" onClick={handleSave} disabled={isLoading || isSaving}>
                             {isSaving ? 'Saving...' : 'Save File (Ctrl+S)'}
                         </Button>
                     </Box>
                 }
             />
-            <FileEditor
-                title={title}
-                errorMessage={errorMessage}
-                blockEditor={blockEditor}
-                icon={icon}
-                coverImage={coverImage}
-                isTemplate={isTemplate}
-                onTitleChange={handleTitleChange}
-                onIconChange={setIcon}
-                onCoverChange={setCoverImage}
-                onToggleTemplate={setIsTemplate}
-            />
+            {isLoading ? (
+                <Box sx={{ padding: 2 }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                        // LOADING_DOCUMENT...
+                    </Typography>
+                </Box>
+            ) : (
+                <FileEditor
+                    title={title}
+                    errorMessage={errorMessage}
+                    blockEditor={blockEditor}
+                    icon={icon}
+                    coverImage={coverImage}
+                    isTemplate={isTemplate}
+                    onTitleChange={handleTitleChange}
+                    onIconChange={setIcon}
+                    onCoverChange={setCoverImage}
+                    onToggleTemplate={setIsTemplate}
+                />
+            )}
         </Box>
     );
 }

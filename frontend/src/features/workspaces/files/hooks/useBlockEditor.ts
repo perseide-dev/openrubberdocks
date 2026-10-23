@@ -127,7 +127,7 @@ export function useBlockEditor(): BlockEditorController {
     );
 
     useEffect(() => {
-        const handleWindowMouseMove = (e: MouseEvent) => {
+        const handlePointerMove = (e: PointerEvent | MouseEvent) => {
             if (!dragStartPos.current) return;
 
             const dist = Math.hypot(
@@ -141,18 +141,23 @@ export function useBlockEditor(): BlockEditorController {
             );
             if (blockElements.length === 0 || blocks.length === 0) return;
 
-            const el = document.elementFromPoint(e.clientX, e.clientY);
-            const currentBlockEl = el?.closest<HTMLElement>('[data-block="true"]');
-            let currentId = currentBlockEl?.getAttribute('data-block-id');
+            let currentId: string | null = null;
+            const firstRect = blockElements[0].getBoundingClientRect();
+            const lastRect = blockElements[blockElements.length - 1].getBoundingClientRect();
 
-            if (!currentId) {
-                const firstRect = blockElements[0].getBoundingClientRect();
-                const lastRect = blockElements[blockElements.length - 1].getBoundingClientRect();
-                if (e.clientY >= lastRect.top) {
-                    currentId = blockElements[blockElements.length - 1].getAttribute('data-block-id');
-                } else if (e.clientY <= firstRect.bottom) {
-                    currentId = blockElements[0].getAttribute('data-block-id');
-                } else {
+            if (e.clientY >= lastRect.top) {
+                currentId = blockElements[blockElements.length - 1].getAttribute('data-block-id');
+            } else if (e.clientY <= firstRect.bottom) {
+                currentId = blockElements[0].getAttribute('data-block-id');
+            } else {
+                for (const bEl of blockElements) {
+                    const rect = bEl.getBoundingClientRect();
+                    if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        currentId = bEl.getAttribute('data-block-id');
+                        break;
+                    }
+                }
+                if (!currentId) {
                     let minDiff = Infinity;
                     let closest = blockElements[0];
                     for (const bEl of blockElements) {
@@ -192,12 +197,12 @@ export function useBlockEditor(): BlockEditorController {
             }
         };
 
-        const handleWindowMouseUp = () => {
+        const handlePointerUp = () => {
             if (isDraggingRange.current) {
                 justFinishedDrag.current = true;
                 setTimeout(() => {
                     justFinishedDrag.current = false;
-                }, 250);
+                }, 300);
             } else if (dragStartBlockId.current) {
                 if (selectedBlockIds.length > 0) {
                     const clickedId = dragStartBlockId.current;
@@ -211,6 +216,13 @@ export function useBlockEditor(): BlockEditorController {
             dragStartBlockId.current = null;
             dragStartPos.current = null;
             isDraggingRange.current = false;
+        };
+
+        const handleDragStart = (e: DragEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (!target?.closest('[data-drag-handle="true"]')) {
+                e.preventDefault();
+            }
         };
 
         const handleDocumentMouseDown = (e: MouseEvent) => {
@@ -253,15 +265,21 @@ export function useBlockEditor(): BlockEditorController {
             }
         };
 
-        window.addEventListener('mousemove', handleWindowMouseMove);
-        window.addEventListener('mouseup', handleWindowMouseUp);
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mouseup', handlePointerUp);
+        window.addEventListener('dragstart', handleDragStart, { capture: true });
         window.addEventListener('mousedown', handleDocumentMouseDown);
         window.addEventListener('dblclick', handleDocumentDblClick);
         document.addEventListener('copy', handleCopy);
 
         return () => {
-            window.removeEventListener('mousemove', handleWindowMouseMove);
-            window.removeEventListener('mouseup', handleWindowMouseUp);
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+            window.removeEventListener('mousemove', handlePointerMove);
+            window.removeEventListener('mouseup', handlePointerUp);
+            window.removeEventListener('dragstart', handleDragStart, { capture: true });
             window.removeEventListener('mousedown', handleDocumentMouseDown);
             window.removeEventListener('dblclick', handleDocumentDblClick);
             document.removeEventListener('copy', handleCopy);

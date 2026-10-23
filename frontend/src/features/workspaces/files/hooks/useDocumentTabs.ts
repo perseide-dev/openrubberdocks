@@ -15,10 +15,11 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
 
     const isFirstMount = useRef(true);
 
-    // Sync tabs with current file being viewed/edited
-    useEffect(() => {
-        if (!workspaceUuid) return;
-
+    // Sync tabs with current file being viewed/edited during render when props change
+    const [prevFileKey, setPrevFileKey] = useState<string | null>(null);
+    const currentKey = currentFile ? `${currentFile.uuid}:${currentFile.title}:${currentFile.icon}` : null;
+    if (currentKey !== prevFileKey) {
+        setPrevFileKey(currentKey);
         if (currentFile && currentFile.uuid) {
             setTabs((prev) => {
                 const existingIndex = prev.findIndex((t) => t.uuid === currentFile.uuid);
@@ -44,7 +45,7 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                 return updated;
             });
         }
-    }, [workspaceUuid, currentFile]);
+    }
 
     // Keep tabs saved to sessionStorage when modified
     useEffect(() => {

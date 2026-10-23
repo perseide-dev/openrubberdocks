@@ -1,10 +1,15 @@
-import { useState, useCallback, useMemo, type ChangeEvent } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreateFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import { useCreateBlockService, fetchFileBlocks } from '@features-workspaces/files/services/block.service';
 import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
 import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
+import {
+    loadDraft,
+    saveDraft,
+    clearDraft,
+} from '@features-workspaces/files/utils/draft-storage.utils';
 import type { AppError } from '@http-error/http-error.handler';
 import type { BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
@@ -37,6 +42,42 @@ export function useFileCreation(workspaceUuid: string) {
     const [coverImage, setCoverImage] = useState<string | null>(null);
     const [isTemplate, setIsTemplate] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    const isInitialMount = useRef(true);
+
+    // Restore cached new draft if present
+    useEffect(() => {
+        const draft = loadDraft(workspaceUuid, 'new');
+        if (draft) {
+            setTitle(draft.title || '');
+            setIcon(draft.icon || null);
+            setCoverImage(draft.coverImage || null);
+            setIsTemplate(Boolean(draft.isTemplate));
+            if (draft.blocks && draft.blocks.length > 0) {
+                blockEditor.setBlocksState(draft.blocks);
+            }
+        }
+    }, [workspaceUuid, blockEditor]);
+
+    // Save draft on change
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        // Only save draft if there is meaningful content
+        if (title.trim() || blockEditor.blocks.length > 0 || icon || coverImage) {
+            saveDraft(workspaceUuid, 'new', {
+                title,
+                icon,
+                coverImage,
+                isTemplate,
+                blocks: blockEditor.blocks,
+                updatedAt: Date.now(),
+            });
+        }
+    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, workspaceUuid]);
 
     const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
@@ -117,6 +158,7 @@ export function useFileCreation(workspaceUuid: string) {
                 });
             }
 
+            clearDraft(workspaceUuid, 'new');
             blockEditor.reset();
             navigate(`/workspaces/${workspaceUuid}/files/${file.uuid}`);
         } catch (err) {
@@ -130,6 +172,19 @@ export function useFileCreation(workspaceUuid: string) {
             setErrorMessage(errorDetail);
         }
     }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, createFileMutation, createBlockMutation, blockEditor, navigate]);
+
+    // Ctrl+S / Cmd+S shortcut
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                void handleSave();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleSave]);
 
     return {
         title,

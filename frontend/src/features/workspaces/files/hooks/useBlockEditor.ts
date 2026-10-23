@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, type KeyboardEvent } from 'react';
+import { useState, useCallback, useRef, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
     PointerSensor,
     KeyboardSensor,
@@ -619,7 +619,7 @@ export function useBlockEditor(): BlockEditorController {
     );
 
     const handleBlockKeyDown = useCallback(
-        (id: string, event: KeyboardEvent<HTMLElement>) => {
+        (id: string, event: ReactKeyboardEvent<HTMLElement>) => {
             if (selector.isOpen) {
                 return;
             }

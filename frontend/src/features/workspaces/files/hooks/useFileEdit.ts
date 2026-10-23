@@ -69,30 +69,32 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         if (!file || isHydratedRef.current) return;
         isHydratedRef.current = true;
 
-        const draft = loadDraft(workspaceUuid, fileUuid);
-        const serverUpdatedAt = new Date(file.updatedAt).getTime();
-        const isDraftNewer = Boolean(draft && draft.updatedAt > serverUpdatedAt);
+        queueMicrotask(() => {
+            const draft = loadDraft(workspaceUuid, fileUuid);
+            const serverUpdatedAt = new Date(file.updatedAt).getTime();
+            const isDraftNewer = Boolean(draft && draft.updatedAt > serverUpdatedAt);
 
-        const resolvedTitle = (isDraftNewer && draft?.title?.trim()) ? draft.title : (file.title || '');
-        const resolvedIcon = (isDraftNewer && draft?.icon !== undefined) ? draft.icon : (file.icon || null);
-        const resolvedCover = (isDraftNewer && draft?.coverImage !== undefined) ? draft.coverImage : (file.coverImage || null);
-        const resolvedTemplate = isDraftNewer ? Boolean(draft?.isTemplate) : Boolean(file.isTemplate);
+            const resolvedTitle = (isDraftNewer && draft?.title?.trim()) ? draft.title : (file.title || '');
+            const resolvedIcon = (isDraftNewer && draft?.icon !== undefined) ? draft.icon : (file.icon || null);
+            const resolvedCover = (isDraftNewer && draft?.coverImage !== undefined) ? draft.coverImage : (file.coverImage || null);
+            const resolvedTemplate = isDraftNewer ? Boolean(draft?.isTemplate) : Boolean(file.isTemplate);
 
-        setTitle(resolvedTitle);
-        setIcon(resolvedIcon);
-        setCoverImage(resolvedCover);
-        setIsTemplate(resolvedTemplate);
+            setTitle(resolvedTitle);
+            setIcon(resolvedIcon);
+            setCoverImage(resolvedCover);
+            setIsTemplate(resolvedTemplate);
 
-        if (isDraftNewer && draft?.blocks && draft.blocks.length > 0) {
-            blockEditor.setBlocksState(draft.blocks);
-            setIsDraftRestored(true);
-            setAutosaveStatus('unsaved');
-            setIsUserDirty(true);
-        } else {
-            const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
-            blockEditor.setBlocksState(sorted.map(mapBlockToEditor));
-            setAutosaveStatus('saved');
-        }
+            if (isDraftNewer && draft?.blocks && draft.blocks.length > 0) {
+                blockEditor.setBlocksState(draft.blocks);
+                setIsDraftRestored(true);
+                setAutosaveStatus('unsaved');
+                setIsUserDirty(true);
+            } else {
+                const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
+                blockEditor.setBlocksState(sorted.map(mapBlockToEditor));
+                setAutosaveStatus('saved');
+            }
+        });
     }, [file, blocks, workspaceUuid, fileUuid, blockEditor]);
 
     // Save draft to localStorage only when user actually makes changes

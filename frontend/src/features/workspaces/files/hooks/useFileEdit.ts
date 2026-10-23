@@ -67,24 +67,26 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     // Load file and check for newer cached draft
     useEffect(() => {
         if (file && lastFileRef.current !== file.uuid) {
-            const draft = loadDraft(workspaceUuid, fileUuid);
-            const serverUpdatedAt = new Date(file.updatedAt).getTime();
-
-            if (draft && draft.updatedAt > serverUpdatedAt) {
-                setTitle(draft.title);
-                setIcon(draft.icon);
-                setCoverImage(draft.coverImage);
-                setIsTemplate(draft.isTemplate);
-                blockEditor.setBlocksState(draft.blocks);
-                setIsDraftRestored(true);
-                setAutosaveStatus('unsaved');
-            } else {
-                setTitle(file.title || '');
-                setIcon(file.icon || null);
-                setCoverImage(file.coverImage || null);
-                setIsTemplate(Boolean(file.isTemplate));
-            }
             lastFileRef.current = file.uuid;
+            queueMicrotask(() => {
+                const draft = loadDraft(workspaceUuid, fileUuid);
+                const serverUpdatedAt = new Date(file.updatedAt).getTime();
+
+                if (draft && draft.updatedAt > serverUpdatedAt) {
+                    setTitle(draft.title);
+                    setIcon(draft.icon);
+                    setCoverImage(draft.coverImage);
+                    setIsTemplate(draft.isTemplate);
+                    blockEditor.setBlocksState(draft.blocks);
+                    setIsDraftRestored(true);
+                    setAutosaveStatus('unsaved');
+                } else {
+                    setTitle(file.title || '');
+                    setIcon(file.icon || null);
+                    setCoverImage(file.coverImage || null);
+                    setIsTemplate(Boolean(file.isTemplate));
+                }
+            });
         }
     }, [file, workspaceUuid, fileUuid, blockEditor]);
 

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
-import { FileViewer } from '@features-workspaces/files/components/FileViewer';
+import { FileViewer, DocumentTabsBar } from '@features-workspaces/files/components';
 import { useFileView } from '@features-workspaces/files/hooks/useFileView';
 import { useDeleteFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
@@ -12,6 +12,7 @@ import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
 import { RevisionHistoryDrawer } from '@features-workspaces/files/components/RevisionHistoryDrawer';
 import { REVISION_LABELS } from '@features-workspaces/files/constants/revision.constants';
+import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
 
 export function FileViewPage() {
     const { workspaceUuid, fileUuid } = useParams<{ workspaceUuid: string; fileUuid: string }>();
@@ -19,6 +20,10 @@ export function FileViewPage() {
     const wsUuid = workspaceUuid ?? '';
     const fUuid = fileUuid ?? '';
     const { file, blocks, isLoading } = useFileView(wsUuid, fUuid);
+
+    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
+        useDocumentTabs(wsUuid, file ? { uuid: fUuid, title: file.title, icon: file.icon } : undefined);
+
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { canMutateInWorkspace, hasPermission } = usePermissions();
@@ -52,6 +57,14 @@ export function FileViewPage() {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <DocumentTabsBar
+                tabs={tabs}
+                activeTabUuid={activeTabUuid}
+                onSelectTab={handleSelectTab}
+                onCloseTab={handleCloseTab}
+                onNewTab={handleNewTab}
+            />
+
             {breadcrumbItems.length > 0 && (
                 <BrutalistBreadcrumbs items={breadcrumbItems} />
             )}

@@ -41,11 +41,32 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
             collisionDetection={collisionDetection}
             onDragEnd={handleDragEnd}
         >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box
+                onClick={(e) => {
+                    const target = e.target as HTMLElement | null;
+                    if (!target?.closest('[data-block="true"]')) {
+                        clearBlockSelection();
+                    }
+                }}
+                onDoubleClick={(e) => {
+                    const target = e.target as HTMLElement | null;
+                    if (!target?.closest('[data-block="true"]')) {
+                        clearBlockSelection();
+                    }
+                }}
+                sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+            >
                 <Box
                     ref={setNodeRef}
                     onClick={(e) => {
-                        if (e.target === e.currentTarget) {
+                        const target = e.target as HTMLElement | null;
+                        if (!target?.closest('[data-block="true"]')) {
+                            clearBlockSelection();
+                        }
+                    }}
+                    onDoubleClick={(e) => {
+                        const target = e.target as HTMLElement | null;
+                        if (!target?.closest('[data-block="true"]')) {
                             clearBlockSelection();
                         }
                     }}

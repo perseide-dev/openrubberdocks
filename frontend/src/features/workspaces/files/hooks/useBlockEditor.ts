@@ -55,17 +55,20 @@ export function useBlockEditor(): BlockEditorController {
     }, []);
 
     const dragStartBlockId = useRef<string | null>(null);
+    const isDraggingRange = useRef(false);
 
     const handleBlockMouseDown = useCallback(
         (id: string, e: React.MouseEvent<HTMLElement>) => {
             if (e.button === 0) {
-                dragStartBlockId.current = id;
-                if (selectedBlockIds.length > 0 && !selectedBlockIds.includes(id)) {
-                    setSelectedBlockIds([]);
+                const target = e.target as HTMLElement | null;
+                if (target?.closest('button') || target?.closest('input[type="checkbox"]')) {
+                    return;
                 }
+                dragStartBlockId.current = id;
+                isDraggingRange.current = false;
             }
         },
-        [selectedBlockIds]
+        []
     );
 
     const handleBlockMouseEnter = useCallback(
@@ -73,6 +76,7 @@ export function useBlockEditor(): BlockEditorController {
             if (!dragStartBlockId.current) return;
             if (dragStartBlockId.current === id) return;
 
+            isDraggingRange.current = true;
             const startIndex = blocks.findIndex((b) => b.id === dragStartBlockId.current);
             const currentIndex = blocks.findIndex((b) => b.id === id);
 
@@ -91,7 +95,43 @@ export function useBlockEditor(): BlockEditorController {
 
     useEffect(() => {
         const handleWindowMouseUp = () => {
+            const clickedId = dragStartBlockId.current;
+            if (clickedId && !isDraggingRange.current) {
+                if (selectedBlockIds.length > 0) {
+                    setSelectedBlockIds([]);
+                    const input = inputRefs.current.get(clickedId);
+                    if (input) {
+                        setTimeout(() => input.focus(), 0);
+                    }
+                }
+            }
             dragStartBlockId.current = null;
+            isDraggingRange.current = false;
+        };
+
+        const handleDocumentMouseDown = (e: MouseEvent) => {
+            if (selectedBlockIds.length === 0) return;
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+
+            const blockEl = target.closest('[data-block="true"]');
+            if (!blockEl) {
+                setSelectedBlockIds([]);
+                return;
+            }
+
+            const blockId = blockEl.getAttribute('data-block-id');
+            if (blockId && !selectedBlockIds.includes(blockId)) {
+                setSelectedBlockIds([]);
+            }
+        };
+
+        const handleDocumentDblClick = (e: MouseEvent) => {
+            if (selectedBlockIds.length === 0) return;
+            const target = e.target as HTMLElement | null;
+            if (!target || !target.closest('[data-block="true"]')) {
+                setSelectedBlockIds([]);
+            }
         };
 
         const handleCopy = (e: ClipboardEvent) => {
@@ -108,10 +148,14 @@ export function useBlockEditor(): BlockEditorController {
         };
 
         window.addEventListener('mouseup', handleWindowMouseUp);
+        window.addEventListener('mousedown', handleDocumentMouseDown);
+        window.addEventListener('dblclick', handleDocumentDblClick);
         document.addEventListener('copy', handleCopy);
 
         return () => {
             window.removeEventListener('mouseup', handleWindowMouseUp);
+            window.removeEventListener('mousedown', handleDocumentMouseDown);
+            window.removeEventListener('dblclick', handleDocumentDblClick);
             document.removeEventListener('copy', handleCopy);
         };
     }, [selectedBlockIds, blocks]);
@@ -145,6 +189,7 @@ export function useBlockEditor(): BlockEditorController {
 
     const addBlock = useCallback((type: BlockType, overId?: string) => {
         const id = crypto.randomUUID();
+        setSelectedBlockIds([]);
 
         setBlocks((prev) => {
             const newBlock: FileEditorBlock = {
@@ -179,6 +224,7 @@ export function useBlockEditor(): BlockEditorController {
     }, []);
 
     const convertBlock = useCallback((id: string, type: BlockType, content?: string) => {
+        setSelectedBlockIds([]);
         setBlocks((prev) =>
             prev.map((block) =>
                 block.id === id

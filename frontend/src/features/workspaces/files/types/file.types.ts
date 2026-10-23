@@ -21,7 +21,7 @@ export interface DocumentTab {
 }
 
 export interface DocumentTabsBarProps {
-    workspaceUuid: string;
+    workspaceUuid?: string;
     tabs: DocumentTab[];
     activeTabUuid: string;
     onSelectTab: (tab: DocumentTab) => void;

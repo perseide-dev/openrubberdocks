@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { BrutalistBreadcrumbs } from '@components/ui';
-import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import { useWorkspaceFilesService, useFileDetailService } from '@features-workspaces/files/services/file.service';
 import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/components';
@@ -33,8 +33,9 @@ export function FileEditPage() {
         handleSave,
     } = useFileEdit(wsUuid, fUuid);
 
+    const { data: file } = useFileDetailService(fUuid);
     const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
-        useDocumentTabs(wsUuid, { uuid: fUuid, title, icon });
+        useDocumentTabs(wsUuid, file ? { uuid: fUuid, title: file.title, icon: file.icon } : undefined);
 
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
     const { data: workspace } = useWorkspaceDetailService(wsUuid);

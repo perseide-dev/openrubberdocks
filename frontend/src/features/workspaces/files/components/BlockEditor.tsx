@@ -46,12 +46,6 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
             <Box
                 onMouseDown={handleCanvasMouseDown}
                 onPointerMove={handlePointerMove}
-                onClick={(e) => {
-                    const target = e.target as HTMLElement | null;
-                    if (!target?.closest('[data-block="true"]')) {
-                        clearBlockSelection();
-                    }
-                }}
                 onDoubleClick={(e) => {
                     const target = e.target as HTMLElement | null;
                     if (!target?.closest('[data-block="true"]')) {
@@ -64,12 +58,6 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                     ref={setNodeRef}
                     onMouseDown={handleCanvasMouseDown}
                     onPointerMove={handlePointerMove}
-                    onClick={(e) => {
-                        const target = e.target as HTMLElement | null;
-                        if (!target?.closest('[data-block="true"]')) {
-                            clearBlockSelection();
-                        }
-                    }}
                     onDoubleClick={(e) => {
                         const target = e.target as HTMLElement | null;
                         if (!target?.closest('[data-block="true"]')) {

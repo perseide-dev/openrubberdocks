@@ -49,6 +49,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const [isTemplate, setIsTemplate] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isDraftRestored, setIsDraftRestored] = useState(false);
+    const isUserDirty = useRef(false);
 
     // Autosave settings & status
     const [autosaveEnabled, setAutosaveEnabled] = useState(getAutosavePreference);
@@ -56,39 +57,38 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
 
     const hydratedKey = `${fileUuid}:${blocks.map((b) => b.uuid).join(',')}`;
     const lastHydratedKeyRef = useRef<string | null>(null);
-    const lastFileRef = useRef<string | null>(null);
-    const isInitialLoad = useRef(true);
 
     const toggleAutosave = useCallback((enabled: boolean) => {
         setAutosaveEnabled(enabled);
         setAutosavePreference(enabled);
     }, []);
 
-    // Load file and check for newer cached draft
-    useEffect(() => {
-        if (file && lastFileRef.current !== file.uuid) {
-            lastFileRef.current = file.uuid;
-            queueMicrotask(() => {
-                const draft = loadDraft(workspaceUuid, fileUuid);
-                const serverUpdatedAt = new Date(file.updatedAt).getTime();
+    // Synchronize initial file data or newer cached draft during render
+    const [syncedFileUuid, setSyncedFileUuid] = useState<string | null>(null);
+    if (file && file.uuid !== syncedFileUuid) {
+        setSyncedFileUuid(file.uuid);
+        const draft = loadDraft(workspaceUuid, fileUuid);
+        const serverUpdatedAt = new Date(file.updatedAt).getTime();
+        const isDraftNewer = Boolean(draft && draft.updatedAt > serverUpdatedAt);
 
-                if (draft && draft.updatedAt > serverUpdatedAt) {
-                    setTitle(draft.title);
-                    setIcon(draft.icon);
-                    setCoverImage(draft.coverImage);
-                    setIsTemplate(draft.isTemplate);
-                    blockEditor.setBlocksState(draft.blocks);
-                    setIsDraftRestored(true);
-                    setAutosaveStatus('unsaved');
-                } else {
-                    setTitle(file.title || '');
-                    setIcon(file.icon || null);
-                    setCoverImage(file.coverImage || null);
-                    setIsTemplate(Boolean(file.isTemplate));
-                }
-            });
+        // Fallback to server title if draft title is empty or missing
+        const resolvedTitle = (isDraftNewer && draft?.title?.trim()) ? draft.title : (file.title || '');
+        const resolvedIcon = (isDraftNewer && draft?.icon !== undefined) ? draft.icon : (file.icon || null);
+        const resolvedCover = (isDraftNewer && draft?.coverImage !== undefined) ? draft.coverImage : (file.coverImage || null);
+        const resolvedTemplate = isDraftNewer ? Boolean(draft?.isTemplate) : Boolean(file.isTemplate);
+
+        setTitle(resolvedTitle);
+        setIcon(resolvedIcon);
+        setCoverImage(resolvedCover);
+        setIsTemplate(resolvedTemplate);
+
+        if (isDraftNewer && draft?.blocks && draft.blocks.length > 0) {
+            blockEditor.setBlocksState(draft.blocks);
+            setIsDraftRestored(true);
+            setAutosaveStatus('unsaved');
+            isUserDirty.current = true;
         }
-    }, [file, workspaceUuid, fileUuid, blockEditor]);
+    }
 
     // Populate editor blocks from server if no draft restored
     useEffect(() => {
@@ -107,13 +107,10 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         }
     }, [hydratedKey, blockEditor, blocks, isDraftRestored]);
 
-    // Save draft to localStorage on any change
+    // Save draft to localStorage only when user actually makes changes
     useEffect(() => {
         if (!file) return;
-        if (isInitialLoad.current) {
-            isInitialLoad.current = false;
-            return;
-        }
+        if (!isUserDirty.current && !blockEditor.canUndo) return;
 
         setAutosaveStatus('unsaved');
         saveDraft(workspaceUuid, fileUuid, {
@@ -124,11 +121,27 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             blocks: blockEditor.blocks,
             updatedAt: Date.now(),
         });
-    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, workspaceUuid, fileUuid, file]);
+    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, blockEditor.canUndo, workspaceUuid, fileUuid, file]);
 
     const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        isUserDirty.current = true;
         setTitle(e.target.value);
         setErrorMessage(null);
+    }, []);
+
+    const handleSetIcon = useCallback((newIcon: string | null) => {
+        isUserDirty.current = true;
+        setIcon(newIcon);
+    }, []);
+
+    const handleSetCoverImage = useCallback((newCover: string | null) => {
+        isUserDirty.current = true;
+        setCoverImage(newCover);
+    }, []);
+
+    const handleSetIsTemplate = useCallback((val: boolean) => {
+        isUserDirty.current = true;
+        setIsTemplate(val);
     }, []);
 
     const persistFile = useCallback(async () => {
@@ -173,6 +186,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         }
 
         clearDraft(workspaceUuid, fileUuid);
+        isUserDirty.current = false;
         setAutosaveStatus('saved');
         return true;
     }, [
@@ -254,9 +268,9 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         autosaveStatus,
         toggleAutosave,
         handleTitleChange,
-        setIcon,
-        setCoverImage,
-        setIsTemplate,
+        setIcon: handleSetIcon,
+        setCoverImage: handleSetCoverImage,
+        setIsTemplate: handleSetIsTemplate,
         handleSave,
     };
 }

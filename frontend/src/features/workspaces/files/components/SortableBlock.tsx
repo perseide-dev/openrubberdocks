@@ -16,6 +16,7 @@ interface SortableBlockProps {
     onKeyDown: (id: string, event: KeyboardEvent<HTMLElement>) => void;
     onPaste?: (id: string, event: ClipboardEvent<HTMLElement>) => void;
     onMouseDown?: (id: string, event: MouseEvent<HTMLElement>) => void;
+    onPointerMove?: (event: React.PointerEvent<HTMLElement>) => void;
     onMouseEnter?: (id: string) => void;
     onRemove: (id: string) => void;
     onToggleChecked: (id: string) => void;
@@ -43,6 +44,7 @@ export function SortableBlock({
     onKeyDown,
     onPaste,
     onMouseDown,
+    onPointerMove,
     onMouseEnter,
     onRemove,
     onToggleChecked,
@@ -87,6 +89,7 @@ export function SortableBlock({
             data-block-id={block.id}
             data-selected-block={isSelected ? 'true' : undefined}
             onMouseDown={(event) => onMouseDown?.(block.id, event)}
+            onPointerMove={onPointerMove}
             onMouseEnter={() => onMouseEnter?.(block.id)}
             sx={{
                 position: 'relative',

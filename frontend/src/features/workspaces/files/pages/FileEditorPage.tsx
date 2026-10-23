@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
@@ -12,6 +12,8 @@ import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTab
 
 export function FileEditorPage() {
     const { uuid } = useParams<{ uuid: string }>();
+    const [searchParams] = useSearchParams();
+    const draftId = searchParams.get('draftId') || 'new';
     const navigate = useNavigate();
     const workspaceUuid = uuid ?? '';
     const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
@@ -34,10 +36,10 @@ export function FileEditorPage() {
         setIsTemplate,
         handleApplyTemplate,
         handleSave,
-    } = useFileCreation(workspaceUuid);
+    } = useFileCreation(workspaceUuid, draftId);
 
     const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
-        useDocumentTabs(workspaceUuid, { uuid: 'new', title: title || 'UNTITLED', icon, isNew: true });
+        useDocumentTabs(workspaceUuid, { uuid: draftId, title: title || 'UNTITLED', icon, isNew: true });
 
     const breadcrumbItems = useMemo(() => {
         if (!parentPageUuid) return [];

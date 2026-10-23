@@ -4,7 +4,10 @@ import { files } from '@features-workspaces/files/routes/routes';
 import { getStoredTabs, setStoredTabs, clearDraft } from '@features-workspaces/files/utils/draft-storage.utils';
 import type { DocumentTab } from '@features-workspaces/files/types/file.types';
 
-export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: string; title: string; icon: string | null; isNew?: boolean }) {
+export function useDocumentTabs(
+    workspaceUuid: string,
+    currentFile?: { uuid: string; title: string; icon: string | null; isNew?: boolean; mode?: 'view' | 'edit' }
+) {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -17,7 +20,7 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
 
     // Sync tabs with current file being viewed/edited during render when props change
     const [prevFileKey, setPrevFileKey] = useState<string | null>(null);
-    const currentKey = currentFile ? `${currentFile.uuid}:${currentFile.title}:${currentFile.icon}` : null;
+    const currentKey = currentFile ? `${currentFile.uuid}:${currentFile.title}:${currentFile.icon}:${currentFile.mode ?? 'view'}` : null;
     if (currentKey !== prevFileKey) {
         setPrevFileKey(currentKey);
         if (currentFile && currentFile.uuid) {
@@ -28,12 +31,13 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                     const existing = prev[existingIndex];
                     const nextTitle = currentFile.title || existing.title;
                     const nextIcon = currentFile.icon ?? existing.icon;
-                    if (existing.title === nextTitle && existing.icon === nextIcon) {
+                    const nextMode = currentFile.mode ?? existing.mode ?? 'view';
+                    if (existing.title === nextTitle && existing.icon === nextIcon && existing.mode === nextMode) {
                         return prev;
                     }
                     updated = prev.map((t, idx) =>
                         idx === existingIndex
-                            ? { ...t, title: nextTitle, icon: nextIcon }
+                            ? { ...t, title: nextTitle, icon: nextIcon, mode: nextMode }
                             : t
                     );
                 } else {
@@ -44,6 +48,7 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                             title: currentFile.title || (currentFile.isNew ? 'Untitled Draft' : 'Untitled'),
                             icon: currentFile.icon,
                             isNew: currentFile.isNew,
+                            mode: currentFile.mode ?? 'view',
                         },
                     ];
                 }
@@ -77,17 +82,13 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                 } else {
                     navigate(`/workspaces/${workspaceUuid}/files/new?draftId=${tab.uuid}`);
                 }
+            } else if (tab.mode === 'edit') {
+                navigate(files.edit.build(workspaceUuid, tab.uuid));
             } else {
-                // If on edit page, stay in edit or switch to edit; otherwise switch to edit/view
-                const isCurrentlyEditing = location.pathname.endsWith('/edit');
-                if (isCurrentlyEditing) {
-                    navigate(files.edit.build(workspaceUuid, tab.uuid));
-                } else {
-                    navigate(files.view.build(workspaceUuid, tab.uuid));
-                }
+                navigate(files.view.build(workspaceUuid, tab.uuid));
             }
         },
-        [activeTabUuid, navigate, workspaceUuid, location.pathname]
+        [activeTabUuid, navigate, workspaceUuid]
     );
 
     const handleCloseTab = useCallback(
@@ -109,6 +110,8 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                             } else {
                                 navigate(`/workspaces/${workspaceUuid}/files/new?draftId=${target.uuid}`);
                             }
+                        } else if (target.mode === 'edit') {
+                            navigate(files.edit.build(workspaceUuid, target.uuid));
                         } else {
                             navigate(files.view.build(workspaceUuid, target.uuid));
                         }

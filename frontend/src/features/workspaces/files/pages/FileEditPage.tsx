@@ -35,7 +35,12 @@ export function FileEditPage() {
 
     const { data: file } = useFileDetailService(fUuid);
     const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
-        useDocumentTabs(wsUuid, file ? { uuid: fUuid, title: file.title, icon: file.icon } : undefined);
+        useDocumentTabs(
+            wsUuid,
+            file
+                ? { uuid: fUuid, title: file.title, icon: file.icon, mode: 'edit' }
+                : { uuid: fUuid, title: '', icon: null, mode: 'edit' }
+        );
 
     const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
     const { data: workspace } = useWorkspaceDetailService(wsUuid);

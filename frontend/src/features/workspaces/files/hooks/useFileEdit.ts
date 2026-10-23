@@ -50,28 +50,29 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isDraftRestored, setIsDraftRestored] = useState(false);
     const [isUserDirty, setIsUserDirty] = useState(false);
+    const [isManualSaving, setIsManualSaving] = useState(false);
 
     // Autosave settings & status
     const [autosaveEnabled, setAutosaveEnabled] = useState(getAutosavePreference);
     const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('saved');
 
-    const hydratedKey = `${fileUuid}:${blocks.map((b) => b.uuid).join(',')}`;
-    const lastHydratedKeyRef = useRef<string | null>(null);
+    const isHydratedRef = useRef(false);
+    const isPersistingRef = useRef(false);
 
     const toggleAutosave = useCallback((enabled: boolean) => {
         setAutosaveEnabled(enabled);
         setAutosavePreference(enabled);
     }, []);
 
-    // Synchronize initial file data or newer cached draft during render
-    const [syncedFileUuid, setSyncedFileUuid] = useState<string | null>(null);
-    if (file && file.uuid !== syncedFileUuid) {
-        setSyncedFileUuid(file.uuid);
+    // Hydrate editor state exactly ONCE when file is available
+    useEffect(() => {
+        if (!file || isHydratedRef.current) return;
+        isHydratedRef.current = true;
+
         const draft = loadDraft(workspaceUuid, fileUuid);
         const serverUpdatedAt = new Date(file.updatedAt).getTime();
         const isDraftNewer = Boolean(draft && draft.updatedAt > serverUpdatedAt);
 
-        // Fallback to server title if draft title is empty or missing
         const resolvedTitle = (isDraftNewer && draft?.title?.trim()) ? draft.title : (file.title || '');
         const resolvedIcon = (isDraftNewer && draft?.icon !== undefined) ? draft.icon : (file.icon || null);
         const resolvedCover = (isDraftNewer && draft?.coverImage !== undefined) ? draft.coverImage : (file.coverImage || null);
@@ -87,29 +88,16 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             setIsDraftRestored(true);
             setAutosaveStatus('unsaved');
             setIsUserDirty(true);
-        }
-    }
-
-    // Populate editor blocks from server if no draft restored
-    useEffect(() => {
-        if (!isDraftRestored && lastHydratedKeyRef.current !== hydratedKey) {
-            blockEditor.reset();
+        } else {
             const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
-            sorted.forEach((b) => {
-                const e = mapBlockToEditor(b);
-                const id = blockEditor.addBlock(e.type);
-                blockEditor.updateBlock(id, e.content);
-                if (e.type === 'todo' && e.checked) {
-                    blockEditor.toggleChecked(id);
-                }
-            });
-            lastHydratedKeyRef.current = hydratedKey;
+            blockEditor.setBlocksState(sorted.map(mapBlockToEditor));
+            setAutosaveStatus('saved');
         }
-    }, [hydratedKey, blockEditor, blocks, isDraftRestored]);
+    }, [file, blocks, workspaceUuid, fileUuid, blockEditor]);
 
     // Save draft to localStorage only when user actually makes changes
     useEffect(() => {
-        if (!file) return;
+        if (!file || isPersistingRef.current) return;
         if (!isUserDirty && !blockEditor.canUndo) return;
 
         saveDraft(workspaceUuid, fileUuid, {
@@ -148,6 +136,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     }, []);
 
     const persistFile = useCallback(async () => {
+        if (isPersistingRef.current) return false;
         const trimmedTitle = title.trim();
         if (!trimmedTitle) {
             setErrorMessage(FILE_MESSAGES.TITLE_REQUIRED);
@@ -155,43 +144,48 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         }
         setErrorMessage(null);
 
-        if (file) {
-            await updateFileMutation.mutateAsync({
-                uuid: file.uuid,
-                payload: {
-                    title: trimmedTitle,
-                    icon,
-                    coverImage,
-                    isTemplate,
-                },
-            });
-        }
-
-        for (let i = 0; i < blocks.length; i++) {
-            await deleteBlockMutation.mutateAsync(blocks[i].uuid);
-        }
-
-        const editorBlocks = blockEditor.blocks;
-        for (let i = 0; i < editorBlocks.length; i++) {
-            const b = editorBlocks[i];
-            await createBlockMutation.mutateAsync({
-                fileUuid,
-                type: b.type,
-                properties: b.type === 'todo' ? { text: b.content, checked: Boolean(b.checked) } : { text: b.content },
-                orderIndex: i,
-            });
-        }
-
+        isPersistingRef.current = true;
         try {
-            await createRevisionMutation.mutateAsync(fileUuid);
-        } catch {
-            // Non-fatal if revision creation fails
-        }
+            if (file) {
+                await updateFileMutation.mutateAsync({
+                    uuid: file.uuid,
+                    payload: {
+                        title: trimmedTitle,
+                        icon,
+                        coverImage,
+                        isTemplate,
+                    },
+                });
+            }
 
-        clearDraft(workspaceUuid, fileUuid);
-        setIsUserDirty(false);
-        setAutosaveStatus('saved');
-        return true;
+            for (let i = 0; i < blocks.length; i++) {
+                await deleteBlockMutation.mutateAsync(blocks[i].uuid);
+            }
+
+            const editorBlocks = blockEditor.blocks;
+            for (let i = 0; i < editorBlocks.length; i++) {
+                const b = editorBlocks[i];
+                await createBlockMutation.mutateAsync({
+                    fileUuid,
+                    type: b.type,
+                    properties: b.type === 'todo' ? { text: b.content, checked: Boolean(b.checked) } : { text: b.content },
+                    orderIndex: i,
+                });
+            }
+
+            try {
+                await createRevisionMutation.mutateAsync(fileUuid);
+            } catch {
+                // Non-fatal if revision creation fails
+            }
+
+            clearDraft(workspaceUuid, fileUuid);
+            setIsUserDirty(false);
+            setAutosaveStatus('saved');
+            return true;
+        } finally {
+            isPersistingRef.current = false;
+        }
     }, [
         title,
         icon,
@@ -210,6 +204,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
 
     // Manual Save: persists and navigates to view
     const handleSave = useCallback(async () => {
+        setIsManualSaving(true);
         try {
             const success = await persistFile();
             if (success) {
@@ -220,22 +215,25 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             const errorDetail = appError?.errors?.[0]?.detail || appError?.message || FILE_MESSAGES.CREATE_ERROR;
             setErrorMessage(errorDetail);
             setAutosaveStatus('unsaved');
+        } finally {
+            setIsManualSaving(false);
         }
     }, [persistFile, navigate, workspaceUuid, fileUuid]);
 
-    // Automatic background save
+    // Automatic background save (calm, debounced, non-blocking)
     useEffect(() => {
         if (!autosaveEnabled || !file) return;
         if (autosaveStatus !== 'unsaved') return;
 
         const timer = setTimeout(async () => {
+            if (isPersistingRef.current) return;
             try {
                 setAutosaveStatus('saving');
                 await persistFile();
             } catch {
                 setAutosaveStatus('unsaved');
             }
-        }, 2000);
+        }, 2500);
 
         return () => clearTimeout(timer);
     }, [autosaveEnabled, autosaveStatus, persistFile, file]);
@@ -259,12 +257,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         coverImage,
         isTemplate,
         errorMessage,
-        isSaving:
-            updateFileMutation.isPending ||
-            createBlockMutation.isPending ||
-            deleteBlockMutation.isPending ||
-            createRevisionMutation.isPending ||
-            autosaveStatus === 'saving',
+        isSaving: isManualSaving,
         blockEditor,
         isDraftRestored,
         autosaveEnabled,

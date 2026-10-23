@@ -29,6 +29,47 @@ export function useBlockEditor(): BlockEditorController {
     const inputRefs = useRef(new Map<string, HTMLTextAreaElement>());
     const pendingFocusId = useRef<string | null>(null);
 
+    // Undo / Redo history stacks
+    const historyPast = useRef<FileEditorBlock[][]>([]);
+    const historyFuture = useRef<FileEditorBlock[][]>([]);
+    const [, setHistoryCount] = useState(0);
+    const isTypingRef = useRef(false);
+    const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const pushSnapshot = useCallback((blocksToSnapshot: FileEditorBlock[]) => {
+        historyPast.current = [...historyPast.current.slice(-40), blocksToSnapshot];
+        historyFuture.current = [];
+        setHistoryCount((c) => c + 1);
+    }, []);
+
+    const undo = useCallback(() => {
+        if (historyPast.current.length === 0) return;
+        const previous = historyPast.current.pop()!;
+        historyFuture.current.push(blocks);
+        setBlocks(previous);
+        setSelectedBlockIds([]);
+        setHistoryCount((c) => c + 1);
+    }, [blocks]);
+
+    const redo = useCallback(() => {
+        if (historyFuture.current.length === 0) return;
+        const next = historyFuture.current.pop()!;
+        historyPast.current.push(blocks);
+        setBlocks(next);
+        setSelectedBlockIds([]);
+        setHistoryCount((c) => c + 1);
+    }, [blocks]);
+
+    const canUndo = historyPast.current.length > 0;
+    const canRedo = historyFuture.current.length > 0;
+
+    const setBlocksState = useCallback((newBlocks: FileEditorBlock[]) => {
+        setBlocks(newBlocks);
+        historyPast.current = [];
+        historyFuture.current = [];
+        setHistoryCount((c) => c + 1);
+    }, []);
+
     const selectAllBlocks = useCallback(() => {
         setSelectedBlockIds(blocks.map((b) => b.id));
     }, [blocks]);
@@ -38,6 +79,8 @@ export function useBlockEditor(): BlockEditorController {
     }, []);
 
     const deleteSelectedBlocks = useCallback(() => {
+        pushSnapshot(blocks);
+        isTypingRef.current = false;
         setSelectedBlockIds((prevSelected) => {
             if (prevSelected.length === 0) return prevSelected;
             setBlocks((prevBlocks) => {
@@ -52,7 +95,7 @@ export function useBlockEditor(): BlockEditorController {
             });
             return [];
         });
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const dragStartBlockId = useRef<string | null>(null);
     const dragStartPos = useRef<{ x: number; y: number } | null>(null);
@@ -246,12 +289,33 @@ export function useBlockEditor(): BlockEditorController {
             }
         };
 
+        const handleWindowKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (target?.tagName === 'INPUT' && !target.closest('[data-block="true"]')) {
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undo();
+                return;
+            }
+            if (
+                ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+                ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
+            ) {
+                e.preventDefault();
+                redo();
+                return;
+            }
+        };
+
         window.addEventListener('pointermove', handlePointerMove);
         window.addEventListener('pointerup', handlePointerUp);
         window.addEventListener('mousemove', handlePointerMove);
         window.addEventListener('mouseup', handlePointerUp);
         window.addEventListener('dragstart', handleDragStart, { capture: true });
         window.addEventListener('dblclick', handleDocumentDblClick);
+        window.addEventListener('keydown', handleWindowKeyDown);
         document.addEventListener('copy', handleCopy);
 
         return () => {
@@ -261,9 +325,10 @@ export function useBlockEditor(): BlockEditorController {
             window.removeEventListener('mouseup', handlePointerUp);
             window.removeEventListener('dragstart', handleDragStart, { capture: true });
             window.removeEventListener('dblclick', handleDocumentDblClick);
+            window.removeEventListener('keydown', handleWindowKeyDown);
             document.removeEventListener('copy', handleCopy);
         };
-    }, [selectedBlockIds, blocks, handlePointerMove]);
+    }, [selectedBlockIds, blocks, handlePointerMove, undo, redo]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -293,6 +358,8 @@ export function useBlockEditor(): BlockEditorController {
     }, []);
 
     const addBlock = useCallback((type: BlockType, overId?: string) => {
+        pushSnapshot(blocks);
+        isTypingRef.current = false;
         const id = crypto.randomUUID();
         setSelectedBlockIds([]);
 
@@ -320,15 +387,28 @@ export function useBlockEditor(): BlockEditorController {
 
         pendingFocusId.current = id;
         return id;
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const updateBlock = useCallback((id: string, content: string) => {
+        if (!isTypingRef.current) {
+            pushSnapshot(blocks);
+            isTypingRef.current = true;
+        }
+        if (typingTimerRef.current) {
+            clearTimeout(typingTimerRef.current);
+        }
+        typingTimerRef.current = setTimeout(() => {
+            isTypingRef.current = false;
+        }, 600);
+
         setBlocks((prev) =>
             prev.map((block) => (block.id === id ? { ...block, content } : block))
         );
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const convertBlock = useCallback((id: string, type: BlockType, content?: string) => {
+        pushSnapshot(blocks);
+        isTypingRef.current = false;
         setSelectedBlockIds([]);
         setBlocks((prev) =>
             prev.map((block) =>
@@ -342,17 +422,21 @@ export function useBlockEditor(): BlockEditorController {
                     : block
             )
         );
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const toggleChecked = useCallback((id: string) => {
+        pushSnapshot(blocks);
+        isTypingRef.current = false;
         setBlocks((prev) =>
             prev.map((block) => (block.id === id ? { ...block, checked: !block.checked } : block))
         );
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const removeBlock = useCallback((id: string) => {
+        pushSnapshot(blocks);
+        isTypingRef.current = false;
         setBlocks((prev) => prev.filter((block) => block.id !== id));
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
@@ -360,6 +444,8 @@ export function useBlockEditor(): BlockEditorController {
             return;
         }
 
+        pushSnapshot(blocks);
+        isTypingRef.current = false;
         setBlocks((prev) => {
             const oldIndex = prev.findIndex((block) => block.id === active.id);
             const newIndex = prev.findIndex((block) => block.id === over.id);
@@ -368,7 +454,7 @@ export function useBlockEditor(): BlockEditorController {
             }
             return arrayMove(prev, oldIndex, newIndex);
         });
-    }, []);
+    }, [blocks, pushSnapshot]);
 
     const openInsertSelector = useCallback(
         (element: HTMLElement, blockId: string) => {
@@ -494,6 +580,9 @@ export function useBlockEditor(): BlockEditorController {
             const parsed = parseMarkdownToBlocks(clipboardText);
             if (parsed.length === 0) return;
 
+            pushSnapshot(blocks);
+            isTypingRef.current = false;
+
             setBlocks((prev) => {
                 const targetIndex = prev.findIndex((b) => b.id === id);
                 if (targetIndex === -1) {
@@ -526,12 +615,27 @@ export function useBlockEditor(): BlockEditorController {
             });
             setSelectedBlockIds([]);
         },
-        []
+        [blocks, pushSnapshot]
     );
 
     const handleBlockKeyDown = useCallback(
         (id: string, event: KeyboardEvent<HTMLElement>) => {
             if (selector.isOpen) {
+                return;
+            }
+
+            // Undo / Redo shortcuts
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+                event.preventDefault();
+                undo();
+                return;
+            }
+            if (
+                ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') ||
+                ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'z')
+            ) {
+                event.preventDefault();
+                redo();
                 return;
             }
 
@@ -623,12 +727,17 @@ export function useBlockEditor(): BlockEditorController {
             removeBlock,
             closeSelector,
             focusBlock,
+            undo,
+            redo,
         ]
     );
 
     const reset = useCallback(() => {
         setBlocks([]);
         setSelectedBlockIds([]);
+        historyPast.current = [];
+        historyFuture.current = [];
+        setHistoryCount(0);
         inputRefs.current.clear();
         pendingFocusId.current = null;
     }, []);
@@ -658,6 +767,11 @@ export function useBlockEditor(): BlockEditorController {
         handleBlockMouseEnter,
         handleCanvasMouseDown,
         handlePointerMove,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
+        setBlocksState,
         registerInput,
         focusBlock,
         reset,

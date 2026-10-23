@@ -300,7 +300,7 @@ export function useBlockEditor(): BlockEditorController {
             window.removeEventListener('dblclick', handleDocumentDblClick);
             document.removeEventListener('copy', handleCopy);
         };
-    }, [selectedBlockIds, blocks]);
+    }, [selectedBlockIds, blocks, handlePointerMove]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

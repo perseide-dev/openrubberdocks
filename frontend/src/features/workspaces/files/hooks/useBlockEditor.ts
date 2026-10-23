@@ -32,15 +32,21 @@ export function useBlockEditor(): BlockEditorController {
     // Undo / Redo history stacks
     const historyPast = useRef<FileEditorBlock[][]>([]);
     const historyFuture = useRef<FileEditorBlock[][]>([]);
-    const [, setHistoryCount] = useState(0);
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
     const isTypingRef = useRef(false);
     const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const updateCanUndoRedo = useCallback(() => {
+        setCanUndo(historyPast.current.length > 0);
+        setCanRedo(historyFuture.current.length > 0);
+    }, []);
 
     const pushSnapshot = useCallback((blocksToSnapshot: FileEditorBlock[]) => {
         historyPast.current = [...historyPast.current.slice(-40), blocksToSnapshot];
         historyFuture.current = [];
-        setHistoryCount((c) => c + 1);
-    }, []);
+        updateCanUndoRedo();
+    }, [updateCanUndoRedo]);
 
     const undo = useCallback(() => {
         if (historyPast.current.length === 0) return;
@@ -48,8 +54,8 @@ export function useBlockEditor(): BlockEditorController {
         historyFuture.current.push(blocks);
         setBlocks(previous);
         setSelectedBlockIds([]);
-        setHistoryCount((c) => c + 1);
-    }, [blocks]);
+        updateCanUndoRedo();
+    }, [blocks, updateCanUndoRedo]);
 
     const redo = useCallback(() => {
         if (historyFuture.current.length === 0) return;
@@ -57,18 +63,15 @@ export function useBlockEditor(): BlockEditorController {
         historyPast.current.push(blocks);
         setBlocks(next);
         setSelectedBlockIds([]);
-        setHistoryCount((c) => c + 1);
-    }, [blocks]);
-
-    const canUndo = historyPast.current.length > 0;
-    const canRedo = historyFuture.current.length > 0;
+        updateCanUndoRedo();
+    }, [blocks, updateCanUndoRedo]);
 
     const setBlocksState = useCallback((newBlocks: FileEditorBlock[]) => {
         setBlocks(newBlocks);
         historyPast.current = [];
         historyFuture.current = [];
-        setHistoryCount((c) => c + 1);
-    }, []);
+        updateCanUndoRedo();
+    }, [updateCanUndoRedo]);
 
     const selectAllBlocks = useCallback(() => {
         setSelectedBlockIds(blocks.map((b) => b.id));
@@ -737,10 +740,10 @@ export function useBlockEditor(): BlockEditorController {
         setSelectedBlockIds([]);
         historyPast.current = [];
         historyFuture.current = [];
-        setHistoryCount(0);
+        updateCanUndoRedo();
         inputRefs.current.clear();
         pendingFocusId.current = null;
-    }, []);
+    }, [updateCanUndoRedo]);
 
     return {
         blocks,

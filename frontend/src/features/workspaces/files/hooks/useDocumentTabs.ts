@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { files } from '@features-workspaces/files/routes/routes';
-import { getStoredTabs, setStoredTabs } from '@features-workspaces/files/utils/draft-storage.utils';
+import { getStoredTabs, setStoredTabs, clearDraft } from '@features-workspaces/files/utils/draft-storage.utils';
 import type { DocumentTab } from '@features-workspaces/files/types/file.types';
 
 export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: string; title: string; icon: string | null; isNew?: boolean }) {
@@ -58,13 +58,19 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
         }
     }, [workspaceUuid, tabs]);
 
-    const activeTabUuid = currentFile?.uuid ?? (location.pathname.endsWith('/files/new') ? 'new' : '');
+    const searchParams = new URLSearchParams(location.search);
+    const activeDraftId = searchParams.get('draftId') || (location.pathname.endsWith('/files/new') ? 'new' : '');
+    const activeTabUuid = currentFile?.uuid ?? activeDraftId;
 
     const handleSelectTab = useCallback(
         (tab: DocumentTab) => {
             if (tab.uuid === activeTabUuid) return;
-            if (tab.isNew || tab.uuid === 'new') {
-                navigate(files.create.build(workspaceUuid));
+            if (tab.isNew || tab.uuid.startsWith('new')) {
+                if (tab.uuid === 'new') {
+                    navigate(files.create.build(workspaceUuid));
+                } else {
+                    navigate(`/workspaces/${workspaceUuid}/files/new?draftId=${tab.uuid}`);
+                }
             } else {
                 // If on edit page, stay in edit or switch to edit; otherwise switch to edit/view
                 const isCurrentlyEditing = location.pathname.endsWith('/edit');
@@ -80,6 +86,9 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
 
     const handleCloseTab = useCallback(
         (tabUuid: string) => {
+            if (tabUuid.startsWith('new')) {
+                clearDraft(workspaceUuid, tabUuid);
+            }
             setTabs((prev) => {
                 const nextTabs = prev.filter((t) => t.uuid !== tabUuid);
                 setStoredTabs(workspaceUuid, nextTabs);
@@ -88,8 +97,12 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
                 if (tabUuid === activeTabUuid) {
                     if (nextTabs.length > 0) {
                         const target = nextTabs[nextTabs.length - 1];
-                        if (target.isNew || target.uuid === 'new') {
-                            navigate(files.create.build(workspaceUuid));
+                        if (target.isNew || target.uuid.startsWith('new')) {
+                            if (target.uuid === 'new') {
+                                navigate(files.create.build(workspaceUuid));
+                            } else {
+                                navigate(`/workspaces/${workspaceUuid}/files/new?draftId=${target.uuid}`);
+                            }
                         } else {
                             navigate(files.view.build(workspaceUuid, target.uuid));
                         }
@@ -104,7 +117,8 @@ export function useDocumentTabs(workspaceUuid: string, currentFile?: { uuid: str
     );
 
     const handleNewTab = useCallback(() => {
-        navigate(files.create.build(workspaceUuid));
+        const newDraftId = `new_${Date.now()}`;
+        navigate(`/workspaces/${workspaceUuid}/files/new?draftId=${newDraftId}`);
     }, [navigate, workspaceUuid]);
 
     const setTabDirty = useCallback((tabUuid: string, isDirty: boolean) => {

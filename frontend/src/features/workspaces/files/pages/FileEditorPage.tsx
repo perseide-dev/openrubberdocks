@@ -6,8 +6,9 @@ import { useWorkspaceDetailService } from '@features-workspaces/manager/services
 import { BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files as fileRoutes } from '@features-workspaces/files/routes/routes';
-import { FileEditor } from '@features-workspaces/files/components/FileEditor';
+import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/components';
 import { useFileCreation } from '@features-workspaces/files/hooks/useFileCreation';
+import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
 
 export function FileEditorPage() {
     const { uuid } = useParams<{ uuid: string }>();
@@ -35,6 +36,9 @@ export function FileEditorPage() {
         handleSave,
     } = useFileCreation(workspaceUuid);
 
+    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
+        useDocumentTabs(workspaceUuid, { uuid: 'new', title: title || 'UNTITLED', icon, isNew: true });
+
     const breadcrumbItems = useMemo(() => {
         if (!parentPageUuid) return [];
         const ancestors = getPageAncestors(parentPageUuid, workspaceFiles);
@@ -51,6 +55,14 @@ export function FileEditorPage() {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <DocumentTabsBar
+                tabs={tabs}
+                activeTabUuid={activeTabUuid}
+                onSelectTab={handleSelectTab}
+                onCloseTab={handleCloseTab}
+                onNewTab={handleNewTab}
+            />
+
             {breadcrumbItems.length > 0 && (
                 <BrutalistBreadcrumbs items={breadcrumbItems} />
             )}
@@ -74,7 +86,7 @@ export function FileEditorPage() {
                             Cancel
                         </Button>
                         <Button color="inherit" onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? 'Saving...' : 'Save File'}
+                            {isSaving ? 'Saving...' : 'Save File (Ctrl+S)'}
                         </Button>
                     </Box>
                 }

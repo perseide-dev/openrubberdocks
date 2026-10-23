@@ -49,7 +49,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const [isTemplate, setIsTemplate] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isDraftRestored, setIsDraftRestored] = useState(false);
-    const isUserDirty = useRef(false);
+    const [isUserDirty, setIsUserDirty] = useState(false);
 
     // Autosave settings & status
     const [autosaveEnabled, setAutosaveEnabled] = useState(getAutosavePreference);
@@ -86,7 +86,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             blockEditor.setBlocksState(draft.blocks);
             setIsDraftRestored(true);
             setAutosaveStatus('unsaved');
-            isUserDirty.current = true;
+            setIsUserDirty(true);
         }
     }
 
@@ -110,9 +110,8 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     // Save draft to localStorage only when user actually makes changes
     useEffect(() => {
         if (!file) return;
-        if (!isUserDirty.current && !blockEditor.canUndo) return;
+        if (!isUserDirty && !blockEditor.canUndo) return;
 
-        setAutosaveStatus('unsaved');
         saveDraft(workspaceUuid, fileUuid, {
             title,
             icon,
@@ -121,26 +120,30 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             blocks: blockEditor.blocks,
             updatedAt: Date.now(),
         });
-    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, blockEditor.canUndo, workspaceUuid, fileUuid, file]);
+    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, blockEditor.canUndo, isUserDirty, workspaceUuid, fileUuid, file]);
 
     const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-        isUserDirty.current = true;
+        setIsUserDirty(true);
+        setAutosaveStatus('unsaved');
         setTitle(e.target.value);
         setErrorMessage(null);
     }, []);
 
     const handleSetIcon = useCallback((newIcon: string | null) => {
-        isUserDirty.current = true;
+        setIsUserDirty(true);
+        setAutosaveStatus('unsaved');
         setIcon(newIcon);
     }, []);
 
     const handleSetCoverImage = useCallback((newCover: string | null) => {
-        isUserDirty.current = true;
+        setIsUserDirty(true);
+        setAutosaveStatus('unsaved');
         setCoverImage(newCover);
     }, []);
 
     const handleSetIsTemplate = useCallback((val: boolean) => {
-        isUserDirty.current = true;
+        setIsUserDirty(true);
+        setAutosaveStatus('unsaved');
         setIsTemplate(val);
     }, []);
 
@@ -186,7 +189,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         }
 
         clearDraft(workspaceUuid, fileUuid);
-        isUserDirty.current = false;
+        setIsUserDirty(false);
         setAutosaveStatus('saved');
         return true;
     }, [

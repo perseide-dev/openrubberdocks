@@ -17,4 +17,5 @@ export { CoverPickerPopover } from '@features-workspaces/files/components/CoverP
 export { TemplateSelectorModal } from '@features-workspaces/files/components/TemplateSelectorModal';
 export { RevisionItemCard } from '@features-workspaces/files/components/RevisionItemCard';
 export { RevisionHistoryDrawer } from '@features-workspaces/files/components/RevisionHistoryDrawer';
+export { DocumentTabsBar } from '@features-workspaces/files/components/DocumentTabsBar';
 

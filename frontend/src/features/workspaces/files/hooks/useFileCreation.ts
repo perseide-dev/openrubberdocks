@@ -26,7 +26,6 @@ export function useFileCreation(workspaceUuid: string) {
     const createFileMutation = useCreateFileService();
     const createBlockMutation = useCreateBlockService();
     const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
-    const blockEditor = useBlockEditor();
 
     const parentFile = useMemo(() => {
         if (!parentPageUuid) return undefined;
@@ -37,27 +36,17 @@ export function useFileCreation(workspaceUuid: string) {
         return workspaceFiles.filter((f) => f.isTemplate);
     }, [workspaceFiles]);
 
-    const [title, setTitle] = useState('');
-    const [icon, setIcon] = useState<string | null>(null);
-    const [coverImage, setCoverImage] = useState<string | null>(null);
-    const [isTemplate, setIsTemplate] = useState<boolean>(false);
+    const initialDraft = useRef(loadDraft(workspaceUuid, 'new'));
+
+    const [title, setTitle] = useState(() => initialDraft.current?.title || '');
+    const [icon, setIcon] = useState<string | null>(() => initialDraft.current?.icon || null);
+    const [coverImage, setCoverImage] = useState<string | null>(() => initialDraft.current?.coverImage || null);
+    const [isTemplate, setIsTemplate] = useState<boolean>(() => Boolean(initialDraft.current?.isTemplate));
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const isInitialMount = useRef(true);
+    const blockEditor = useBlockEditor(initialDraft.current?.blocks);
 
-    // Restore cached new draft if present
-    useEffect(() => {
-        const draft = loadDraft(workspaceUuid, 'new');
-        if (draft) {
-            setTitle(draft.title || '');
-            setIcon(draft.icon || null);
-            setCoverImage(draft.coverImage || null);
-            setIsTemplate(Boolean(draft.isTemplate));
-            if (draft.blocks && draft.blocks.length > 0) {
-                blockEditor.setBlocksState(draft.blocks);
-            }
-        }
-    }, [workspaceUuid, blockEditor]);
+    const isInitialMount = useRef(true);
 
     // Save draft on change
     useEffect(() => {

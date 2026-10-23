@@ -83,6 +83,9 @@ export function SortableBlock({
         <Box
             ref={setNodeRef}
             style={style}
+            data-block="true"
+            data-block-id={block.id}
+            data-selected-block={isSelected ? 'true' : undefined}
             onMouseDown={(event) => onMouseDown?.(block.id, event)}
             onMouseEnter={() => onMouseEnter?.(block.id)}
             sx={{

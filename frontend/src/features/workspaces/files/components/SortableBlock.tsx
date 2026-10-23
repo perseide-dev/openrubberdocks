@@ -144,6 +144,7 @@ export function SortableBlock({
                         ref={setActivatorNodeRef}
                         size="small"
                         aria-label="drag block"
+                        data-drag-handle="true"
                         sx={{ ...ghostButtonSx, cursor: 'grab', touchAction: 'none' }}
                         {...attributes}
                         {...listeners}

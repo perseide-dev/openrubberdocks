@@ -101,8 +101,6 @@ export function SortableBlock({
                 border: '1.5px solid',
                 borderColor: isDragging
                     ? 'primary.main'
-                    : isSelected
-                    ? 'primary.main'
                     : 'transparent',
                 backgroundColor: isDragging
                     ? 'action.hover'
@@ -112,7 +110,7 @@ export function SortableBlock({
                 opacity: isDragging ? 0.55 : 1,
                 transition: 'background-color 0.12s ease, border-color 0.12s ease',
                 '&:hover': {
-                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    borderColor: isDragging ? 'primary.main' : isSelected ? 'transparent' : 'divider',
                     backgroundColor: isSelected ? 'action.selected' : 'action.hover',
                 },
                 '&:hover .block-actions, &:focus-within .block-actions': {

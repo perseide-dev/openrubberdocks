@@ -126,8 +126,8 @@ export function useBlockEditor(): BlockEditorController {
         [blocks]
     );
 
-    useEffect(() => {
-        const handlePointerMove = (e: PointerEvent | MouseEvent) => {
+    const handlePointerMove = useCallback(
+        (e: React.PointerEvent<HTMLElement> | PointerEvent | MouseEvent) => {
             if (!dragStartPos.current) return;
 
             const dist = Math.hypot(
@@ -135,6 +135,18 @@ export function useBlockEditor(): BlockEditorController {
                 e.clientY - dragStartPos.current.y
             );
             if (dist < 6) return;
+
+            // Release pointer capture from the target element so Chromium doesn't trap the cursor
+            const target = e.target as HTMLElement | null;
+            if (target && typeof target.releasePointerCapture === 'function' && 'pointerId' in e) {
+                try {
+                    if (target.hasPointerCapture(e.pointerId)) {
+                        target.releasePointerCapture(e.pointerId);
+                    }
+                } catch {
+                    // ignore if already released
+                }
+            }
 
             const blockElements = Array.from(
                 document.querySelectorAll<HTMLElement>('[data-block="true"]')
@@ -195,7 +207,11 @@ export function useBlockEditor(): BlockEditorController {
                     setSelectedBlockIds(range);
                 }
             }
-        };
+        },
+        [blocks]
+    );
+
+    useEffect(() => {
 
         const handlePointerUp = () => {
             if (isDraggingRange.current) {
@@ -678,6 +694,7 @@ export function useBlockEditor(): BlockEditorController {
         handleBlockMouseDown,
         handleBlockMouseEnter,
         handleCanvasMouseDown,
+        handlePointerMove,
         registerInput,
         focusBlock,
         reset,

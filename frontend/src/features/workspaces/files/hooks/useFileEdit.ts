@@ -35,8 +35,8 @@ function mapBlockToEditor(block: WorkspaceBlock) {
 
 export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const navigate = useNavigate();
-    const { data: file } = useFileDetailService(fileUuid);
-    const { data: blocks = [] } = useFileBlocksService(fileUuid);
+    const { data: file, isLoading: isFileLoading } = useFileDetailService(fileUuid);
+    const { data: serverBlocks, isLoading: isBlocksLoading } = useFileBlocksService(fileUuid);
     const updateFileMutation = useUpdateFileService();
     const createBlockMutation = useCreateBlockService();
     const deleteBlockMutation = useDeleteBlockService();
@@ -57,6 +57,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('saved');
 
     const isHydratedRef = useRef(false);
+    const [isHydrated, setIsHydrated] = useState(false);
     const isPersistingRef = useRef(false);
 
     const toggleAutosave = useCallback((enabled: boolean) => {
@@ -64,9 +65,9 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         setAutosavePreference(enabled);
     }, []);
 
-    // Hydrate editor state exactly ONCE when file is available
+    // Hydrate editor state exactly ONCE when both file and serverBlocks are loaded
     useEffect(() => {
-        if (!file || isHydratedRef.current) return;
+        if (!file || !serverBlocks || isHydratedRef.current) return;
         isHydratedRef.current = true;
 
         queueMicrotask(() => {
@@ -84,23 +85,25 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             setCoverImage(resolvedCover);
             setIsTemplate(resolvedTemplate);
 
-            if (isDraftNewer && draft?.blocks && draft.blocks.length > 0) {
+            const hasValidDraftBlocks = isDraftNewer && draft?.blocks && draft.blocks.length > 0;
+            if (hasValidDraftBlocks) {
                 blockEditor.setBlocksState(draft.blocks);
                 setIsDraftRestored(true);
                 setAutosaveStatus('unsaved');
                 setIsUserDirty(true);
             } else {
-                const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
+                const sorted = [...serverBlocks].sort((a, b) => a.orderIndex - b.orderIndex);
                 blockEditor.setBlocksState(sorted.map(mapBlockToEditor));
                 setAutosaveStatus('saved');
             }
+            setIsHydrated(true);
         });
-    }, [file, blocks, workspaceUuid, fileUuid, blockEditor]);
+    }, [file, serverBlocks, workspaceUuid, fileUuid, blockEditor]);
 
-    // Save draft to localStorage only when user actually makes changes
+    // Save draft to localStorage only when user actually makes changes after hydration
     useEffect(() => {
-        if (!file || isPersistingRef.current) return;
-        if (!isUserDirty && !blockEditor.canUndo) return;
+        if (!file || !isHydratedRef.current || isPersistingRef.current) return;
+        if (!isUserDirty && !blockEditor.canUndo && !isDraftRestored) return;
 
         saveDraft(workspaceUuid, fileUuid, {
             title,
@@ -110,7 +113,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             blocks: blockEditor.blocks,
             updatedAt: Date.now(),
         });
-    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, blockEditor.canUndo, isUserDirty, workspaceUuid, fileUuid, file]);
+    }, [title, icon, coverImage, isTemplate, blockEditor.blocks, blockEditor.canUndo, isUserDirty, isDraftRestored, workspaceUuid, fileUuid, file]);
 
     const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setIsUserDirty(true);
@@ -160,8 +163,9 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                 });
             }
 
-            for (let i = 0; i < blocks.length; i++) {
-                await deleteBlockMutation.mutateAsync(blocks[i].uuid);
+            const currentBlocks = serverBlocks || [];
+            for (let i = 0; i < currentBlocks.length; i++) {
+                await deleteBlockMutation.mutateAsync(currentBlocks[i].uuid);
             }
 
             const editorBlocks = blockEditor.blocks;
@@ -194,7 +198,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         coverImage,
         isTemplate,
         file,
-        blocks,
+        serverBlocks,
         blockEditor.blocks,
         updateFileMutation,
         deleteBlockMutation,
@@ -254,6 +258,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     }, [handleSave]);
 
     return {
+        isLoading: isFileLoading || isBlocksLoading || !isHydrated,
         title,
         icon,
         coverImage,

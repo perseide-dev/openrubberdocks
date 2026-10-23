@@ -4,6 +4,7 @@ import {
   Typography,
   IconButton,
   Collapse,
+  Tooltip,
 } from '@mui/material';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -49,13 +50,13 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
           paddingLeft: 1 + node.level * 1.5,
           border: '1.5px solid',
           borderColor: isActive ? 'primary.main' : 'transparent',
-          backgroundColor: isActive ? 'primary.main' : 'transparent',
-          color: isActive ? 'primary.contrastText' : 'text.primary',
+          backgroundColor: isActive ? 'action.selected' : 'transparent',
+          color: 'text.primary',
           cursor: 'pointer',
           marginBottom: 0.5,
           transition: 'background-color 0.15s, border-color 0.15s',
           '&:hover': {
-            backgroundColor: isActive ? 'primary.main' : 'action.hover',
+            backgroundColor: isActive ? 'action.selected' : 'action.hover',
             borderColor: isActive ? 'primary.main' : 'divider',
             '& .tree-add-btn': {
               opacity: 1,
@@ -72,7 +73,8 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
             }}
             sx={{
               padding: 0.25,
-              color: isActive ? 'primary.contrastText' : 'inherit',
+              borderRadius: 0,
+              color: 'text.primary',
             }}
           >
             {isOpen ? (
@@ -95,7 +97,8 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
               variant="caption"
               sx={{
                 fontFamily: 'monospace',
-                color: isActive ? 'primary.contrastText' : 'text.disabled',
+                color: isActive ? 'primary.main' : 'text.disabled',
+                fontWeight: isActive ? 700 : 400,
                 fontSize: '0.65rem',
               }}
             >
@@ -120,7 +123,7 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
             sx={{
               fontSize: '1rem',
               flexShrink: 0,
-              color: isActive ? 'primary.contrastText' : 'text.secondary',
+              color: isActive ? 'primary.main' : 'text.secondary',
             }}
           />
         )}
@@ -134,6 +137,7 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
             fontWeight: isActive ? 700 : 500,
             fontSize: '0.8rem',
             letterSpacing: '0.02em',
+            color: 'text.primary',
           }}
         >
           {node.file.title || 'UNTITLED_FILE'}
@@ -143,25 +147,28 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
           action={BASE_PERMISSIONS_ACTIONS.DOCUMENT_WRITE}
           scope={workspaceUuid}
         >
-          <IconButton
-            size="small"
-            className="tree-add-btn"
-            title="Create sub-file"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCreateSubPage?.(node.file.uuid);
-            }}
-            sx={{
-              opacity: 0,
-              padding: 0.25,
-              color: isActive ? 'primary.contrastText' : 'text.secondary',
-              '&:hover': {
-                color: isActive ? 'primary.contrastText' : 'primary.main',
-              },
-            }}
-          >
-            <AddIcon sx={{ fontSize: '0.9rem' }} />
-          </IconButton>
+          <Tooltip title="Crear sub-documento" placement="top" arrow>
+            <IconButton
+              size="small"
+              className="tree-add-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCreateSubPage?.(node.file.uuid);
+              }}
+              sx={{
+                opacity: 0,
+                padding: 0.25,
+                borderRadius: 0,
+                color: 'text.secondary',
+                '&:hover': {
+                  color: 'primary.main',
+                  backgroundColor: 'action.hover',
+                },
+              }}
+            >
+              <AddIcon sx={{ fontSize: '0.9rem' }} />
+            </IconButton>
+          </Tooltip>
         </Can>
       </Box>
 

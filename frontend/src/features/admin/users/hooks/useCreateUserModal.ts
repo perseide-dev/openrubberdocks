@@ -8,6 +8,8 @@ export function useCreateUserModal(onSuccess: () => void) {
   const [password, setPassword] = useState('');
   const [type, setType] = useState<AdminUserType>('internal');
   const [initialRoleUuid, setInitialRoleUuid] = useState('');
+  const [canViewDocuments, setCanViewDocuments] = useState(true);
+  const [canViewProjects, setCanViewProjects] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const createMutation = useCreateAdminUserService();
@@ -18,6 +20,8 @@ export function useCreateUserModal(onSuccess: () => void) {
     setPassword('');
     setType('internal');
     setInitialRoleUuid('');
+    setCanViewDocuments(true);
+    setCanViewProjects(true);
     setErrorMessage(null);
   }, []);
 
@@ -46,7 +50,9 @@ export function useCreateUserModal(onSuccess: () => void) {
         rubberHandle: cleanHandle,
         password: cleanPassword,
         type,
-        initialRoleUuid: initialRoleUuid || undefined,
+        initialRoleUuid: type === 'external' ? undefined : (initialRoleUuid || undefined),
+        canViewDocuments: type === 'external' ? canViewDocuments : undefined,
+        canViewProjects: type === 'external' ? canViewProjects : undefined,
       });
       reset();
       onSuccess();
@@ -55,7 +61,7 @@ export function useCreateUserModal(onSuccess: () => void) {
         err instanceof Error ? err.message : 'Failed to create platform user';
       setErrorMessage(message);
     }
-  }, [username, rubberHandle, password, type, initialRoleUuid, createMutation, reset, onSuccess]);
+  }, [username, rubberHandle, password, type, initialRoleUuid, canViewDocuments, canViewProjects, createMutation, reset, onSuccess]);
 
   return {
     username,
@@ -68,6 +74,10 @@ export function useCreateUserModal(onSuccess: () => void) {
     setType,
     initialRoleUuid,
     setInitialRoleUuid,
+    canViewDocuments,
+    setCanViewDocuments,
+    canViewProjects,
+    setCanViewProjects,
     errorMessage,
     setErrorMessage,
     isSubmitting: createMutation.isPending,

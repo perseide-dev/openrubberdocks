@@ -23,6 +23,8 @@ export interface AdminUserItem {
   type: AdminUserType;
   createdAt: string;
   scopes?: AdminUserScope[];
+  canViewDocuments?: boolean;
+  canViewProjects?: boolean;
 }
 
 export interface CreateUserPayload extends Record<string, unknown> {
@@ -31,6 +33,8 @@ export interface CreateUserPayload extends Record<string, unknown> {
   type: AdminUserType;
   password: string;
   initialRoleUuid?: string;
+  canViewDocuments?: boolean;
+  canViewProjects?: boolean;
 }
 
 export interface UpdateUserPayload extends Record<string, unknown> {
@@ -39,6 +43,8 @@ export interface UpdateUserPayload extends Record<string, unknown> {
   type?: AdminUserType;
   password?: string;
   globalRoleUuid?: string | null;
+  canViewDocuments?: boolean;
+  canViewProjects?: boolean;
 }
 
 export interface UsersAdminTableProps {

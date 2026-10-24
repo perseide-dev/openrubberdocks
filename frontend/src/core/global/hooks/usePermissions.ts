@@ -44,6 +44,14 @@ export function usePermissions(): UsePermissionsReturn {
               continue;
             }
 
+            // External user rules
+            if (action.startsWith('document:') && user.canViewDocuments === false) {
+              continue;
+            }
+            if ((action.startsWith('project:') || action.startsWith('task:')) && user.canViewProjects === false) {
+              continue;
+            }
+
             if (workspaceUuid && scope.workspace?.uuid === workspaceUuid) {
               return true;
             }
@@ -97,6 +105,8 @@ export function usePermissions(): UsePermissionsReturn {
     isCoreAdmin,
     isExternal,
     isInternal,
+    canViewDocuments: user?.canViewDocuments !== false,
+    canViewProjects: user?.canViewProjects !== false,
     userType: user?.type,
   };
 }

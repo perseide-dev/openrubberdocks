@@ -29,6 +29,8 @@ export interface AuthUser {
   rubberHandle: string;
   type: UserType;
   scopes?: UserRoleScope[];
+  canViewDocuments?: boolean;
+  canViewProjects?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -79,6 +81,8 @@ export interface UsePermissionsReturn {
   isCoreAdmin: boolean;
   isExternal: boolean;
   isInternal: boolean;
+  canViewDocuments: boolean;
+  canViewProjects: boolean;
   userType?: UserType;
 }
 

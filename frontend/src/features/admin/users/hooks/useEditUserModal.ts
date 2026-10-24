@@ -15,6 +15,8 @@ export function useEditUserModal(
   const [password, setPassword] = useState('');
   const [type, setType] = useState<AdminUserType>('internal');
   const [globalRoleUuid, setGlobalRoleUuid] = useState('');
+  const [canViewDocuments, setCanViewDocuments] = useState(true);
+  const [canViewProjects, setCanViewProjects] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const updateMutation = useUpdateAdminUserService();
@@ -29,6 +31,8 @@ export function useEditUserModal(
       setType(user.type || 'internal');
       const existingGlobalRole = user.scopes?.find((s) => !s.workspace)?.role.uuid || '';
       setGlobalRoleUuid(existingGlobalRole);
+      setCanViewDocuments(user.canViewDocuments !== false);
+      setCanViewProjects(user.canViewProjects !== false);
       setErrorMessage(null);
     }
   }, [open, user]);
@@ -39,6 +43,8 @@ export function useEditUserModal(
     setPassword('');
     setType('internal');
     setGlobalRoleUuid('');
+    setCanViewDocuments(true);
+    setCanViewProjects(true);
     setErrorMessage(null);
   }, []);
 
@@ -72,6 +78,8 @@ export function useEditUserModal(
           password: cleanPassword || undefined,
           type: isCoreAdmin ? undefined : type,
           globalRoleUuid: isCoreAdmin ? undefined : (type === 'external' ? null : (globalRoleUuid || null)),
+          canViewDocuments: type === 'external' ? canViewDocuments : undefined,
+          canViewProjects: type === 'external' ? canViewProjects : undefined,
         },
       });
       reset();
@@ -81,7 +89,7 @@ export function useEditUserModal(
         err instanceof Error ? err.message : 'Failed to update platform user';
       setErrorMessage(message);
     }
-  }, [user, username, rubberHandle, password, type, globalRoleUuid, isCoreAdmin, updateMutation, reset, onSuccess]);
+  }, [user, username, rubberHandle, password, type, globalRoleUuid, isCoreAdmin, canViewDocuments, canViewProjects, updateMutation, reset, onSuccess]);
 
   return {
     username,
@@ -94,6 +102,10 @@ export function useEditUserModal(
     setType,
     globalRoleUuid,
     setGlobalRoleUuid,
+    canViewDocuments,
+    setCanViewDocuments,
+    canViewProjects,
+    setCanViewProjects,
     isCoreAdmin,
     errorMessage,
     setErrorMessage,

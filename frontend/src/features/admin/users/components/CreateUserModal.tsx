@@ -12,6 +12,8 @@ import {
   MenuItem,
   FormControl,
   Alert,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import { useCreateUserModal } from '@features/admin/users/hooks/useCreateUserModal';
@@ -35,6 +37,10 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     setType,
     initialRoleUuid,
     setInitialRoleUuid,
+    canViewDocuments,
+    setCanViewDocuments,
+    canViewProjects,
+    setCanViewProjects,
     errorMessage,
     isSubmitting,
     handleSubmit,
@@ -169,30 +175,90 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           </FormControl>
         </Box>
 
-        {/* Initial Role Selection */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
-            // INITIAL_GLOBAL_ROLE (OPTIONAL)
-          </Typography>
-          <FormControl fullWidth size="small">
-            <Select
-              value={initialRoleUuid}
-              onChange={(e) => setInitialRoleUuid(e.target.value)}
-              disabled={isSubmitting}
-              displayEmpty
-              sx={{ borderRadius: 0, fontFamily: 'monospace' }}
-            >
-              <MenuItem value="" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-                -- NO INITIAL ROLE (ASSIGN LATER) --
-              </MenuItem>
-              {availableRoles.map((role) => (
-                <MenuItem key={role.uuid} value={role.uuid} sx={{ fontFamily: 'monospace' }}>
-                  {role.name}
+        {/* Role or Rules Selection based on tier */}
+        {type === 'external' ? (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              padding: 1.5,
+              border: '1.5px solid',
+              borderColor: 'divider',
+              backgroundColor: 'action.hover',
+            }}
+          >
+            <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+              // EXTERNAL_ACCESS_RULES (CANNOT ASSIGN ROLES)
+            </Typography>
+
+            <FormControlLabel
+              control={<Checkbox checked disabled size="small" />}
+              label={
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  [MANDATORY] View assigned workspaces
+                </Typography>
+              }
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={canViewDocuments}
+                  onChange={(e) => setCanViewDocuments(e.target.checked)}
+                  disabled={isSubmitting}
+                  size="small"
+                />
+              }
+              label={
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  View documents in workspace
+                </Typography>
+              }
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={canViewProjects}
+                  onChange={(e) => setCanViewProjects(e.target.checked)}
+                  disabled={isSubmitting}
+                  size="small"
+                />
+              }
+              label={
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  View projects in workspace
+                </Typography>
+              }
+            />
+          </Box>
+        ) : (
+          /* Initial Role Selection */
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+              // INITIAL_GLOBAL_ROLE (OPTIONAL)
+            </Typography>
+            <FormControl fullWidth size="small">
+              <Select
+                value={initialRoleUuid}
+                onChange={(e) => setInitialRoleUuid(e.target.value)}
+                disabled={isSubmitting}
+                displayEmpty
+                sx={{ borderRadius: 0, fontFamily: 'monospace' }}
+              >
+                <MenuItem value="" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+                  -- NO INITIAL ROLE (ASSIGN LATER) --
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+                {availableRoles.map((role) => (
+                  <MenuItem key={role.uuid} value={role.uuid} sx={{ fontFamily: 'monospace' }}>
+                    {role.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        )}
       </DialogContent>
 
       <DialogActions sx={{ padding: 2, gap: 1 }}>

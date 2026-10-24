@@ -9,3 +9,4 @@ export * from '@features-workspaces/projects/components/TasksListView/TasksTable
 export * from '@features-workspaces/projects/components/ProjectFilesView/ProjectFilesTab';
 export * from '@features-workspaces/projects/components/ProjectSettings/ProjectSettingsTab';
 export * from '@features-workspaces/projects/components/TaskDetailModal';
+export * from '@features-workspaces/projects/components/ExternalProjectOverview/ExternalProjectOverview';

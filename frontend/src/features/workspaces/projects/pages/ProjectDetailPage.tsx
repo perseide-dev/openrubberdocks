@@ -31,6 +31,7 @@ import { ProjectFilesTab } from '@features-workspaces/projects/components/Projec
 import { ProjectSettingsTab } from '@features-workspaces/projects/components/ProjectSettings/ProjectSettingsTab';
 import { TaskDetailModal } from '@features-workspaces/projects/components/TaskDetailModal';
 import { TimeLogModal } from '@features-workspaces/projects/components/TimelineView/TimeLogModal';
+import { ExternalProjectOverview } from '@features-workspaces/projects/components/ExternalProjectOverview/ExternalProjectOverview';
 import { PROJECT_LABELS } from '@features-workspaces/projects/constants/project.constants';
 import type { Task, ProjectTab } from '@features-workspaces/projects/types/project.types';
 
@@ -46,7 +47,7 @@ export const ProjectDetailPage: React.FC = () => {
 
     const { project, tasks, isLoading, isError, activeTab, setActiveTab } = useProjectDetail(pUuid);
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
-    const { canMutateInWorkspace } = usePermissions();
+    const { canMutateInWorkspace, isExternal } = usePermissions();
     const canManage = canMutateInWorkspace(wsUuid);
 
     const createTaskMutation = useCreateTaskService();
@@ -189,74 +190,85 @@ export const ProjectDetailPage: React.FC = () => {
                 />
             </Box>
 
-            {/* Navigation Tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs
-                    value={activeTab}
-                    onChange={(_, val) => setActiveTab(val as ProjectTab)}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                >
-                    <Tab label={PROJECT_LABELS.TAB_BOARD} value="board" sx={{ fontFamily: 'monospace' }} />
-                    <Tab label={PROJECT_LABELS.TAB_TIMELINE} value="timeline" sx={{ fontFamily: 'monospace' }} />
-                    <Tab label={PROJECT_LABELS.TAB_TASKS} value="tasks" sx={{ fontFamily: 'monospace' }} />
-                    <Tab label={PROJECT_LABELS.TAB_FILES} value="files" sx={{ fontFamily: 'monospace' }} />
-                    <Tab label={PROJECT_LABELS.TAB_SETTINGS} value="settings" sx={{ fontFamily: 'monospace' }} />
-                </Tabs>
-            </Box>
-
-            {/* Tab Panels */}
-            {activeTab === 'board' && (
-                <KanbanBoard
-                    projectUuid={pUuid}
-                    statuses={statuses}
+            {/* External user dedicated overview panel vs internal user tabs */}
+            {isExternal ? (
+                <ExternalProjectOverview
+                    project={project}
                     tasks={tasks}
-                    canManage={canManage}
                     onTaskClick={handleTaskClick}
-                    onQuickAddTask={handleQuickAddTask}
-                    onMoveTask={handleMoveTask}
                 />
-            )}
+            ) : (
+                <>
+                    {/* Navigation Tabs */}
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                        <Tabs
+                            value={activeTab}
+                            onChange={(_, val) => setActiveTab(val as ProjectTab)}
+                            variant="scrollable"
+                            scrollButtons="auto"
+                        >
+                            <Tab label={PROJECT_LABELS.TAB_BOARD} value="board" sx={{ fontFamily: 'monospace' }} />
+                            <Tab label={PROJECT_LABELS.TAB_TIMELINE} value="timeline" sx={{ fontFamily: 'monospace' }} />
+                            <Tab label={PROJECT_LABELS.TAB_TASKS} value="tasks" sx={{ fontFamily: 'monospace' }} />
+                            <Tab label={PROJECT_LABELS.TAB_FILES} value="files" sx={{ fontFamily: 'monospace' }} />
+                            <Tab label={PROJECT_LABELS.TAB_SETTINGS} value="settings" sx={{ fontFamily: 'monospace' }} />
+                        </Tabs>
+                    </Box>
 
-            {activeTab === 'timeline' && (
-                <TimelineView
-                    projectUuid={pUuid}
-                    tasks={tasks}
-                    canManage={canManage}
-                    onTaskClick={handleTaskClick}
-                    onOpenTimeLog={(t) => setTimeLogTask(t)}
-                />
-            )}
+                    {/* Tab Panels */}
+                    {activeTab === 'board' && (
+                        <KanbanBoard
+                            projectUuid={pUuid}
+                            statuses={statuses}
+                            tasks={tasks}
+                            canManage={canManage}
+                            onTaskClick={handleTaskClick}
+                            onQuickAddTask={handleQuickAddTask}
+                            onMoveTask={handleMoveTask}
+                        />
+                    )}
 
-            {activeTab === 'tasks' && (
-                <TasksTable
-                    tasks={tasks}
-                    properties={properties}
-                    canManage={canManage}
-                    onTaskClick={handleTaskClick}
-                    onDeleteTask={(taskUuid) => {
-                        const found = tasks.find((t) => t.uuid === taskUuid);
-                        setTaskToDelete({ uuid: taskUuid, title: found?.title || taskUuid });
-                    }}
-                />
-            )}
+                    {activeTab === 'timeline' && (
+                        <TimelineView
+                            projectUuid={pUuid}
+                            tasks={tasks}
+                            canManage={canManage}
+                            onTaskClick={handleTaskClick}
+                            onOpenTimeLog={(t) => setTimeLogTask(t)}
+                        />
+                    )}
 
-            {activeTab === 'files' && (
-                <ProjectFilesTab
-                    projectUuid={pUuid}
-                    workspaceUuid={wsUuid}
-                    canManage={canManage}
-                />
-            )}
+                    {activeTab === 'tasks' && (
+                        <TasksTable
+                            tasks={tasks}
+                            properties={properties}
+                            canManage={canManage}
+                            onTaskClick={handleTaskClick}
+                            onDeleteTask={(taskUuid) => {
+                                const found = tasks.find((t) => t.uuid === taskUuid);
+                                setTaskToDelete({ uuid: taskUuid, title: found?.title || taskUuid });
+                            }}
+                        />
+                    )}
 
-            {activeTab === 'settings' && (
-                <ProjectSettingsTab
-                    projectUuid={pUuid}
-                    statuses={statuses}
-                    types={types}
-                    properties={properties}
-                    canManage={canManage}
-                />
+                    {activeTab === 'files' && (
+                        <ProjectFilesTab
+                            projectUuid={pUuid}
+                            workspaceUuid={wsUuid}
+                            canManage={canManage}
+                        />
+                    )}
+
+                    {activeTab === 'settings' && (
+                        <ProjectSettingsTab
+                            projectUuid={pUuid}
+                            statuses={statuses}
+                            types={types}
+                            properties={properties}
+                            canManage={canManage}
+                        />
+                    )}
+                </>
             )}
 
             {/* Modals */}

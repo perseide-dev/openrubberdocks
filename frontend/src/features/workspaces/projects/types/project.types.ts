@@ -332,3 +332,12 @@ export interface TaskDetailModalProps {
     canManage: boolean;
     onClose: () => void;
 }
+
+export type UpcomingRangeFilter = 'week' | 'month';
+
+export interface ExternalProjectOverviewProps {
+    project: Project;
+    tasks: Task[];
+    onTaskClick: (task: Task) => void;
+}
+

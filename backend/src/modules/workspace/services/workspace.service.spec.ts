@@ -78,6 +78,17 @@ describe('WorkspaceService', () => {
       await service.findAll({ filters: [{ field: 'name', operator: 'eq', value: 'Test' }] });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalled();
     });
+
+    it('should scope workspaces for external users', async () => {
+      mockQueryBuilder.getMany.mockResolvedValue([{ id: 10 }]);
+      const externalUser = { id: 5, uuid: 'ext-5', type: 'external', scopes: [{ workspaceId: 10 }] };
+      const result = await service.findAll({}, externalUser);
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('workspace.id IN'),
+        expect.objectContaining({ userId: 5, userUuid: 'ext-5' }),
+      );
+      expect(result).toEqual([{ id: 10 }]);
+    });
   });
 
   describe('findOne', () => {

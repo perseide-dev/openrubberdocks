@@ -26,9 +26,9 @@ export class WorkspaceController {
   }
 
   @Get()
-  @RequirePermissions('workspace:read')
-  findAll(@JsonApiQuery() query: JsonApiQueryOptions) {
-    return this.workspaceService.findAll(query);
+  findAll(@JsonApiQuery() query: JsonApiQueryOptions, @Req() request: Request) {
+    const user = request.user as any;
+    return this.workspaceService.findAll(query, user);
   }
 
   @Get(':uuid')

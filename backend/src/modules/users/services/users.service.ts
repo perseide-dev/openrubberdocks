@@ -51,7 +51,9 @@ export class UsersService {
         rubberHandle: createDto.rubberHandle,
         username: createDto.username,
         type: createDto.type,
-        password: createDto.password
+        password: createDto.password,
+        canViewDocuments: createDto.canViewDocuments !== undefined ? createDto.canViewDocuments : true,
+        canViewProjects: createDto.canViewProjects !== undefined ? createDto.canViewProjects : true,
       });
     const savedUser = await this.usersRepository.save(user);
 
@@ -106,6 +108,14 @@ export class UsersService {
 
     if (updateDto.password) {
       user.password = updateDto.password;
+    }
+
+    if (updateDto.canViewDocuments !== undefined) {
+      user.canViewDocuments = updateDto.canViewDocuments;
+    }
+
+    if (updateDto.canViewProjects !== undefined) {
+      user.canViewProjects = updateDto.canViewProjects;
     }
 
     if (updateDto.globalRoleUuid !== undefined) {

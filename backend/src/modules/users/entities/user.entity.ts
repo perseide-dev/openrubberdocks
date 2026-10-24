@@ -37,6 +37,12 @@ export class User {
   })
   type!: UserType;
 
+  @Column({ name: 'can_view_documents', default: true })
+  canViewDocuments: boolean;
+
+  @Column({ name: 'can_view_projects', default: true })
+  canViewProjects: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 

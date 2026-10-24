@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MinLength, IsEnum, IsUUID, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, IsEnum, IsUUID, IsOptional, IsBoolean } from 'class-validator';
 import { UserType } from '@moduleUsers/enums/users.enum';
 
 export class CreateUserDto {
@@ -25,4 +25,12 @@ export class CreateUserDto {
     @IsUUID()
     @IsOptional()
     readonly initialRoleUuid?: string;
+
+    @IsBoolean()
+    @IsOptional()
+    readonly canViewDocuments?: boolean;
+
+    @IsBoolean()
+    @IsOptional()
+    readonly canViewProjects?: boolean;
 }

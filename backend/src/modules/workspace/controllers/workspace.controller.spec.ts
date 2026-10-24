@@ -47,8 +47,9 @@ describe('WorkspaceController', () => {
   });
 
   it('findAll should call service.findAll', async () => {
-    await controller.findAll({});
-    expect(service.findAll).toHaveBeenCalledWith({});
+    const req = { user: { id: 1, uuid: 'u-1' } } as any;
+    await controller.findAll({}, req);
+    expect(service.findAll).toHaveBeenCalledWith({}, req.user);
   });
 
   it('findOne should call service.findOne', async () => {

@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsEnum, IsUUID, IsOptional, ValidateIf } from 'class-validator';
+import { IsString, MinLength, IsEnum, IsUUID, IsOptional, ValidateIf, IsBoolean } from 'class-validator';
 import { UserType } from '@moduleUsers/enums/users.enum';
 
 export class UpdateUserDto {
@@ -25,4 +25,12 @@ export class UpdateUserDto {
   @IsUUID()
   @IsOptional()
   readonly globalRoleUuid?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
+  readonly canViewDocuments?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  readonly canViewProjects?: boolean;
 }

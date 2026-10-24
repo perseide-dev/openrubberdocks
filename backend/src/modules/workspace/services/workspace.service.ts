@@ -6,6 +6,7 @@ import { CreateWorkspaceDto } from '@moduleWorkspace/dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from '@moduleWorkspace/dto/update-workspace.dto';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
 import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
+import { UserType } from '@moduleUsers/enums/users.enum';
 import { WORKSPACE_ERRORS_CONSTANTS } from '../constants/workspace.errors.constants';
 
 @Injectable()
@@ -23,7 +24,7 @@ export class WorkspaceService {
     return await this.workspaceRepository.save(workspace);
   }
 
-  async findAll(query: JsonApiQueryOptions): Promise<Workspace[]> {
+  async findAll(query: JsonApiQueryOptions, user?: any): Promise<Workspace[]> {
     const qb = this.workspaceRepository.createQueryBuilder('workspace');
 
     // 1. Apply Relationships Inclusion (if any)
@@ -36,6 +37,22 @@ export class WorkspaceService {
     // 2. Dynamic Filter Construction
     if (query.filters?.length) {
       applyJsonApiFilters(qb, query.filters, 'workspace');
+    }
+
+    // 3. User Scoping
+    if (user && user.type !== UserType.COREADMIN) {
+      const hasGlobalScope = user.scopes?.some((s: any) => !s.workspace && !s.workspaceId);
+      if (!hasGlobalScope) {
+        qb.andWhere(
+          `workspace.id IN (
+            SELECT wm.workspace_id FROM workspace_members wm WHERE wm.user_id = :userId
+            UNION
+            SELECT urs.workspace_id FROM user_role_scopes urs WHERE urs.user_id = :userId AND urs.workspace_id IS NOT NULL
+            ${user.type === UserType.INTERNAL ? 'UNION SELECT w2.id FROM workspace w2 WHERE w2.created_by_uuid = :userUuid' : ''}
+          )`,
+          { userId: user.id, userUuid: user.uuid },
+        );
+      }
     }
 
     return await qb.getMany();

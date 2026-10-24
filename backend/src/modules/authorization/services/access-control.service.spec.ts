@@ -130,5 +130,52 @@ describe('AccessControlService', () => {
       const result = await service.hasPermission(1, 'item:read', 'ws-123');
       expect(result).toBe(true);
     });
+
+    it('should return true for external user performing unscoped read with read permission', async () => {
+      userRepository.findOne.mockResolvedValue({ id: 1, type: UserType.EXTERNAL });
+      userRoleScopeRepository.find.mockResolvedValue([
+        {
+          workspace: { uuid: 'ws-123' },
+          role: { permissions: [{ action: 'workspace:read' }] },
+        },
+      ]);
+
+      const result = await service.hasPermission(1, 'workspace:read');
+      expect(result).toBe(true);
+    });
+
+    it('should return false if external user has canViewDocuments=false and tries to read documents', async () => {
+      userRepository.findOne.mockResolvedValue({
+        id: 1,
+        type: UserType.EXTERNAL,
+        canViewDocuments: false,
+      });
+      userRoleScopeRepository.find.mockResolvedValue([
+        {
+          workspace: { uuid: 'ws-123' },
+          role: { permissions: [{ action: 'document:read' }] },
+        },
+      ]);
+
+      const result = await service.hasPermission(1, 'document:read', 'ws-123');
+      expect(result).toBe(false);
+    });
+
+    it('should return false if external user has canViewProjects=false and tries to read projects', async () => {
+      userRepository.findOne.mockResolvedValue({
+        id: 1,
+        type: UserType.EXTERNAL,
+        canViewProjects: false,
+      });
+      userRoleScopeRepository.find.mockResolvedValue([
+        {
+          workspace: { uuid: 'ws-123' },
+          role: { permissions: [{ action: 'project:read' }] },
+        },
+      ]);
+
+      const result = await service.hasPermission(1, 'project:read', 'ws-123');
+      expect(result).toBe(false);
+    });
   });
 });

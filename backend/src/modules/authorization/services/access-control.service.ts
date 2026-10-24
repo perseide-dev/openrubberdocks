@@ -45,8 +45,20 @@ export class AccessControlService {
           if (requiredPermission.includes('write') || requiredPermission.includes('create') || requiredPermission.includes('edit') || requiredPermission.includes('delete')) {
             continue; // External users cannot write, ever, even if assigned a role with write permission
           }
+
+          // External user rule: canViewDocuments
+          if (requiredPermission.startsWith('document:') && !user.canViewDocuments) {
+            continue;
+          }
+
+          // External user rule: canViewProjects
+          if ((requiredPermission.startsWith('project:') || requiredPermission.startsWith('task:')) && !user.canViewProjects) {
+            continue;
+          }
+
           if (workspaceUuid && scope.workspace?.uuid === workspaceUuid) return true;
           if (squadId && scope.squadId === squadId) return true;
+          if (!workspaceUuid && !squadId) return true;
           continue;
         }
 
@@ -61,6 +73,10 @@ export class AccessControlService {
         }
 
         if (squadId && scope.squadId === squadId) {
+          return true;
+        }
+
+        if (!workspaceUuid && !squadId && !requiredPermission.includes('write') && !requiredPermission.includes('create') && !requiredPermission.includes('edit') && !requiredPermission.includes('delete')) {
           return true;
         }
       }

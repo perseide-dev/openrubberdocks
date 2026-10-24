@@ -23,13 +23,16 @@ export class AuthController {
     }
 
     const tokens = await this.authService.generateTokens(buildGenerateTokenPayload(user));
-    await this.authService.updateRefreshToken(buildTokenPayload(tokens));
+    await this.authService.updateRefreshToken(
+      buildTokenPayload({ uuid: user.uuid, refreshToken: tokens.refreshToken }),
+    );
 
     response.cookie('Authentication', tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
+      path: '/',
     });
 
     response.cookie('Refresh', tokens.refreshToken, {
@@ -37,6 +40,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
     // Returning user directly so the JsonApiInterceptor formats it
@@ -56,6 +60,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000,
+      path: '/',
     });
 
     response.cookie('Refresh', tokens.refreshToken, {
@@ -63,6 +68,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
     });
 
     // We can return the user object, or null
@@ -80,12 +86,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      path: '/',
     });
 
     response.clearCookie('Refresh', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      path: '/',
     });
 
     return null; // Will result in { data: null } via JsonApiInterceptor

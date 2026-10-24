@@ -50,7 +50,7 @@ describe('AuthController', () => {
       const result = await controller.login({ rubberHandle: 'test', pwd: 'pwd' }, mockResponse);
 
       expect(authService.generateTokens).toHaveBeenCalled();
-      expect(authService.updateRefreshToken).toHaveBeenCalled();
+      expect(authService.updateRefreshToken).toHaveBeenCalledWith({ userUUID: 'u-1', refreshToken: 'ref_token' });
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockUser);
     });

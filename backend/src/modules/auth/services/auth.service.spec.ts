@@ -113,7 +113,7 @@ describe('AuthService', () => {
       
       expect(result).toEqual({ accessToken: 'new_acc', refreshToken: 'new_ref' });
       expect(service.generateTokens).toHaveBeenCalled();
-      expect(service.updateRefreshToken).toHaveBeenCalled();
+      expect(service.updateRefreshToken).toHaveBeenCalledWith({ userUUID: 'u-1', refreshToken: 'new_ref' });
     });
 
     it('should throw UnauthorizedException if user not found', async () => {

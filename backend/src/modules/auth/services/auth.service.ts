@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@moduleUsers/entities/user.entity';
 import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
 import { AUTH_ERRORS_CONSTANTS } from '@moduleAuth/constants/auth.errors.constants';
+import { AuthTokens } from '@moduleAuth/interface/auth.interface';
 
 
 @Injectable()
@@ -25,7 +26,7 @@ export class AuthService {
     throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.INVALID_CREDENTIALS());
   }
 
-  async generateTokens(generateToken: GenerateTokenDto): Promise<any> {
+  async generateTokens(generateToken: GenerateTokenDto): Promise<AuthTokens> {
     const accessSecret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
 
@@ -53,7 +54,7 @@ export class AuthService {
     await this.usersService.updateRefreshToken(updateToken.userUUID, hashedRefreshToken);
   }
 
-  async refreshTokens(refreshToken: RefreshTokenDto) {
+  async refreshTokens(refreshToken: RefreshTokenDto): Promise<AuthTokens> {
     const user = await this.usersService.findById(refreshToken.userUUID);
     if (!user || !user.hashedRefreshToken) {
       throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.ACCESS_DENIED());
@@ -69,7 +70,9 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens(buildGenerateTokenPayload(user));
-    await this.updateRefreshToken(buildTokenPayload(tokens));
+    await this.updateRefreshToken(
+      buildTokenPayload({ uuid: user.uuid, refreshToken: tokens.refreshToken }),
+    );
     return tokens;
   }
 

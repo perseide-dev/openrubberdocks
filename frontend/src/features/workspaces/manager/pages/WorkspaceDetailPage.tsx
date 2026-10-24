@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Button, Tooltip } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
@@ -18,11 +18,32 @@ export function WorkspaceDetailPage() {
     const navigate = useNavigate();
     const wsUuid = uuid ?? '';
 
-    const [activeTab, setActiveTab] = useState<'files' | 'members' | 'projects'>('files');
+    const { canMutateInWorkspace, isExternal, canViewDocuments, canViewProjects } = usePermissions();
+    const canMutate = canMutateInWorkspace(wsUuid);
+
+    const showFiles = !isExternal || canViewDocuments;
+    const showMembers = !isExternal;
+    const showProjects = !isExternal || canViewProjects;
+
+    const [activeTab, setActiveTab] = useState<'files' | 'members' | 'projects'>(() => {
+        if (!isExternal || canViewDocuments) return 'files';
+        if (canViewProjects) return 'projects';
+        return 'files';
+    });
+
+    useEffect(() => {
+        if (activeTab === 'files' && !showFiles) {
+            if (showProjects) setActiveTab('projects');
+        } else if (activeTab === 'members' && !showMembers) {
+            if (showFiles) setActiveTab('files');
+            else if (showProjects) setActiveTab('projects');
+        } else if (activeTab === 'projects' && !showProjects) {
+            if (showFiles) setActiveTab('files');
+        }
+    }, [activeTab, showFiles, showMembers, showProjects]);
+
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { files: workspaceFiles, viewMode, setViewMode } = useWorkspaceFiles(wsUuid);
-    const { canMutateInWorkspace } = usePermissions();
-    const canMutate = canMutateInWorkspace(wsUuid);
 
     const [isDeleteWorkspaceOpen, setIsDeleteWorkspaceOpen] = useState(false);
     const [fileToDelete, setFileToDelete] = useState<WorkspaceFile | null>(null);
@@ -92,48 +113,54 @@ export function WorkspaceDetailPage() {
                     paddingBottom: 1,
                 }}
             >
-                <Button
-                    variant={activeTab === 'files' ? 'contained' : 'outlined'}
-                    color="inherit"
-                    onClick={() => setActiveTab('files')}
-                    sx={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        borderRadius: 0,
-                    }}
-                >
-                    // FILES
-                </Button>
-                <Button
-                    variant={activeTab === 'members' ? 'contained' : 'outlined'}
-                    color="inherit"
-                    onClick={() => setActiveTab('members')}
-                    sx={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        borderRadius: 0,
-                    }}
-                >
-                    // MEMBERS
-                </Button>
-                <Button
-                    variant={activeTab === 'projects' ? 'contained' : 'outlined'}
-                    color="inherit"
-                    onClick={() => setActiveTab('projects')}
-                    sx={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        borderRadius: 0,
-                    }}
-                >
-                    // PROJECTS
-                </Button>
+                {showFiles && (
+                    <Button
+                        variant={activeTab === 'files' ? 'contained' : 'outlined'}
+                        color="inherit"
+                        onClick={() => setActiveTab('files')}
+                        sx={{
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            borderRadius: 0,
+                        }}
+                    >
+                        // FILES
+                    </Button>
+                )}
+                {showMembers && (
+                    <Button
+                        variant={activeTab === 'members' ? 'contained' : 'outlined'}
+                        color="inherit"
+                        onClick={() => setActiveTab('members')}
+                        sx={{
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            borderRadius: 0,
+                        }}
+                    >
+                        // MEMBERS
+                    </Button>
+                )}
+                {showProjects && (
+                    <Button
+                        variant={activeTab === 'projects' ? 'contained' : 'outlined'}
+                        color="inherit"
+                        onClick={() => setActiveTab('projects')}
+                        sx={{
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            borderRadius: 0,
+                        }}
+                    >
+                        // PROJECTS
+                    </Button>
+                )}
             </Box>
 
-            {activeTab === 'files' && (
+            {showFiles && activeTab === 'files' && (
                 <FilesView
                     files={workspaceFiles}
                     viewMode={viewMode}
@@ -142,14 +169,14 @@ export function WorkspaceDetailPage() {
                 />
             )}
 
-            {activeTab === 'members' && (
+            {showMembers && activeTab === 'members' && (
                 <MembersTabContent
                     workspaceUuid={wsUuid}
                     canManage={canMutate}
                 />
             )}
 
-            {activeTab === 'projects' && (
+            {showProjects && activeTab === 'projects' && (
                 <ProjectsTabContent
                     workspaceUuid={wsUuid}
                     canManage={canMutate}

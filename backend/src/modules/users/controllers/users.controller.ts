@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Param,
   Query,
   UseGuards,
   UseInterceptors,
@@ -9,6 +11,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from '@moduleUsers/services/users.service';
 import { CreateUserDto } from '@moduleUsers/dto/create-user.dto';
+import { UpdateUserDto } from '@moduleUsers/dto/update-user.dto';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { RequirePermissions } from '@commonDecorators/require-permissions.decorator';
@@ -30,5 +33,15 @@ export class UsersController {
   @Post()
   create(@JsonApiBody() createUsersDto: CreateUserDto) {
     return this.usersService.create(createUsersDto);
+  }
+
+  @UseInterceptors(new JsonApiInterceptor('users'))
+  @RequirePermissions('role:assign')
+  @Patch(':uuid')
+  update(
+    @Param('uuid') uuid: string,
+    @JsonApiBody() updateUsersDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(uuid, updateUsersDto);
   }
 }

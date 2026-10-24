@@ -6,6 +6,7 @@ import { User } from '@moduleUsers/entities/user.entity';
 import { Role } from '@moduleAuthorization/entities/role.entity';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 import { CreateUserDto } from '@moduleUsers/dto/create-user.dto';
+import { UpdateUserDto } from '@moduleUsers/dto/update-user.dto';
 import { AUTHORIZATION_ERRORS } from '@moduleAuthorization/constants/authorization.errors.constants';
 
 @Injectable()
@@ -65,6 +66,97 @@ export class UsersService {
     return savedUser;
   }
 
+  async update(uuid: string, updateDto: UpdateUserDto): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { uuid },
+      relations: [
+        'scopes',
+        'scopes.role',
+        'scopes.workspace',
+      ],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with UUID ${uuid} not found`);
+    }
+
+    if (updateDto.rubberHandle && updateDto.rubberHandle !== user.rubberHandle) {
+      const existingUser = await this.usersRepository.findOne({
+        where: { rubberHandle: updateDto.rubberHandle },
+      });
+      if (existingUser && existingUser.uuid !== user.uuid) {
+        throw new ConflictException('User with this handle already exists');
+      }
+      user.rubberHandle = updateDto.rubberHandle;
+    }
+
+    if (updateDto.username) {
+      user.username = updateDto.username;
+    }
+
+    if (updateDto.type && updateDto.type !== user.type) {
+      if (user.type === UserType.COREADMIN) {
+        throw new BadRequestException('Cannot modify Core Admin user type');
+      }
+      if (updateDto.type === UserType.COREADMIN) {
+        throw new BadRequestException('Cannot promote user to Core Admin');
+      }
+      user.type = updateDto.type;
+    }
+
+    if (updateDto.password) {
+      user.password = updateDto.password;
+    }
+
+    if (updateDto.globalRoleUuid !== undefined) {
+      if (user.type === UserType.COREADMIN) {
+        throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_MODIFY_CORE_USER());
+      }
+
+      if (user.type === UserType.EXTERNAL && updateDto.globalRoleUuid) {
+        throw new BadRequestException(AUTHORIZATION_ERRORS.INVALID_SCOPE_ASSIGNMENT());
+      }
+
+      const existingGlobalScope = user.scopes?.find((s) => !s.workspace);
+
+      if (updateDto.globalRoleUuid) {
+        const role = await this.roleRepository.findOne({
+          where: { uuid: updateDto.globalRoleUuid },
+        });
+        if (!role) {
+          throw new NotFoundException(AUTHORIZATION_ERRORS.ROLE_NOT_FOUND());
+        }
+        if (!role.isAssignable) {
+          throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_ASSIGN_SUPER_ADMIN());
+        }
+
+        if (existingGlobalScope) {
+          existingGlobalScope.role = role;
+          await this.scopeRepository.save(existingGlobalScope);
+        } else {
+          const newScope = this.scopeRepository.create({
+            user,
+            role,
+          });
+          await this.scopeRepository.save(newScope);
+        }
+      } else if (existingGlobalScope) {
+        await this.scopeRepository.remove(existingGlobalScope);
+      }
+    }
+
+    if (user.type === UserType.EXTERNAL) {
+      const existingGlobalScope = user.scopes?.find((s) => !s.workspace);
+      if (existingGlobalScope) {
+        await this.scopeRepository.remove(existingGlobalScope);
+      }
+    }
+
+    await this.usersRepository.save(user);
+
+    return this.findById(user.uuid);
+  }
+
   async findByRubberHandle(rubberHandle: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { rubberHandle },
@@ -112,7 +204,8 @@ export class UsersService {
       .orderBy('user.createdAt', 'DESC');
 
     if (search && search.trim()) {
-      const term = `%${search.trim().toLowerCase()}%`;
+      const cleanTerm = search.trim().replace(/^@/, '').toLowerCase();
+      const term = `%${cleanTerm}%`;
       qb.where('LOWER(user.rubberHandle) LIKE :term OR LOWER(user.username) LIKE :term', { term });
     }
     qb.limit(50);

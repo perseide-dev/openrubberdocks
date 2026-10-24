@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Button,
@@ -38,6 +38,8 @@ export const MembersTabContent: React.FC<MembersTabContentProps> = ({
     isRemovingMember,
     refetch,
   } = useWorkspaceMembers(workspaceUuid);
+
+  const existingMemberUserUuids = useMemo(() => members.map((m) => m.userUuid), [members]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -129,6 +131,7 @@ export const MembersTabContent: React.FC<MembersTabContentProps> = ({
         open={isAddModalOpen}
         workspaceUuid={workspaceUuid}
         availableRoles={availableRoles}
+        existingMemberUserUuids={existingMemberUserUuids}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={() => {
           setIsAddModalOpen(false);

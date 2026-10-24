@@ -11,6 +11,7 @@ import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader
 import { useUserAdmin } from '@features/admin/users/hooks/useUserAdmin';
 import { UsersAdminTable } from '@features/admin/users/components/UsersAdminTable';
 import { CreateUserModal } from '@features/admin/users/components/CreateUserModal';
+import { EditUserModal } from '@features/admin/users/components/EditUserModal';
 import { USER_ADMIN_MESSAGES } from '@features/admin/users/constants/user-admin.constants';
 
 export const UsersAdminPage: React.FC = () => {
@@ -23,6 +24,10 @@ export const UsersAdminPage: React.FC = () => {
     setSearchTerm,
     isCreateModalOpen,
     setIsCreateModalOpen,
+    isEditModalOpen,
+    userToEdit,
+    handleOpenEditModal,
+    handleCloseEditModal,
     refetch,
   } = useUserAdmin();
 
@@ -81,7 +86,10 @@ export const UsersAdminPage: React.FC = () => {
           <CircularProgress size={32} />
         </Box>
       ) : (
-        <UsersAdminTable users={users} />
+        <UsersAdminTable
+          users={users}
+          onEditUser={handleOpenEditModal}
+        />
       )}
 
       {/* Modal: Create User */}
@@ -91,6 +99,18 @@ export const UsersAdminPage: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => {
           setIsCreateModalOpen(false);
+          refetch();
+        }}
+      />
+
+      {/* Modal: Edit User */}
+      <EditUserModal
+        open={isEditModalOpen}
+        user={userToEdit}
+        availableRoles={availableRoles}
+        onClose={handleCloseEditModal}
+        onSuccess={() => {
+          handleCloseEditModal();
           refetch();
         }}
       />

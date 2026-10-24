@@ -6,6 +6,7 @@ import {
 import type {
   AdminUserItem,
   CreateUserPayload,
+  UpdateUserPayload,
 } from '@features/admin/users/types/user-admin.types';
 
 export async function getAdminUsersRepository(
@@ -21,6 +22,17 @@ export async function createAdminUserRepository(
 ): Promise<AdminUserItem> {
   return baseAPIrequest.post<AdminUserItem, CreateUserPayload>(
     USER_ADMIN_ENDPOINTS.CREATE,
+    payload,
+    { resourceType: USER_ADMIN_RESOURCE_TYPE },
+  );
+}
+
+export async function updateAdminUserRepository(
+  uuid: string,
+  payload: UpdateUserPayload,
+): Promise<AdminUserItem> {
+  return baseAPIrequest.patch<AdminUserItem, UpdateUserPayload>(
+    USER_ADMIN_ENDPOINTS.USER_BY_UUID(uuid),
     payload,
     { resourceType: USER_ADMIN_RESOURCE_TYPE },
   );

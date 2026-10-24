@@ -27,12 +27,20 @@ export function useWorkspaceMembers(workspaceUuid: string) {
   const filteredMembers = useMemo(() => {
     if (!searchTerm.trim()) return members;
     const term = searchTerm.toLowerCase().trim();
-    return members.filter(
-      (m) =>
-        m.username.toLowerCase().includes(term) ||
-        m.rubberHandle.toLowerCase().includes(term) ||
-        m.role?.name.toLowerCase().includes(term),
-    );
+    const cleanTerm = term.replace(/^@/, '');
+    return members.filter((m) => {
+      const username = m.username?.toLowerCase() || '';
+      const handle = m.rubberHandle?.toLowerCase() || '';
+      const roleName = m.role?.name?.toLowerCase() || '';
+
+      return (
+        username.includes(term) ||
+        username.includes(cleanTerm) ||
+        handle.includes(cleanTerm) ||
+        roleName.includes(term) ||
+        roleName.includes(cleanTerm)
+      );
+    });
   }, [members, searchTerm]);
 
   const handleUpdateRole = useCallback(

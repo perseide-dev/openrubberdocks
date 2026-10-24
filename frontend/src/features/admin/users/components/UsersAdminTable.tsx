@@ -10,10 +10,12 @@ import {
   Chip,
   Typography,
   Box,
+  IconButton,
 } from '@mui/material';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { UsersAdminTableProps } from '@features/admin/users/types/user-admin.types';
 
-export const UsersAdminTable: React.FC<UsersAdminTableProps> = ({ users }) => {
+export const UsersAdminTable: React.FC<UsersAdminTableProps> = ({ users, onEditUser }) => {
   if (users.length === 0) {
     return (
       <Box sx={{ padding: 4, textAlign: 'center' }}>
@@ -50,8 +52,11 @@ export const UsersAdminTable: React.FC<UsersAdminTableProps> = ({ users }) => {
             <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.75rem' }}>
               // ASSIGNED_SCOPES
             </TableCell>
-            <TableCell align="right" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.75rem' }}>
+            <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.75rem' }}>
               // CREATED_AT
+            </TableCell>
+            <TableCell align="right" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.75rem' }}>
+              // ACTIONS
             </TableCell>
           </TableRow>
         </TableHead>
@@ -171,13 +176,24 @@ export const UsersAdminTable: React.FC<UsersAdminTableProps> = ({ users }) => {
                   )}
                 </TableCell>
 
-                <TableCell align="right">
+                <TableCell>
                   <Typography
                     variant="caption"
                     sx={{ fontFamily: 'monospace', color: 'text.secondary' }}
                   >
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '--'}
                   </Typography>
+                </TableCell>
+
+                <TableCell align="right">
+                  <IconButton
+                    size="small"
+                    color="inherit"
+                    onClick={() => onEditUser(user)}
+                    title="Edit User"
+                  >
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             );

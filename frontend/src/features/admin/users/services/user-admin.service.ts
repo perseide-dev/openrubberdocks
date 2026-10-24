@@ -2,10 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getAdminUsersRepository,
   createAdminUserRepository,
+  updateAdminUserRepository,
   getAdminRolesRepository,
 } from '@features/admin/users/repositories/user-admin.repository';
 import { USER_ADMIN_QUERY_KEYS } from '@features/admin/users/constants/user-admin.constants';
-import type { CreateUserPayload } from '@features/admin/users/types/user-admin.types';
+import type {
+  CreateUserPayload,
+  UpdateUserPayload,
+} from '@features/admin/users/types/user-admin.types';
 
 export function useAdminUsersService(search?: string) {
   return useQuery({
@@ -19,6 +23,19 @@ export function useCreateAdminUserService() {
   return useMutation({
     mutationFn: (payload: CreateUserPayload) =>
       createAdminUserRepository(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['admin-users'],
+      });
+    },
+  });
+}
+
+export function useUpdateAdminUserService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ uuid, payload }: { uuid: string; payload: UpdateUserPayload }) =>
+      updateAdminUserRepository(uuid, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['admin-users'],

@@ -25,12 +25,14 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   open,
   workspaceUuid,
   availableRoles,
+  existingMemberUserUuids,
   onClose,
   onSuccess,
 }) => {
   const {
     searchInput,
     setSearchInput,
+    debouncedSearch,
     searchResults,
     isSearching,
     selectedUser,
@@ -41,7 +43,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
     isSubmitting,
     handleSubmit,
     reset,
-  } = useAddMemberModal(workspaceUuid, availableRoles, onSuccess);
+  } = useAddMemberModal(workspaceUuid, availableRoles, onSuccess, existingMemberUserUuids);
 
   const handleClose = () => {
     reset();
@@ -160,7 +162,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
                       </Typography>
                     </Box>
                     <Chip
-                      label={user.type.toUpperCase()}
+                      label={(user.type || 'internal').toUpperCase()}
                       size="small"
                       variant="outlined"
                       sx={{ borderRadius: 0, fontFamily: 'monospace', fontSize: '0.65rem', height: 18 }}
@@ -168,6 +170,24 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   </Box>
                 );
               })}
+            </Box>
+          )}
+
+          {/* No results message */}
+          {debouncedSearch.length >= 1 && searchResults.length === 0 && !isSearching && (
+            <Box
+              sx={{
+                padding: '8px 12px',
+                border: '1.5px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{ fontFamily: 'monospace', color: 'text.secondary' }}
+              >
+                // NO_USERS_FOUND
+              </Typography>
             </Box>
           )}
 

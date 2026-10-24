@@ -33,12 +33,29 @@ export interface CreateUserPayload extends Record<string, unknown> {
   initialRoleUuid?: string;
 }
 
+export interface UpdateUserPayload extends Record<string, unknown> {
+  username?: string;
+  rubberHandle?: string;
+  type?: AdminUserType;
+  password?: string;
+  globalRoleUuid?: string | null;
+}
+
 export interface UsersAdminTableProps {
   users: AdminUserItem[];
+  onEditUser: (user: AdminUserItem) => void;
 }
 
 export interface CreateUserModalProps {
   open: boolean;
+  availableRoles: { uuid: string; name: string }[];
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export interface EditUserModalProps {
+  open: boolean;
+  user: AdminUserItem | null;
   availableRoles: { uuid: string; name: string }[];
   onClose: () => void;
   onSuccess: () => void;

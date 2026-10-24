@@ -52,6 +52,7 @@ export interface AddMemberModalProps {
   open: boolean;
   workspaceUuid: string;
   availableRoles: RoleItem[];
+  existingMemberUserUuids?: string[];
   onClose: () => void;
   onSuccess: () => void;
 }

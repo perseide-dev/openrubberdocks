@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   useSearchUsersService,
   useAddWorkspaceMemberService,
@@ -12,6 +12,7 @@ export function useAddMemberModal(
   workspaceUuid: string,
   availableRoles: RoleItem[],
   onSuccess: () => void,
+  existingMemberUserUuids?: string[],
 ) {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -19,16 +20,24 @@ export function useAddMemberModal(
   const [selectedRoleUuid, setSelectedRoleUuid] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Debounce search input
+  // Debounce search input and strip @ prefix
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
+      setDebouncedSearch(searchInput.trim().replace(/^@/, ''));
     }, 250);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { data: searchResults = [], isLoading: isSearching } =
+  const { data: rawSearchResults = [], isLoading: isSearching } =
     useSearchUsersService(debouncedSearch);
+
+  const searchResults = useMemo(() => {
+    return rawSearchResults.filter((u) => {
+      if (u.type === 'coreAdmin') return false;
+      if (existingMemberUserUuids && existingMemberUserUuids.includes(u.uuid)) return false;
+      return true;
+    });
+  }, [rawSearchResults, existingMemberUserUuids]);
 
   const addMemberMutation = useAddWorkspaceMemberService(workspaceUuid);
 
@@ -71,6 +80,7 @@ export function useAddMemberModal(
   return {
     searchInput,
     setSearchInput,
+    debouncedSearch,
     searchResults,
     isSearching,
     selectedUser,

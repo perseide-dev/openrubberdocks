@@ -21,11 +21,13 @@ export class RolesSeeder implements Seeder {
         name: 'Super Admin',
         description: 'Global administrator with all permissions',
         isSystemDefined: true,
+        isAssignable: false,
         permissions: allPermissions,
       });
       await roleRepository.save(superAdminRole);
     } else {
       superAdminRole.permissions = allPermissions;
+      superAdminRole.isAssignable = false;
       await roleRepository.save(superAdminRole);
     }
 
@@ -41,11 +43,13 @@ export class RolesSeeder implements Seeder {
         name: 'External Reader',
         description: 'External user with read-only access to specific scopes',
         isSystemDefined: true,
+        isAssignable: true,
         permissions: readPermissions,
       });
       await roleRepository.save(externalReaderRole);
     } else {
       externalReaderRole.permissions = readPermissions;
+      externalReaderRole.isAssignable = true;
       await roleRepository.save(externalReaderRole);
     }
   }

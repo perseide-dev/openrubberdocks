@@ -112,6 +112,9 @@ export class WorkspaceMembersService {
     if (!role) {
       throw new NotFoundException(`Role with UUID ${dto.roleUuid} not found`);
     }
+    if (!role.isAssignable) {
+      throw new BadRequestException('This role cannot be assigned to workspace members');
+    }
 
     const existingMember = await this.memberRepository.findOne({
       where: { workspaceId: workspace.id, userId: user.id },
@@ -186,6 +189,9 @@ export class WorkspaceMembersService {
     });
     if (!role) {
       throw new NotFoundException(`Role with UUID ${dto.roleUuid} not found`);
+    }
+    if (!role.isAssignable) {
+      throw new BadRequestException('This role cannot be assigned to workspace members');
     }
 
     let scope = await this.scopeRepository.findOne({

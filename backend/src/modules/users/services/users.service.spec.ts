@@ -1,15 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from '../entities/user.entity';
+import { User } from '@moduleUsers/entities/user.entity';
 import { Role } from '@moduleAuthorization/entities/role.entity';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
-import { ConflictException, NotFoundException } from '@nestjs/common';
-import { UserType } from '../enums/users.enum';
+import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { UserType } from '@moduleUsers/enums/users.enum';
 
 describe('UsersService', () => {
   let service: UsersService;
   let repository: any;
+  let roleRepo: any;
+  let scopeRepo: any;
 
   beforeEach(async () => {
     repository = {
@@ -17,6 +19,13 @@ describe('UsersService', () => {
       create: jest.fn(),
       save: jest.fn(),
       update: jest.fn(),
+    };
+    roleRepo = {
+      findOne: jest.fn(),
+    };
+    scopeRepo = {
+      create: jest.fn(),
+      save: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -28,11 +37,11 @@ describe('UsersService', () => {
         },
         {
           provide: getRepositoryToken(Role),
-          useValue: { findOne: jest.fn() },
+          useValue: roleRepo,
         },
         {
           provide: getRepositoryToken(UserRoleScope),
-          useValue: { create: jest.fn(), save: jest.fn() },
+          useValue: scopeRepo,
         },
       ],
     }).compile();
@@ -69,6 +78,57 @@ describe('UsersService', () => {
       repository.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 1 });
 
       await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw NotFoundException if initialRoleUuid does not exist', async () => {
+      const createDto = {
+        rubberHandle: 'test',
+        username: 'Test',
+        type: UserType.INTERNAL,
+        password: 'pwd',
+        initialRoleUuid: 'non-existent-role-uuid',
+      };
+      repository.findOne.mockResolvedValue(null);
+      roleRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if assigning Super Admin role to non-core user', async () => {
+      const createDto = {
+        rubberHandle: 'test',
+        username: 'Test',
+        type: UserType.INTERNAL,
+        password: 'pwd',
+        initialRoleUuid: 'super-admin-role-uuid',
+      };
+      repository.findOne.mockResolvedValue(null);
+      roleRepo.findOne.mockResolvedValue({ uuid: 'super-admin-role-uuid', name: 'Super Admin', isAssignable: false });
+
+      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should assign role scope if valid initialRoleUuid provided', async () => {
+      const createDto = {
+        rubberHandle: 'test',
+        username: 'Test',
+        type: UserType.INTERNAL,
+        password: 'pwd',
+        initialRoleUuid: 'editor-role-uuid',
+      };
+      const mockRole = { uuid: 'editor-role-uuid', name: 'Editor', isAssignable: true };
+      const savedUser = { id: 1, ...createDto };
+      repository.findOne.mockResolvedValue(null);
+      roleRepo.findOne.mockResolvedValue(mockRole);
+      repository.create.mockReturnValue(savedUser);
+      repository.save.mockResolvedValue(savedUser);
+      scopeRepo.create.mockReturnValue({});
+      scopeRepo.save.mockResolvedValue({});
+
+      const result = await service.create(createDto);
+      expect(result).toEqual(savedUser);
+      expect(scopeRepo.create).toHaveBeenCalledWith({ user: savedUser, role: mockRole });
+      expect(scopeRepo.save).toHaveBeenCalled();
     });
   });
 

@@ -32,8 +32,7 @@ export function useAddMemberModal(
 
   const addMemberMutation = useAddWorkspaceMemberService(workspaceUuid);
 
-  const defaultRoleUuid =
-    (availableRoles.find((r) => r.name !== 'Super Admin') || availableRoles[0])?.uuid || '';
+  const defaultRoleUuid = availableRoles[0]?.uuid || '';
   const currentRoleUuid = selectedRoleUuid || defaultRoleUuid;
 
   const reset = useCallback(() => {

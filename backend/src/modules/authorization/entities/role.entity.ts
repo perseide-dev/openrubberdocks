@@ -22,6 +22,9 @@ export class Role {
   @Column({ name: 'is_system_defined', default: false })
   isSystemDefined: boolean;
 
+  @Column({ name: 'is_assignable', default: true })
+  isAssignable: boolean;
+
   @ManyToMany(() => Permission, permission => permission.roles, { cascade: true })
   @JoinTable({
     name: 'role_permissions',

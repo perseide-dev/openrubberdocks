@@ -58,6 +58,21 @@ describe('RoleManagementService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('findAll', () => {
+    it('should return only assignable roles (excluding isAssignable: false)', async () => {
+      const mockRoles = [{ uuid: 'r-2', name: 'Editor', isAssignable: true }];
+      roleRepository.find.mockResolvedValue(mockRoles);
+
+      const result = await service.findAll();
+      expect(result).toEqual(mockRoles);
+      expect(roleRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { isAssignable: true },
+        }),
+      );
+    });
+  });
+
   describe('findOne', () => {
     it('should return a role if found', async () => {
       const mockRole = { uuid: 'role-1' };
@@ -93,12 +108,22 @@ describe('RoleManagementService', () => {
 
       await expect(service.create(createDto as any)).rejects.toThrow(BadRequestException);
     });
+
+    it('should throw BadRequestException if trying to create a role named Super Admin', async () => {
+      const createDto = { name: 'Super Admin', permissionUuids: [] };
+      await expect(service.create(createDto as any)).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('update', () => {
     it('should throw BadRequestException if trying to modify a system defined role', async () => {
       roleRepository.findOne.mockResolvedValue({ uuid: 'sys-role', isSystemDefined: true });
       await expect(service.update('sys-role', { name: 'New Name' })).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if trying to rename a role to Super Admin', async () => {
+      roleRepository.findOne.mockResolvedValue({ uuid: 'role-1', name: 'Custom Role', isSystemDefined: false });
+      await expect(service.update('role-1', { name: 'Super Admin' })).rejects.toThrow(BadRequestException);
     });
 
     it('should update role correctly', async () => {
@@ -138,9 +163,15 @@ describe('RoleManagementService', () => {
       await expect(service.assignScope({ userUuid: 'u-1', roleUuid: 'r-1' })).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException if role is Super Admin', async () => {
+      userRepository.findOne.mockResolvedValue({ type: UserType.INTERNAL });
+      roleRepository.findOne.mockResolvedValue({ uuid: 'r-super', name: 'Super Admin' });
+      await expect(service.assignScope({ userUuid: 'u-1', roleUuid: 'r-super' })).rejects.toThrow(BadRequestException);
+    });
+
     it('should assign scope successfully for internal user without workspace', async () => {
       userRepository.findOne.mockResolvedValue({ type: UserType.INTERNAL });
-      roleRepository.findOne.mockResolvedValue({ uuid: 'r-1' });
+      roleRepository.findOne.mockResolvedValue({ uuid: 'r-1', isAssignable: true, name: 'Editor' });
       
       const mockScope = { id: 1 };
       scopeRepository.create.mockReturnValue(mockScope);

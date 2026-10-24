@@ -25,7 +25,7 @@ export class AuthorizationController {
 
   @UseInterceptors(new JsonApiInterceptor('roles'))
   @Get('roles')
-  @RequirePermissions('role:read') // Assuming you add this to permissions list
+  @RequirePermissions('role:read')
   findAllRoles(@JsonApiQuery() query: JsonApiQueryOptions) {
     return this.roleService.findAll(query);
   }

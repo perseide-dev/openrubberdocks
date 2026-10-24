@@ -15,7 +15,7 @@ import { RequirePermissions } from '@commonDecorators/require-permissions.decora
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard)
-@Controller(['users', 'userss'])
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 

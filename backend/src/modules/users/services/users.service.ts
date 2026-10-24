@@ -1,11 +1,12 @@
-import { Injectable, ConflictException, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserType } from '@moduleUsers/enums/users.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@moduleUsers/entities/user.entity';
 import { Role } from '@moduleAuthorization/entities/role.entity';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
-import { CreateUserDto } from '../dto/create-user.dto';
+import { CreateUserDto } from '@moduleUsers/dto/create-user.dto';
+import { AUTHORIZATION_ERRORS } from '@moduleAuthorization/constants/authorization.errors.constants';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +32,19 @@ export class UsersService {
       throw new ConflictException('User already exists');
     }
 
+    let initialRole: Role | null = null;
+    if (createDto.initialRoleUuid) {
+      initialRole = await this.roleRepository.findOne({
+        where: { uuid: createDto.initialRoleUuid },
+      });
+      if (!initialRole) {
+        throw new NotFoundException(AUTHORIZATION_ERRORS.ROLE_NOT_FOUND());
+      }
+      if (!initialRole.isAssignable && createDto.type !== UserType.COREADMIN) {
+        throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_ASSIGN_SUPER_ADMIN());
+      }
+    }
+
     const user = this.usersRepository.create(
       {
         rubberHandle: createDto.rubberHandle,
@@ -40,17 +54,12 @@ export class UsersService {
       });
     const savedUser = await this.usersRepository.save(user);
 
-    if (createDto.initialRoleUuid) {
-      const role = await this.roleRepository.findOne({
-        where: { uuid: createDto.initialRoleUuid },
+    if (initialRole) {
+      const scope = this.scopeRepository.create({
+        user: savedUser,
+        role: initialRole,
       });
-      if (role) {
-        const scope = this.scopeRepository.create({
-          user: savedUser,
-          role,
-        });
-        await this.scopeRepository.save(scope);
-      }
+      await this.scopeRepository.save(scope);
     }
 
     return savedUser;

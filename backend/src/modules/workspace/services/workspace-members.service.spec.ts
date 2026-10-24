@@ -20,7 +20,7 @@ describe('WorkspaceMembersService', () => {
   const mockWorkspace = { id: 1, uuid: 'ws-1', name: 'Dev Workspace' };
   const mockUser = { id: 10, uuid: 'u-1', username: 'dev_user', rubberHandle: 'dev_user', type: UserType.INTERNAL };
   const mockCoreAdmin = { id: 99, uuid: 'u-admin', username: 'admin', rubberHandle: 'admin', type: UserType.COREADMIN };
-  const mockRole = { id: 5, uuid: 'r-1', name: 'Workspace Editor', description: 'Can edit' };
+  const mockRole = { id: 5, uuid: 'r-1', name: 'Workspace Editor', description: 'Can edit', isAssignable: true };
 
   beforeEach(async () => {
     workspaceRepo = {
@@ -130,6 +130,17 @@ describe('WorkspaceMembersService', () => {
         service.addMember('ws-1', { userUuid: 'u-1', roleUuid: 'r-1' }),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('should throw BadRequestException if trying to assign Super Admin role', async () => {
+      workspaceRepo.findOne.mockResolvedValue(mockWorkspace);
+      userRepo.findOne.mockResolvedValue(mockUser);
+      roleRepo.findOne.mockResolvedValue({ id: 9, uuid: 'r-super', name: 'Super Admin', isAssignable: false });
+      memberRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.addMember('ws-1', { userUuid: 'u-1', roleUuid: 'r-super' }),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('updateMemberRole', () => {
@@ -146,6 +157,17 @@ describe('WorkspaceMembersService', () => {
       const result = await service.updateMemberRole('ws-1', 'u-1', { roleUuid: 'r-1' });
       expect(result.role?.name).toBe('Workspace Editor');
       expect(scopeRepo.save).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException if trying to update member with Super Admin role', async () => {
+      workspaceRepo.findOne.mockResolvedValue(mockWorkspace);
+      userRepo.findOne.mockResolvedValue(mockUser);
+      roleRepo.findOne.mockResolvedValue({ id: 9, uuid: 'r-super', name: 'Super Admin', isAssignable: false });
+      memberRepo.findOne.mockResolvedValue({ id: 101, joinedAt: new Date() });
+
+      await expect(
+        service.updateMemberRole('ws-1', 'u-1', { roleUuid: 'r-super' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when trying to modify coreAdmin', async () => {

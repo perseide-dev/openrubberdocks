@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not } from 'typeorm';
 import { Role } from '@moduleAuthorization/entities/role.entity';
 import { Permission } from '@moduleAuthorization/entities/permission.entity';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
@@ -32,6 +32,7 @@ export class RoleManagementService {
       ? query.relations
       : ['permissions'];
     return this.roleRepository.find({
+      where: { isAssignable: true },
       relations,
     });
   }
@@ -59,10 +60,15 @@ export class RoleManagementService {
   }
 
   async create(createDto: CreateRoleDto) {
+    if (createDto.name.trim().toLowerCase() === 'super admin') {
+      throw new BadRequestException('The Super Admin role is unique and cannot be created');
+    }
+
     const role = this.roleRepository.create({
       name: createDto.name,
       description: createDto.description,
       isSystemDefined: false,
+      isAssignable: true,
     });
 
     if (createDto.permissionUuids && createDto.permissionUuids.length > 0) {
@@ -82,8 +88,12 @@ export class RoleManagementService {
   async update(uuid: string, updateDto: UpdateRoleDto) {
     const role = await this.findOne(uuid, { relations: [] });
 
-    if (role.isSystemDefined) {
+    if (role.isSystemDefined || role.name === 'Super Admin') {
       throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_MODIFY_SYSTEM_ROLE());
+    }
+
+    if (updateDto.name && updateDto.name.trim().toLowerCase() === 'super admin' && role.name !== 'Super Admin') {
+      throw new BadRequestException('The Super Admin role name is reserved');
     }
 
     if (updateDto.name) role.name = updateDto.name;
@@ -106,7 +116,7 @@ export class RoleManagementService {
   async remove(uuid: string) {
     const role = await this.findOne(uuid, { relations: [] });
 
-    if (role.isSystemDefined) {
+    if (role.isSystemDefined || role.name === 'Super Admin') {
       throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_MODIFY_SYSTEM_ROLE());
     }
 
@@ -123,6 +133,10 @@ export class RoleManagementService {
     }
 
     const role = await this.findOne(assignDto.roleUuid, { relations: [] });
+
+    if (!role.isAssignable) {
+      throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_ASSIGN_SUPER_ADMIN());
+    }
 
     let workspace: Workspace | null = null;
     if (assignDto.workspaceUuid) {

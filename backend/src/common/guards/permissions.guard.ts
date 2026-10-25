@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
-import { SCOPE_KEY } from '../decorators/check-scope.decorator';
+import { PERMISSIONS_KEY } from '@commonDecorators/require-permissions.decorator';
+import { SCOPE_KEY } from '@commonDecorators/check-scope.decorator';
 import { AccessControlService } from '@moduleAuthorization/services/access-control.service';
 
 @Injectable()
@@ -34,8 +34,12 @@ export class PermissionsGuard implements CanActivate {
     ]);
 
     let workspaceUuid: string | undefined;
-    if (scopeParam && request.params[scopeParam]) {
-      workspaceUuid = request.params[scopeParam];
+    if (scopeParam) {
+      workspaceUuid =
+        request.params?.[scopeParam] ||
+        request.query?.[scopeParam] ||
+        request.body?.[scopeParam] ||
+        request.body?.data?.attributes?.[scopeParam];
     }
 
     for (const permission of requiredPermissions) {

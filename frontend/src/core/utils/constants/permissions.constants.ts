@@ -1,4 +1,13 @@
-export const MUTATION_ACTION_VERBS = ['write', 'create', 'edit', 'delete'] as const;
+export const MUTATION_ACTION_VERBS = [
+  'write',
+  'create',
+  'edit',
+  'delete',
+  'update',
+  'manage',
+  'assign',
+  'time_log',
+] as const;
 
 export const BASE_PERMISSIONS_ACTIONS = {
   WORKSPACE_READ: 'workspace:read',

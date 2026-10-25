@@ -5,6 +5,21 @@ import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.ent
 import { User } from '@moduleUsers/entities/user.entity';
 import { UserType } from '@moduleUsers/enums/users.enum';
 
+export const MUTATION_VERBS = [
+  'write',
+  'create',
+  'edit',
+  'delete',
+  'update',
+  'manage',
+  'assign',
+  'time_log',
+] as const;
+
+export function isMutationAction(action: string): boolean {
+  return MUTATION_VERBS.some((verb) => action.includes(verb));
+}
+
 @Injectable()
 export class AccessControlService {
   constructor(
@@ -41,9 +56,9 @@ export class AccessControlService {
       if (hasPermissionAction) {
         // External users MUST have a specific workspaceId or squadId matched
         if (user.type === UserType.EXTERNAL) {
-          // If required is read-only, ensure they are in the scope
-          if (requiredPermission.includes('write') || requiredPermission.includes('create') || requiredPermission.includes('edit') || requiredPermission.includes('delete')) {
-            continue; // External users cannot write, ever, even if assigned a role with write permission
+          // If required is a mutation, ensure external users are permanently blocked
+          if (isMutationAction(requiredPermission)) {
+            continue; // External users cannot mutate, ever, even if assigned a role with write/update permission
           }
 
           // External user rule: canViewDocuments
@@ -76,7 +91,7 @@ export class AccessControlService {
           return true;
         }
 
-        if (!workspaceUuid && !squadId && !requiredPermission.includes('write') && !requiredPermission.includes('create') && !requiredPermission.includes('edit') && !requiredPermission.includes('delete')) {
+        if (!workspaceUuid && !squadId && !isMutationAction(requiredPermission)) {
           return true;
         }
       }

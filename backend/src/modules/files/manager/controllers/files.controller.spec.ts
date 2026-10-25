@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { FilesController } from './files.controller';
 import { FilesService } from '@moduleFiles/manager/services/files.service';
 import { AuthGuard } from '@nestjs/passport';
+import { PermissionsGuard } from '@commonGuards/permissions.guard';
 
 describe('FilesController', () => {
   let controller: FilesController;
@@ -23,6 +24,7 @@ describe('FilesController', () => {
       ],
     })
     .overrideGuard(AuthGuard('jwt')).useValue({ canActivate: () => true })
+    .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
     .compile();
 
     controller = module.get<FilesController>(FilesController);

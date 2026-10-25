@@ -3,8 +3,8 @@ import { Reflector } from '@nestjs/core';
 import { AccessControlService } from '@moduleAuthorization/services/access-control.service';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
-import { SCOPE_KEY } from '../decorators/check-scope.decorator';
+import { PERMISSIONS_KEY } from '@commonDecorators/require-permissions.decorator';
+import { SCOPE_KEY } from '@commonDecorators/check-scope.decorator';
 
 describe('PermissionsGuard', () => {
   let guard: PermissionsGuard;

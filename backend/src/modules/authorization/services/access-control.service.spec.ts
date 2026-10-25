@@ -118,6 +118,22 @@ describe('AccessControlService', () => {
       expect(result).toBe(false);
     });
 
+    it('should return false if external user tries to perform update or manage actions', async () => {
+      userRepository.findOne.mockResolvedValue({ id: 1, type: UserType.EXTERNAL });
+      userRoleScopeRepository.find.mockResolvedValue([
+        {
+          workspace: { uuid: 'ws-123' },
+          role: { permissions: [{ action: 'task:update' }, { action: 'task_status:manage' }] },
+        },
+      ]);
+
+      const updateResult = await service.hasPermission(1, 'task:update', 'ws-123');
+      expect(updateResult).toBe(false);
+
+      const manageResult = await service.hasPermission(1, 'task_status:manage', 'ws-123');
+      expect(manageResult).toBe(false);
+    });
+
     it('should return true if reading and scope matches workspaceUuid', async () => {
       userRepository.findOne.mockResolvedValue({ id: 1, type: UserType.EXTERNAL });
       userRoleScopeRepository.find.mockResolvedValue([

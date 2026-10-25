@@ -4,11 +4,24 @@ import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import { UsersAdminPage } from '@features/admin/users/pages/UsersAdminPage';
 import { RolesAdminPage } from '@features/admin/roles/pages/RolesAdminPage';
+import { ScopedRouteGuard } from '@routes/ScopedRouteGuard';
+import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 
 export const AdminRouter: RouteObject[] = [
   {
     path: '/admin',
-    element: <Outlet />,
+    element: (
+      <ScopedRouteGuard
+        requiredPermissions={[
+          BASE_PERMISSIONS_ACTIONS.ROLE_ASSIGN,
+          BASE_PERMISSIONS_ACTIONS.ROLE_READ,
+          BASE_PERMISSIONS_ACTIONS.ROLE_CREATE,
+        ]}
+        redirectTo="/workspaces"
+      >
+        <Outlet />
+      </ScopedRouteGuard>
+    ),
     handle: {
       label: '// RBAC',
       icon: AdminPanelSettingsOutlinedIcon,

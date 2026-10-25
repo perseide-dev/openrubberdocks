@@ -16,6 +16,7 @@ import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
 import { RequirePermissions } from '@commonDecorators/require-permissions.decorator';
+import { CheckScope } from '@commonDecorators/check-scope.decorator';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
 import { ProjectsService } from '@moduleProjects/services/projects.service';
@@ -30,6 +31,7 @@ export class ProjectsController {
     @UseInterceptors(new JsonApiInterceptor('projects'))
     @Post()
     @RequirePermissions('project:create')
+    @CheckScope('workspaceUuid')
     create(@JsonApiBody() dto: CreateProjectDto, @Req() request: Request) {
         const user = request.user as any;
         return this.projectsService.create(dto, user?.uuid);
@@ -38,6 +40,7 @@ export class ProjectsController {
     @UseInterceptors(new JsonApiInterceptor('projects'))
     @Get()
     @RequirePermissions('project:read')
+    @CheckScope('workspaceUuid')
     findAll(@Query('workspaceUuid') workspaceUuid: string) {
         return this.projectsService.findAll(workspaceUuid);
     }

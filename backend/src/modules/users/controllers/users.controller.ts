@@ -23,6 +23,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @UseInterceptors(new JsonApiInterceptor('users'))
+  @RequirePermissions('role:read')
   @Get()
   findAll(@Query('search') search?: string) {
     return this.usersService.findAll(search);

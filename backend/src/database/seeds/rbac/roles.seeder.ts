@@ -37,7 +37,9 @@ export class RolesSeeder implements Seeder {
       relations: ['permissions'],
     });
 
-    const readPermissions = allPermissions.filter((p) => p.action.includes('read'));
+    const readPermissions = allPermissions.filter(
+      (p) => p.action.includes('read') && !p.action.startsWith('role:') && !p.action.startsWith('global:')
+    );
     if (!externalReaderRole) {
       externalReaderRole = roleRepository.create({
         name: 'External Reader',

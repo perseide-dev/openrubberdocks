@@ -95,6 +95,7 @@ export interface CanProps {
 
 export interface ScopedRouteGuardProps {
   requiredPermission?: string;
+  requiredPermissions?: string[];
   scopeParamName?: string;
   redirectTo?: string;
   children?: React.ReactElement;

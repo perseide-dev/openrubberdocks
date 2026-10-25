@@ -5,6 +5,7 @@ import { Permission } from '@moduleAuthorization/entities/permission.entity';
 export const BASE_PERMISSIONS = [
   { action: 'workspace:read' },
   { action: 'workspace:write' },
+  { action: 'workspace:create' },
   { action: 'workspace:delete' },
   { action: 'document:read' },
   { action: 'document:write' },

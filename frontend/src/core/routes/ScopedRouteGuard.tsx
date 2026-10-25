@@ -11,18 +11,26 @@ import type { ScopedRouteGuardProps } from '@features/auth/types/auth.types';
  */
 export const ScopedRouteGuard: React.FC<ScopedRouteGuardProps> = ({
   requiredPermission = BASE_PERMISSIONS_ACTIONS.WORKSPACE_READ,
+  requiredPermissions,
   scopeParamName,
   redirectTo = '/workspaces',
   children,
 }) => {
   const params = useParams<Record<string, string>>();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission, isCoreAdmin } = usePermissions();
 
   const workspaceUuid = scopeParamName
     ? params[scopeParamName]
     : params.workspaceUuid || params.uuid;
 
-  const isAuthorized = hasPermission(requiredPermission, workspaceUuid);
+  let isAuthorized = false;
+  if (isCoreAdmin) {
+    isAuthorized = true;
+  } else if (requiredPermissions && requiredPermissions.length > 0) {
+    isAuthorized = hasAnyPermission(requiredPermissions, workspaceUuid);
+  } else {
+    isAuthorized = hasPermission(requiredPermission, workspaceUuid);
+  }
 
   if (!isAuthorized) {
     return <Navigate to={redirectTo} replace />;

@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BlocksController } from './blocks.controller';
-import { BlocksService } from '../services/blocks.service';
+import { BlocksController } from '@moduleFiles/blocks/controllers/blocks.controller';
+import { BlocksService } from '@moduleFiles/blocks/services/blocks.service';
 import { AuthGuard } from '@nestjs/passport';
+import { PermissionsGuard } from '@commonGuards/permissions.guard';
 
 describe('BlocksController', () => {
   let controller: BlocksController;
@@ -24,6 +25,7 @@ describe('BlocksController', () => {
       ],
     })
     .overrideGuard(AuthGuard('jwt')).useValue({ canActivate: () => true })
+    .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
     .compile();
 
     controller = module.get<BlocksController>(BlocksController);

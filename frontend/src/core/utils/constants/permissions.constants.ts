@@ -23,6 +23,7 @@ export const BASE_PERMISSIONS_ACTIONS = {
   ROLE_DELETE: 'role:delete',
   ROLE_ASSIGN: 'role:assign',
   GLOBAL_AUDIT: 'global:audit',
+  AUDIT_GLOBAL: 'global:audit',
   WORKSPACE_AUDIT: 'workspace:audit',
   PROJECT_READ: 'project:read',
   PROJECT_WRITE: 'project:write',

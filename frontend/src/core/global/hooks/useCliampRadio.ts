@@ -10,6 +10,13 @@ import {
 // Global singleton audio reference so streams persist seamlessly across any layout updates
 let globalAudio: HTMLAudioElement | null = null;
 
+export function stopGlobalRadio(): void {
+  if (globalAudio) {
+    globalAudio.pause();
+    globalAudio.src = '';
+  }
+}
+
 function getOrCreateAudio(): HTMLAudioElement {
   if (typeof window === 'undefined') {
     return {} as HTMLAudioElement;

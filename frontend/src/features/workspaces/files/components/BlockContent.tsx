@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
-import type { KeyboardEvent, ChangeEvent, ClipboardEvent, ReactNode } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { Box, Checkbox, Divider, InputBase } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { BLOCK_CONTENT_PLACEHOLDERS } from '@features/workspaces/files/constants/block.constants';
-import type { BlockType, FileEditorBlock } from '@features/workspaces/files/types/block.types';
+import type { BlockType, BlockContentProps } from '@features/workspaces/files/types/block.types';
+import { sanitizeImageUrl } from '@utils-functions/media.utils';
 
 const sharedInput: SxProps<Theme> = {
   p: 0,
@@ -32,16 +33,6 @@ function getInputSx(type: BlockType): SxProps<Theme> {
     default:
       return { ...sharedInput, fontSize: '1rem', lineHeight: 1.5 }; // Ajustado para mejor centrado
   }
-}
-
-interface BlockContentProps {
-  block: FileEditorBlock;
-  number?: number;
-  inputRef: (element: HTMLTextAreaElement | null) => void;
-  onChange: (content: string) => void;
-  onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
-  onPaste?: (event: ClipboardEvent<HTMLElement>) => void;
-  onToggleChecked: () => void;
 }
 
 function PrefixRow({ prefix, children }: { prefix: string; children: ReactNode }) {
@@ -169,14 +160,15 @@ export function BlockContent({
   }
 
   if (block.type === 'image') {
+    const safeSrc = sanitizeImageUrl(block.content.trim());
     // Las imágenes generalmente mantienen su flex-direction en column para que la imagen quede debajo del texto.
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {editor}
-        {block.content.trim() !== '' && (
+        {safeSrc && (
           <Box
             component="img"
-            src={block.content.trim()}
+            src={safeSrc}
             alt=""
             sx={{
               maxWidth: '100%',

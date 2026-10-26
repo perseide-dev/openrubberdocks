@@ -1,13 +1,8 @@
 import type { ReactNode } from 'react';
 import { Box, Checkbox, Chip, Divider, Typography } from '@mui/material';
-import type { BlockType } from '@features-workspaces/files/types/block.types';
+import type { BlockType, BlockProperties } from '@features-workspaces/files/types/block.types';
 import type { FileViewerProps } from '@features-workspaces/files/types/file.types';
-import { getCoverStyle } from '@utils-functions/media.utils';
-
-interface BlockProperties {
-    text?: unknown;
-    checked?: unknown;
-}
+import { getCoverStyle, sanitizeImageUrl } from '@utils-functions/media.utils';
 
 function getTextFromProperties(props: Record<string, unknown> | null): string {
     if (!props) return '';
@@ -200,12 +195,13 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                     }
 
                     if (block.type === 'image') {
+                        const safeSrc = sanitizeImageUrl(text.trim());
                         return (
                             <Box key={block.uuid} sx={{ marginY: 1 }}>
-                                {text.trim() !== '' && (
+                                {safeSrc && (
                                     <Box
                                         component="img"
-                                        src={text.trim()}
+                                        src={safeSrc}
                                         alt=""
                                         sx={{
                                             maxWidth: '100%',

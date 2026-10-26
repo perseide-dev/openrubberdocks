@@ -11,6 +11,8 @@ import {
 } from '@features/auth/constants/auth.constants';
 import type { AuthUser, LoginCredentials } from '@features/auth/types/auth.types';
 import type { AppError } from '@http-error/http-error.handler';
+import { clearAllDraftsAndTabs } from '@utils-functions/storage.utils';
+import { stopGlobalRadio } from '@global-hooks/useCliampRadio';
 
 /**
  * Service hook to query and cache the currently authenticated user.
@@ -50,6 +52,8 @@ export function useLogoutService() {
     mutationKey: AUTH_MUTATION_KEYS.LOGOUT,
     mutationFn: logoutRepository,
     onSuccess: () => {
+      clearAllDraftsAndTabs();
+      stopGlobalRadio();
       queryClient.setQueryData(AUTH_QUERY_KEYS.ME, null);
       queryClient.clear();
     },

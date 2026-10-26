@@ -30,8 +30,6 @@ export function LoginForm() {
     handleSubmit,
   } = useLoginForm();
 
-  console.log("error:",errorMessage)
-
   return (
     <Box
       sx={{

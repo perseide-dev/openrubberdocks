@@ -34,7 +34,14 @@ export const AdminRouter: RouteObject[] = [
     children: [
       {
         path: 'users',
-        element: <UsersAdminPage />,
+        element: (
+          <ScopedRouteGuard
+            requiredPermissions={[BASE_PERMISSIONS_ACTIONS.ROLE_ASSIGN]}
+            redirectTo="/workspaces"
+          >
+            <UsersAdminPage />
+          </ScopedRouteGuard>
+        ),
         handle: {
           label: '// USERS',
           icon: PeopleAltOutlinedIcon,
@@ -42,7 +49,18 @@ export const AdminRouter: RouteObject[] = [
       },
       {
         path: 'roles',
-        element: <RolesAdminPage />,
+        element: (
+          <ScopedRouteGuard
+            requiredPermissions={[
+              BASE_PERMISSIONS_ACTIONS.ROLE_READ,
+              BASE_PERMISSIONS_ACTIONS.ROLE_CREATE,
+              BASE_PERMISSIONS_ACTIONS.ROLE_ASSIGN,
+            ]}
+            redirectTo="/workspaces"
+          >
+            <RolesAdminPage />
+          </ScopedRouteGuard>
+        ),
         handle: {
           label: '// ROLES',
           icon: SecurityOutlinedIcon,
@@ -50,7 +68,17 @@ export const AdminRouter: RouteObject[] = [
       },
       {
         path: 'api-keys',
-        element: <ApiKeysAdminPage />,
+        element: (
+          <ScopedRouteGuard
+            requiredPermissions={[
+              BASE_PERMISSIONS_ACTIONS.ROLE_ASSIGN,
+              BASE_PERMISSIONS_ACTIONS.ROLE_CREATE,
+            ]}
+            redirectTo="/workspaces"
+          >
+            <ApiKeysAdminPage />
+          </ScopedRouteGuard>
+        ),
         handle: {
           label: '// MCP KEYS',
           icon: VpnKeyOutlinedIcon,
@@ -60,7 +88,7 @@ export const AdminRouter: RouteObject[] = [
         path: 'audit-logs',
         element: (
           <ScopedRouteGuard
-            requiredPermission={BASE_PERMISSIONS_ACTIONS.GLOBAL_AUDIT}
+            requiredPermissions={[BASE_PERMISSIONS_ACTIONS.AUDIT_GLOBAL]}
             redirectTo="/workspaces"
           >
             <AuditLogsAdminPage />

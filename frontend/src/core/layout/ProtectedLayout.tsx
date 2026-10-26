@@ -1,5 +1,5 @@
 // src/layout/ProtectedLayout.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 import {
@@ -14,6 +14,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircleIcon from '@mui/icons-material/Circle';
 import { useAuth } from '@global-hooks/useAuth';
 import { usePermissions } from '@global-hooks/usePermissions';
+import { stopGlobalRadio } from '@global-hooks/useCliampRadio';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
 import { CliampRadio } from '@components/ui/CliampRadio';
@@ -23,6 +24,12 @@ import appLogo from '@assets/openrubberdocs.svg';
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const { user, logout } = useAuth();
   const { hasPermission } = usePermissions();
+
+  useEffect(() => {
+    return () => {
+      stopGlobalRadio();
+    };
+  }, []);
   const isAdmin =
     user?.type === 'coreAdmin' ||
     hasPermission('role:create') ||

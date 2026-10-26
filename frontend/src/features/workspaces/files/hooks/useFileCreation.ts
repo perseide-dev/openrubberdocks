@@ -45,17 +45,21 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
     const [initialDraftBlocks] = useState(() => loadDraft(workspaceUuid, draftId)?.blocks);
     const blockEditor = useBlockEditor(initialDraftBlocks);
 
-    const lastDraftIdRef = useRef(draftId);
-    useEffect(() => {
-        if (lastDraftIdRef.current === draftId) return;
-        lastDraftIdRef.current = draftId;
+    const activeDraftIdRef = useRef(draftId);
+    const isSwitchingDraftRef = useRef(false);
 
-        const draft = loadDraft(workspaceUuid, draftId);
-        setTitle(draft?.title || '');
-        setIcon(draft?.icon || null);
-        setCoverImage(draft?.coverImage || null);
-        setIsTemplate(Boolean(draft?.isTemplate));
-        blockEditor.setBlocksState(draft?.blocks || []);
+    useEffect(() => {
+        if (activeDraftIdRef.current !== draftId) {
+            isSwitchingDraftRef.current = true;
+            activeDraftIdRef.current = draftId;
+
+            const draft = loadDraft(workspaceUuid, draftId);
+            setTitle(draft?.title || '');
+            setIcon(draft?.icon || null);
+            setCoverImage(draft?.coverImage || null);
+            setIsTemplate(Boolean(draft?.isTemplate));
+            blockEditor.setBlocksState(draft?.blocks || []);
+        }
     }, [draftId, workspaceUuid, blockEditor]);
 
     const isInitialMount = useRef(true);
@@ -64,6 +68,15 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
+            return;
+        }
+
+        if (isSwitchingDraftRef.current) {
+            isSwitchingDraftRef.current = false;
+            return;
+        }
+
+        if (activeDraftIdRef.current !== draftId) {
             return;
         }
 

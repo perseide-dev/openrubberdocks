@@ -42,9 +42,14 @@ export async function createFileRevisionSnapshotRepository(
 export async function restoreFileRevisionRepository(
     fileUuid: string,
     revisionUuid: string,
+    workspaceUuid?: string,
 ): Promise<WorkspaceFile> {
+    const endpoint = workspaceUuid
+        ? `${REVISION_ENDPOINTS.RESTORE(fileUuid, revisionUuid)}?workspaceUuid=${workspaceUuid}`
+        : REVISION_ENDPOINTS.RESTORE(fileUuid, revisionUuid);
+
     return baseAPIrequest.post<WorkspaceFile>(
-        REVISION_ENDPOINTS.RESTORE(fileUuid, revisionUuid),
+        endpoint,
         undefined,
         { wrapJsonApi: false },
     );

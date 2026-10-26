@@ -11,6 +11,7 @@ import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
 import { RequirePermissions } from '@commonDecorators/require-permissions.decorator';
+import { CheckScope } from '@commonDecorators/check-scope.decorator';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { FileRevisionsService } from '@moduleFiles/manager/services/file-revisions.service';
 
@@ -39,6 +40,7 @@ export class FileRevisionsController {
     @UseInterceptors(new JsonApiInterceptor('file_revisions'))
     @Post()
     @RequirePermissions('document:write')
+    @CheckScope('workspaceUuid')
     createSnapshot(
         @Param('uuid') uuid: string,
         @Req() request: Request,
@@ -50,6 +52,7 @@ export class FileRevisionsController {
     @UseInterceptors(new JsonApiInterceptor('pages'))
     @Post(':revisionUuid/restore')
     @RequirePermissions('document:write')
+    @CheckScope('workspaceUuid')
     restore(
         @Param('uuid') uuid: string,
         @Param('revisionUuid') revisionUuid: string,

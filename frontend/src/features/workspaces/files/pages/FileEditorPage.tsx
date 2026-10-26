@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
 import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
+import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import { BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files as fileRoutes } from '@features-workspaces/files/routes/routes';
@@ -10,14 +11,20 @@ import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/componen
 import { useFileCreation } from '@features-workspaces/files/hooks/useFileCreation';
 import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
 
-export function FileEditorPage() {
-    const { uuid } = useParams<{ uuid: string }>();
-    const [searchParams] = useSearchParams();
-    const draftId = searchParams.get('draftId') || 'new';
-    const navigate = useNavigate();
-    const workspaceUuid = uuid ?? '';
-    const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
+interface FileCreationContentProps {
+    workspaceUuid: string;
+    draftId: string;
+    workspaceName?: string;
+    onDraftInfoChange?: (info: { title: string; icon: string | null }) => void;
+}
 
+function FileCreationContent({
+    workspaceUuid,
+    draftId,
+    workspaceName,
+    onDraftInfoChange,
+}: FileCreationContentProps) {
+    const navigate = useNavigate();
     const {
         title,
         icon,
@@ -27,8 +34,6 @@ export function FileEditorPage() {
         isSaving,
         blockEditor,
         parentFile,
-        parentPageUuid,
-        workspaceFiles,
         workspaceTemplates,
         handleTitleChange,
         setIcon,
@@ -38,44 +43,19 @@ export function FileEditorPage() {
         handleSave,
     } = useFileCreation(workspaceUuid, draftId);
 
-    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
-        useDocumentTabs(workspaceUuid, { uuid: draftId, title: title || 'UNTITLED', icon, isNew: true });
-
-    const breadcrumbItems = useMemo(() => {
-        if (!parentPageUuid) return [];
-        const ancestors = getPageAncestors(parentPageUuid, workspaceFiles);
-        return [
-            ...ancestors.map((anc) => ({
-                label: anc.title || 'UNTITLED',
-                href: fileRoutes.view.build(workspaceUuid, anc.uuid),
-            })),
-            {
-                label: '// NEW_SUB_FILE',
-            },
-        ];
-    }, [parentPageUuid, workspaceFiles, workspaceUuid]);
+    useEffect(() => {
+        onDraftInfoChange?.({ title: title || 'UNTITLED', icon });
+    }, [title, icon, onDraftInfoChange]);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <DocumentTabsBar
-                tabs={tabs}
-                activeTabUuid={activeTabUuid}
-                onSelectTab={handleSelectTab}
-                onCloseTab={handleCloseTab}
-                onNewTab={handleNewTab}
-            />
-
-            {breadcrumbItems.length > 0 && (
-                <BrutalistBreadcrumbs items={breadcrumbItems} />
-            )}
-
+        <>
             <WorkspaceHeader
                 title={parentFile ? `Create Sub-File of "${parentFile.title}"` : 'Create File'}
                 subtitle={
                     parentFile
                         ? `// PARENT: ${parentFile.title}`
-                        : workspace?.name
-                        ? `// WORKSPACE: ${workspace.name.toUpperCase()} // NEW DOCUMENT`
+                        : workspaceName
+                        ? `// WORKSPACE: ${workspaceName.toUpperCase()} // NEW DOCUMENT`
                         : '// NEW DOCUMENT'
                 }
                 action={
@@ -107,6 +87,78 @@ export function FileEditorPage() {
                 onCoverChange={setCoverImage}
                 onToggleTemplate={setIsTemplate}
                 onApplyTemplate={handleApplyTemplate}
+            />
+        </>
+    );
+}
+
+export function FileEditorPage() {
+    const { uuid } = useParams<{ uuid: string }>();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const workspaceUuid = uuid ?? '';
+    const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
+    const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
+    const parentPageUuid = searchParams.get('parent') || undefined;
+
+    useEffect(() => {
+        if (!searchParams.get('draftId')) {
+            const uniqueDraftId = `new_${Date.now()}`;
+            setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.set('draftId', uniqueDraftId);
+                return next;
+            }, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
+
+    const draftId = searchParams.get('draftId') || 'new';
+
+    const [activeTabInfo, setActiveTabInfo] = useState<{ title: string; icon: string | null }>({
+        title: 'UNTITLED',
+        icon: null,
+    });
+
+    const handleDraftInfoChange = useCallback((info: { title: string; icon: string | null }) => {
+        setActiveTabInfo(info);
+    }, []);
+
+    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
+        useDocumentTabs(workspaceUuid, { uuid: draftId, title: activeTabInfo.title, icon: activeTabInfo.icon, isNew: true });
+
+    const breadcrumbItems = useMemo(() => {
+        if (!parentPageUuid) return [];
+        const ancestors = getPageAncestors(parentPageUuid, workspaceFiles);
+        return [
+            ...ancestors.map((anc) => ({
+                label: anc.title || 'UNTITLED',
+                href: fileRoutes.view.build(workspaceUuid, anc.uuid),
+            })),
+            {
+                label: '// NEW_SUB_FILE',
+            },
+        ];
+    }, [parentPageUuid, workspaceFiles, workspaceUuid]);
+
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <DocumentTabsBar
+                tabs={tabs}
+                activeTabUuid={activeTabUuid}
+                onSelectTab={handleSelectTab}
+                onCloseTab={handleCloseTab}
+                onNewTab={handleNewTab}
+            />
+
+            {breadcrumbItems.length > 0 && (
+                <BrutalistBreadcrumbs items={breadcrumbItems} />
+            )}
+
+            <FileCreationContent
+                key={draftId}
+                workspaceUuid={workspaceUuid}
+                draftId={draftId}
+                workspaceName={workspace?.name}
+                onDraftInfoChange={handleDraftInfoChange}
             />
         </Box>
     );

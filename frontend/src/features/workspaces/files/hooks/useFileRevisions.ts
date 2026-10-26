@@ -11,7 +11,11 @@ import type {
 /**
  * Custom UI hook managing file revisions state, drawer selection, and restore workflows.
  */
-export function useFileRevisions(fileUuid: string): UseFileRevisionsReturn {
+export function useFileRevisions(
+    fileUuid: string,
+    workspaceUuid?: string,
+    onRestoreSuccess?: () => void,
+): UseFileRevisionsReturn {
     const { data: revisions = [], isLoading, isError } = useFileRevisionsService(fileUuid);
     const restoreMutation = useRestoreFileRevisionService();
 
@@ -37,13 +41,15 @@ export function useFileRevisions(fileUuid: string): UseFileRevisionsReturn {
             await restoreMutation.mutateAsync({
                 fileUuid,
                 revisionUuid: selectedRevision.uuid,
+                workspaceUuid,
             });
             setIsConfirmOpen(false);
             setSelectedRevision(null);
+            onRestoreSuccess?.();
         } catch {
             // Error handling managed by service / snackbar
         }
-    }, [selectedRevision, fileUuid, restoreMutation]);
+    }, [selectedRevision, fileUuid, workspaceUuid, restoreMutation, onRestoreSuccess]);
 
     return {
         revisions,

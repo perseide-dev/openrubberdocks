@@ -18,6 +18,7 @@ export const RevisionHistoryDrawer: React.FC<RevisionHistoryDrawerProps> = ({
     open,
     onClose,
     fileUuid,
+    workspaceUuid,
     canRestore,
 }) => {
     const {
@@ -29,7 +30,7 @@ export const RevisionHistoryDrawer: React.FC<RevisionHistoryDrawerProps> = ({
         handleOpenConfirm,
         handleCloseConfirm,
         handleConfirmRestore,
-    } = useFileRevisions(fileUuid);
+    } = useFileRevisions(fileUuid, workspaceUuid, onClose);
 
     const confirmDescription = selectedRevision
         ? `Are you sure you want to restore the document to "${selectedRevision.title || 'Untitled'}" (${new Date(selectedRevision.createdAt).toLocaleString()})? Current content will be archived into a new audit checkpoint automatically.`

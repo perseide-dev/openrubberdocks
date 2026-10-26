@@ -98,7 +98,7 @@ export class FileRevisionsService {
         }
 
         // Restore file title
-        if (revision.title) {
+        if (revision.title && !revision.title.startsWith('Restored from version')) {
             file.title = revision.title;
             await this.fileRepository.save(file);
         }
@@ -122,7 +122,7 @@ export class FileRevisionsService {
         }
 
         // Create a new snapshot documenting this restore operation (non-destructive audit)
-        await this.createSnapshot(fileUuid, userUuid, `Restored from version ${revision.createdAt.toISOString()}`);
+        await this.createSnapshot(fileUuid, userUuid);
 
         return await this.fileRepository.findOneOrFail({
             where: { uuid: fileUuid },

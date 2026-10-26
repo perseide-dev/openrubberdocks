@@ -1,10 +1,12 @@
-import { useState, useCallback, useEffect, useRef, type ChangeEvent } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFileDetailService, useUpdateFileService } from '@features-workspaces/files/services/file.service';
+import { useQueryClient } from '@tanstack/react-query';
+import { useFileDetailService, useUpdateFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
 import {
     useFileBlocksService,
     useCreateBlockService,
     useDeleteBlockService,
+    fetchFileBlocks,
 } from '@features-workspaces/files/services/block.service';
 import { useCreateFileRevisionService } from '@features-workspaces/files/services/revision.service';
 import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
@@ -19,7 +21,7 @@ import {
 } from '@features-workspaces/files/utils/draft-storage.utils';
 import type { AppError } from '@http-error/http-error.handler';
 import type { WorkspaceBlock } from '@features-workspaces/files/types/block.types';
-import type { AutosaveStatus } from '@features-workspaces/files/types/file.types';
+import type { AutosaveStatus, BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
 function mapBlockToEditor(block: WorkspaceBlock) {
     const props = (block.properties ?? {}) as Record<string, unknown>;
@@ -35,13 +37,19 @@ function mapBlockToEditor(block: WorkspaceBlock) {
 
 export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { data: file, isLoading: isFileLoading } = useFileDetailService(fileUuid);
     const { data: serverBlocks, isLoading: isBlocksLoading } = useFileBlocksService(fileUuid);
+    const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
     const updateFileMutation = useUpdateFileService();
     const createBlockMutation = useCreateBlockService();
     const deleteBlockMutation = useDeleteBlockService();
     const createRevisionMutation = useCreateFileRevisionService();
     const blockEditor = useBlockEditor();
+
+    const workspaceTemplates = useMemo(() => {
+        return workspaceFiles.filter((f) => f.isTemplate);
+    }, [workspaceFiles]);
 
     const [title, setTitle] = useState('');
     const [icon, setIcon] = useState<string | null>(null);
@@ -139,6 +147,48 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         setAutosaveStatus('unsaved');
         setIsTemplate(val);
     }, []);
+
+    const handleApplyTemplate = useCallback(async (template: BuiltInTemplate | WorkspaceFile) => {
+        setIsUserDirty(true);
+        setAutosaveStatus('unsaved');
+        if ('blocks' in template && Array.isArray(template.blocks)) {
+            // Built-in system preset
+            setTitle(template.title);
+            setIcon(template.icon);
+            setCoverImage(template.coverImage);
+            blockEditor.reset();
+            template.blocks.forEach((b) => {
+                const id = blockEditor.addBlock(b.type);
+                blockEditor.updateBlock(id, b.content);
+                if (b.type === 'todo' && b.checked) {
+                    blockEditor.toggleChecked(id);
+                }
+            });
+        } else {
+            // Workspace template file
+            const fileTmpl = template as WorkspaceFile;
+            setTitle(`${fileTmpl.title} (Template Copy)`);
+            setIcon(fileTmpl.icon || null);
+            setCoverImage(fileTmpl.coverImage || null);
+            try {
+                const blocks = await fetchFileBlocks(queryClient, fileTmpl.uuid);
+                blockEditor.reset();
+                const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
+                sorted.forEach((b) => {
+                    const id = blockEditor.addBlock(b.type);
+                    const props = (b.properties ?? {}) as Record<string, unknown>;
+                    const text = typeof props.text === 'string' ? props.text : '';
+                    const checked = typeof props.checked === 'boolean' ? props.checked : false;
+                    blockEditor.updateBlock(id, text);
+                    if (b.type === 'todo' && checked) {
+                        blockEditor.toggleChecked(id);
+                    }
+                });
+            } catch {
+                // Keep empty blocks if template blocks couldn't be loaded
+            }
+        }
+    }, [blockEditor, queryClient]);
 
     const persistFile = useCallback(async () => {
         if (isPersistingRef.current) return false;
@@ -263,6 +313,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         icon,
         coverImage,
         isTemplate,
+        workspaceTemplates,
         errorMessage,
         isSaving: isManualSaving,
         blockEditor,
@@ -274,6 +325,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         setIcon: handleSetIcon,
         setCoverImage: handleSetCoverImage,
         setIsTemplate: handleSetIsTemplate,
+        handleApplyTemplate,
         handleSave,
     };
 }

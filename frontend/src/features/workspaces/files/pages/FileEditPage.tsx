@@ -10,17 +10,21 @@ import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/componen
 import { useFileEdit } from '@features-workspaces/files/hooks/useFileEdit';
 import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
 
-export function FileEditPage() {
-    const { workspaceUuid, fileUuid } = useParams<{ workspaceUuid: string; fileUuid: string }>();
+interface FileEditContentProps {
+    wsUuid: string;
+    fUuid: string;
+    workspaceName?: string;
+}
+
+function FileEditContent({ wsUuid, fUuid, workspaceName }: FileEditContentProps) {
     const navigate = useNavigate();
-    const wsUuid = workspaceUuid ?? '';
-    const fUuid = fileUuid ?? '';
     const {
         isLoading,
         title,
         icon,
         coverImage,
         isTemplate,
+        workspaceTemplates,
         errorMessage,
         isSaving,
         blockEditor,
@@ -31,52 +35,15 @@ export function FileEditPage() {
         setIcon,
         setCoverImage,
         setIsTemplate,
+        handleApplyTemplate,
         handleSave,
     } = useFileEdit(wsUuid, fUuid);
 
-    const { data: file } = useFileDetailService(fUuid);
-    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
-        useDocumentTabs(
-            wsUuid,
-            file
-                ? { uuid: fUuid, title: file.title, icon: file.icon, mode: 'edit' }
-                : { uuid: fUuid, title: '', icon: null, mode: 'edit' }
-        );
-
-    const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
-    const { data: workspace } = useWorkspaceDetailService(wsUuid);
-
-    const breadcrumbItems = useMemo(() => {
-        if (!fUuid || allFiles.length === 0) return [];
-        const ancestors = getPageAncestors(fUuid, allFiles);
-        return [
-            ...ancestors.map((anc) => ({
-                label: anc.title || 'UNTITLED',
-                href: `/workspaces/${wsUuid}/files/${anc.uuid}`,
-            })),
-            {
-                label: '// EDITING',
-            },
-        ];
-    }, [fUuid, allFiles, wsUuid]);
-
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <DocumentTabsBar
-                tabs={tabs}
-                activeTabUuid={activeTabUuid}
-                onSelectTab={handleSelectTab}
-                onCloseTab={handleCloseTab}
-                onNewTab={handleNewTab}
-            />
-
-            {breadcrumbItems.length > 0 && (
-                <BrutalistBreadcrumbs items={breadcrumbItems} />
-            )}
-
+        <>
             <WorkspaceHeader
                 title={`Edit File: ${title || 'Untitled'}`}
-                subtitle={workspace?.name ? `// WORKSPACE: ${workspace.name.toUpperCase()} // EDITING` : '// EDITING DOCUMENT'}
+                subtitle={workspaceName ? `// WORKSPACE: ${workspaceName.toUpperCase()} // EDITING` : '// EDITING DOCUMENT'}
                 action={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center' }}>
@@ -120,12 +87,69 @@ export function FileEditPage() {
                     icon={icon}
                     coverImage={coverImage}
                     isTemplate={isTemplate}
+                    workspaceTemplates={workspaceTemplates}
                     onTitleChange={handleTitleChange}
                     onIconChange={setIcon}
                     onCoverChange={setCoverImage}
                     onToggleTemplate={setIsTemplate}
+                    onApplyTemplate={handleApplyTemplate}
                 />
             )}
+        </>
+    );
+}
+
+export function FileEditPage() {
+    const { workspaceUuid, fileUuid } = useParams<{ workspaceUuid: string; fileUuid: string }>();
+    const wsUuid = workspaceUuid ?? '';
+    const fUuid = fileUuid ?? '';
+
+    const { data: file } = useFileDetailService(fUuid);
+    const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
+        useDocumentTabs(
+            wsUuid,
+            file
+                ? { uuid: fUuid, title: file.title, icon: file.icon, mode: 'edit' }
+                : { uuid: fUuid, title: '', icon: null, mode: 'edit' }
+        );
+
+    const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
+    const { data: workspace } = useWorkspaceDetailService(wsUuid);
+
+    const breadcrumbItems = useMemo(() => {
+        if (!fUuid || allFiles.length === 0) return [];
+        const ancestors = getPageAncestors(fUuid, allFiles);
+        return [
+            ...ancestors.map((anc) => ({
+                label: anc.title || 'UNTITLED',
+                href: `/workspaces/${wsUuid}/files/${anc.uuid}`,
+            })),
+            {
+                label: '// EDITING',
+            },
+        ];
+    }, [fUuid, allFiles, wsUuid]);
+
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <DocumentTabsBar
+                tabs={tabs}
+                activeTabUuid={activeTabUuid}
+                onSelectTab={handleSelectTab}
+                onCloseTab={handleCloseTab}
+                onNewTab={handleNewTab}
+            />
+
+            {breadcrumbItems.length > 0 && (
+                <BrutalistBreadcrumbs items={breadcrumbItems} />
+            )}
+
+            <FileEditContent
+                key={fUuid}
+                wsUuid={wsUuid}
+                fUuid={fUuid}
+                workspaceName={workspace?.name}
+            />
         </Box>
     );
 }

@@ -10,6 +10,7 @@ import {
 } from '@features-workspaces/files/constants/revision.constants';
 import { FILE_QUERY_KEYS } from '@features-workspaces/files/constants/file.constants';
 import { BLOCK_QUERY_KEYS } from '@features-workspaces/files/constants/block.constants';
+import { clearDraft } from '@features-workspaces/files/utils/draft-storage.utils';
 import type { FileRevision, RestoreRevisionVariables } from '@features-workspaces/files/types/revision.types';
 import type { WorkspaceFile } from '@features-workspaces/files/types/file.types';
 import type { AppError } from '@http-error/http-error.handler';
@@ -50,21 +51,30 @@ export function useRestoreFileRevisionService() {
     const queryClient = useQueryClient();
 
     return useMutation<WorkspaceFile, AppError, RestoreRevisionVariables>({
-        mutationFn: ({ fileUuid, revisionUuid }: RestoreRevisionVariables) =>
-            restoreFileRevisionRepository(fileUuid, revisionUuid),
-        onSuccess: (_data, { fileUuid }) => {
-            queryClient.invalidateQueries({
-                queryKey: FILE_QUERY_KEYS.DETAIL(fileUuid),
-            });
-            queryClient.invalidateQueries({
-                queryKey: [...BLOCK_QUERY_KEYS.ALL, { fileUuid }],
-            });
-            queryClient.invalidateQueries({
-                queryKey: BLOCK_QUERY_KEYS.ALL,
-            });
-            queryClient.invalidateQueries({
-                queryKey: REVISION_QUERY_KEYS.LIST(fileUuid),
-            });
+        mutationFn: ({ fileUuid, revisionUuid, workspaceUuid }: RestoreRevisionVariables) =>
+            restoreFileRevisionRepository(fileUuid, revisionUuid, workspaceUuid),
+        onSuccess: async (_data, { fileUuid, workspaceUuid }) => {
+            if (workspaceUuid) {
+                clearDraft(workspaceUuid, fileUuid);
+            }
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: FILE_QUERY_KEYS.DETAIL(fileUuid),
+                    refetchType: 'all',
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [...BLOCK_QUERY_KEYS.ALL, { fileUuid }],
+                    refetchType: 'all',
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: BLOCK_QUERY_KEYS.ALL,
+                    refetchType: 'all',
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: REVISION_QUERY_KEYS.LIST(fileUuid),
+                    refetchType: 'all',
+                }),
+            ]);
         },
     });
 }

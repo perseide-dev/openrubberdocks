@@ -28,6 +28,7 @@ export interface FileRevision {
 export interface RestoreRevisionVariables {
     fileUuid: string;
     revisionUuid: string;
+    workspaceUuid?: string;
 }
 
 export interface RevisionItemCardProps {

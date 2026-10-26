@@ -42,6 +42,13 @@ export class PermissionsGuard implements CanActivate {
         request.body?.data?.attributes?.[scopeParam];
     }
 
+    if (!workspaceUuid) {
+      workspaceUuid =
+        request.query?.workspaceUuid ||
+        request.body?.workspaceUuid ||
+        request.body?.data?.attributes?.workspaceUuid;
+    }
+
     for (const permission of requiredPermissions) {
       const hasAccess = await this.accessControlService.hasPermission(user.id, permission, workspaceUuid);
       if (!hasAccess) {

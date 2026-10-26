@@ -2,8 +2,12 @@ import { Outlet, type RouteObject } from 'react-router-dom';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import { UsersAdminPage } from '@features/admin/users/pages/UsersAdminPage';
 import { RolesAdminPage } from '@features/admin/roles/pages/RolesAdminPage';
+import { ApiKeysAdminPage } from '@features/admin/api-keys/pages/ApiKeysAdminPage';
+import { AuditLogsAdminPage } from '@features/admin/audit-logs/pages/AuditLogsAdminPage';
 import { ScopedRouteGuard } from '@routes/ScopedRouteGuard';
 import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 
@@ -16,6 +20,7 @@ export const AdminRouter: RouteObject[] = [
           BASE_PERMISSIONS_ACTIONS.ROLE_ASSIGN,
           BASE_PERMISSIONS_ACTIONS.ROLE_READ,
           BASE_PERMISSIONS_ACTIONS.ROLE_CREATE,
+          BASE_PERMISSIONS_ACTIONS.GLOBAL_AUDIT,
         ]}
         redirectTo="/workspaces"
       >
@@ -41,6 +46,29 @@ export const AdminRouter: RouteObject[] = [
         handle: {
           label: '// ROLES',
           icon: SecurityOutlinedIcon,
+        },
+      },
+      {
+        path: 'api-keys',
+        element: <ApiKeysAdminPage />,
+        handle: {
+          label: '// MCP KEYS',
+          icon: VpnKeyOutlinedIcon,
+        },
+      },
+      {
+        path: 'audit-logs',
+        element: (
+          <ScopedRouteGuard
+            requiredPermission={BASE_PERMISSIONS_ACTIONS.GLOBAL_AUDIT}
+            redirectTo="/workspaces"
+          >
+            <AuditLogsAdminPage />
+          </ScopedRouteGuard>
+        ),
+        handle: {
+          label: '// AUDIT LOGS',
+          icon: HistoryOutlinedIcon,
         },
       },
     ],

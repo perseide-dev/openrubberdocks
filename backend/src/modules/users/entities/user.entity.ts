@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { WorkspaceMember } from '@moduleWorkspace/entities/workspace-member.entity';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
+import { ApiKey } from '@moduleAuth/entities/api-key.entity';
 
 @Entity('users')
 export class User {
@@ -66,4 +67,7 @@ export class User {
 
   @OneToMany(() => UserRoleScope, (scope) => scope.user)
   scopes: UserRoleScope[];
+
+  @OneToMany(() => ApiKey, (apiKey) => apiKey.user)
+  apiKeys: ApiKey[];
 }

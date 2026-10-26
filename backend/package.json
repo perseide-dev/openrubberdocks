@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "cli": "node dist/cli.js",
+    "command:api-key:create": "pnpm cli create-api-key",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -32,6 +33,7 @@
     "seed:create": "pnpm build && ts-node -r tsconfig-paths/register ./node_modules/typeorm-extension/bin/cli.cjs seed:create"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -127,7 +129,9 @@
       "^@moduleWorkspace/(.*)": "<rootDir>/modules/workspace/$1",
       "^@moduleFiles/(.*)": "<rootDir>/modules/files/$1",
       "^@moduleAuthorization/(.*)": "<rootDir>/modules/authorization/$1",
-      "^@moduleProjects/(.*)": "<rootDir>/modules/projects/$1"
+      "^@moduleProjects/(.*)": "<rootDir>/modules/projects/$1",
+      "^@moduleMcp/(.*)": "<rootDir>/modules/mcp/$1",
+      "^@moduleAudit/(.*)": "<rootDir>/modules/audit/$1"
     }
   }
 }

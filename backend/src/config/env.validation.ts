@@ -35,6 +35,14 @@ class EnviromentVariables {
     @IsOptional()
     @IsNumber()
     BCRYPT_SALT_ROUNDS?: number;
+
+    @IsOptional()
+    @IsBoolean()
+    ENABLE_MCP?: boolean;
+
+    @IsOptional()
+    @IsString()
+    MCP_BASE_PATH?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

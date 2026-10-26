@@ -5,12 +5,14 @@ import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader
 import { FilesView } from '@features-workspaces/files/components/FilesView';
 import { MembersTabContent } from '@features-workspaces/members/components/MembersTabContent';
 import { ProjectsTabContent } from '@features-workspaces/projects/components/ProjectsTabContent';
+import { WorkspaceAuditTabContent } from '@features/workspaces/audit/components/WorkspaceAuditTabContent';
 import { useWorkspaceFiles } from '@features-workspaces/files/hooks/useWorkspaceFiles';
 import { useWorkspaceDetailService, useDeleteWorkspaceService } from '@features-workspaces/manager/services/workspace.service';
 import { useDeleteFileService } from '@features-workspaces/files/services/file.service';
 import { ConfirmModal } from '@components/ui/ConfirmModal';
 import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
+import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 import type { WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
 export function WorkspaceDetailPage() {
@@ -18,14 +20,15 @@ export function WorkspaceDetailPage() {
     const navigate = useNavigate();
     const wsUuid = uuid ?? '';
 
-    const { canMutateInWorkspace, isExternal, canViewDocuments, canViewProjects } = usePermissions();
+    const { canMutateInWorkspace, isExternal, canViewDocuments, canViewProjects, hasPermission } = usePermissions();
     const canMutate = canMutateInWorkspace(wsUuid);
 
     const showFiles = !isExternal || canViewDocuments;
     const showMembers = !isExternal;
     const showProjects = !isExternal || canViewProjects;
+    const showAudit = hasPermission(BASE_PERMISSIONS_ACTIONS.WORKSPACE_AUDIT, wsUuid) || hasPermission(BASE_PERMISSIONS_ACTIONS.GLOBAL_AUDIT);
 
-    const [activeTab, setActiveTab] = useState<'files' | 'members' | 'projects'>(() => {
+    const [activeTab, setActiveTab] = useState<'files' | 'members' | 'projects' | 'audit'>(() => {
         if (!isExternal || canViewDocuments) return 'files';
         if (canViewProjects) return 'projects';
         return 'files';
@@ -34,13 +37,19 @@ export function WorkspaceDetailPage() {
     useEffect(() => {
         if (activeTab === 'files' && !showFiles) {
             if (showProjects) setActiveTab('projects');
+            else if (showAudit) setActiveTab('audit');
         } else if (activeTab === 'members' && !showMembers) {
             if (showFiles) setActiveTab('files');
             else if (showProjects) setActiveTab('projects');
+            else if (showAudit) setActiveTab('audit');
         } else if (activeTab === 'projects' && !showProjects) {
             if (showFiles) setActiveTab('files');
+            else if (showAudit) setActiveTab('audit');
+        } else if (activeTab === 'audit' && !showAudit) {
+            if (showFiles) setActiveTab('files');
+            else if (showProjects) setActiveTab('projects');
         }
-    }, [activeTab, showFiles, showMembers, showProjects]);
+    }, [activeTab, showFiles, showMembers, showProjects, showAudit]);
 
     const { data: workspace } = useWorkspaceDetailService(wsUuid);
     const { files: workspaceFiles, viewMode, setViewMode } = useWorkspaceFiles(wsUuid);
@@ -158,6 +167,21 @@ export function WorkspaceDetailPage() {
                         // PROJECTS
                     </Button>
                 )}
+                {showAudit && (
+                    <Button
+                        variant={activeTab === 'audit' ? 'contained' : 'outlined'}
+                        color="inherit"
+                        onClick={() => setActiveTab('audit')}
+                        sx={{
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            borderRadius: 0,
+                        }}
+                    >
+                        // AUDIT
+                    </Button>
+                )}
             </Box>
 
             {showFiles && activeTab === 'files' && (
@@ -181,6 +205,10 @@ export function WorkspaceDetailPage() {
                     workspaceUuid={wsUuid}
                     canManage={canMutate}
                 />
+            )}
+
+            {showAudit && activeTab === 'audit' && (
+                <WorkspaceAuditTabContent workspaceUuid={wsUuid} />
             )}
 
             {/* Modal: Delete Workspace */}

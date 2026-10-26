@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Optional } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '@moduleUsers/services/users.service';
@@ -8,6 +8,7 @@ import { User } from '@moduleUsers/entities/user.entity';
 import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
 import { AUTH_ERRORS_CONSTANTS } from '@moduleAuth/constants/auth.errors.constants';
 import { AuthTokens } from '@moduleAuth/interface/auth.interface';
+import { AuditService } from '@moduleAudit/services/audit.service';
 
 
 @Injectable()
@@ -16,13 +17,34 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Optional() private auditService?: AuditService,
   ) { }
 
   async validateUser(validateUserDto: ValidateUserDTO): Promise<User> {
     const user = await this.usersService.findByRubberHandle(validateUserDto.rubberHandle);
     if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
+      void this.auditService?.logEvent({
+        userId: user.id,
+        userEmail: user.rubberHandle,
+        userType: user.type,
+        action: 'AUTH_LOGIN_SUCCESS',
+        resourceType: 'auth',
+        resourceUuid: user.uuid,
+        status: 'SUCCESS',
+        statusCode: 200,
+      });
       return user;
     }
+
+    void this.auditService?.logEvent({
+      action: 'AUTH_LOGIN_FAILED',
+      resourceType: 'auth',
+      status: 'FAILURE',
+      statusCode: 401,
+      errorMessage: 'Invalid credentials',
+      payload: { rubberHandle: validateUserDto.rubberHandle },
+    });
+
     throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.INVALID_CREDENTIALS());
   }
 
@@ -78,5 +100,12 @@ export class AuthService {
 
   async logout(userId: string) {
     await this.usersService.updateRefreshToken(userId, null);
+    void this.auditService?.logEvent({
+      action: 'AUTH_LOGOUT',
+      resourceType: 'auth',
+      resourceUuid: userId,
+      status: 'SUCCESS',
+      statusCode: 200,
+    });
   }
 }

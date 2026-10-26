@@ -34,7 +34,9 @@
       "@moduleWorkspace/*": ["src/modules/workspace/*"],
       "@moduleFiles/*": ["src/modules/files/*"],
       "@moduleAuthorization/*": ["src/modules/authorization/*"],
-      "@moduleProjects/*": ["src/modules/projects/*"]
+      "@moduleProjects/*": ["src/modules/projects/*"],
+      "@moduleMcp/*": ["src/modules/mcp/*"],
+      "@moduleAudit/*": ["src/modules/audit/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

@@ -17,6 +17,7 @@ import { usePermissions } from '@global-hooks/usePermissions';
 import type { NavHandle, ProtectedLayoutProps } from '@layout/types/layout.types';
 import { PageTreeSidebar } from '@features-workspaces/files/components/PageTreeSidebar';
 import { CliampRadio } from '@components/ui/CliampRadio';
+import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 import appLogo from '@assets/openrubberdocs.svg';
 
 export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
@@ -25,7 +26,8 @@ export function ProtectedLayout({ navRoutes }: ProtectedLayoutProps) {
   const isAdmin =
     user?.type === 'coreAdmin' ||
     hasPermission('role:create') ||
-    hasPermission('role:assign');
+    hasPermission('role:assign') ||
+    hasPermission(BASE_PERMISSIONS_ACTIONS.GLOBAL_AUDIT);
 
   const navigate = useNavigate();
   const location = useLocation();

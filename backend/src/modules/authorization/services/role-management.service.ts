@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, Not } from 'typeorm';
 import { Role } from '@moduleAuthorization/entities/role.entity';
@@ -11,6 +11,7 @@ import { UpdateRoleDto } from '@moduleAuthorization/dto/update-role.dto';
 import { AssignRoleScopeDto } from '@moduleAuthorization/dto/assign-role-scope.dto';
 import { AUTHORIZATION_ERRORS } from '@moduleAuthorization/constants/authorization.errors.constants';
 import type { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
+import { AuditService } from '@moduleAudit/services/audit.service';
 
 @Injectable()
 export class RoleManagementService {
@@ -25,6 +26,7 @@ export class RoleManagementService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   async findAll(query?: JsonApiQueryOptions) {
@@ -155,6 +157,24 @@ export class RoleManagementService {
       workspace: workspace || undefined,
     });
 
-    return this.scopeRepository.save(newScope);
+    const savedScope = await this.scopeRepository.save(newScope);
+
+    void this.auditService?.logEvent({
+      action: 'ROLE_SCOPE_ASSIGN',
+      resourceType: 'authorization',
+      resourceUuid: savedScope.uuid,
+      workspaceUuid: workspace ? workspace.uuid : null,
+      status: 'SUCCESS',
+      statusCode: 201,
+      payload: {
+        targetUserUuid: user.uuid,
+        targetEmail: user.rubberHandle,
+        roleName: role.name,
+        roleUuid: role.uuid,
+        workspaceUuid: workspace?.uuid || null,
+      },
+    });
+
+    return savedScope;
   }
 }

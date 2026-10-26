@@ -1,8 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Card, Skeleton, Alert, Typography } from '@mui/material';
 import { useWorkspaceList } from '@features/workspaces/manager/hooks/useWorkspaceList';
-import { useDeleteWorkspaceService } from '@features/workspaces/manager/services/workspace.service';
 import { WorkspaceCard } from '@features/workspaces/manager/components/WorkspaceCard';
 import { ConfirmModal } from '@components/ui/ConfirmModal';
 import { WORKSPACE_SKELETON_KEYS } from '@features/workspaces/manager/constants/workspace.constants';
@@ -13,23 +12,23 @@ import type { Workspace } from '@features/workspaces/manager/types/workspace.typ
  */
 export function CardListDashboardPage() {
     const navigate = useNavigate();
-    const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(null);
-    const deleteWorkspaceMutation = useDeleteWorkspaceService();
 
     const handleOpenWorkspace = useCallback(
         (workspace: Workspace) => navigate(`/workspaces/${workspace.uuid}`),
         [navigate]
     );
 
-    const handleConfirmDelete = async () => {
-        if (workspaceToDelete) {
-            await deleteWorkspaceMutation.mutateAsync(workspaceToDelete.uuid);
-            setWorkspaceToDelete(null);
-        }
-    };
-
-    const { workspaces, isLoading, isError, errorMessage, isEmpty } =
-        useWorkspaceList({ onOpenWorkspace: handleOpenWorkspace });
+    const {
+        workspaces,
+        isLoading,
+        isError,
+        errorMessage,
+        isEmpty,
+        workspaceToDelete,
+        setWorkspaceToDelete,
+        handleConfirmDelete,
+        isDeleting,
+    } = useWorkspaceList({ onOpenWorkspace: handleOpenWorkspace });
 
     if (isLoading) {
         return (
@@ -93,7 +92,7 @@ export function CardListDashboardPage() {
                 open={Boolean(workspaceToDelete)}
                 title={`DELETE WORKSPACE: ${workspaceToDelete?.name || ''}`}
                 description={`Are you sure you want to delete "${workspaceToDelete?.name}"? All associated files, blocks, and permissions will be permanently removed. This action cannot be undone.`}
-                isLoading={deleteWorkspaceMutation.isPending}
+                isLoading={isDeleting}
                 onConfirm={handleConfirmDelete}
                 onClose={() => setWorkspaceToDelete(null)}
             />

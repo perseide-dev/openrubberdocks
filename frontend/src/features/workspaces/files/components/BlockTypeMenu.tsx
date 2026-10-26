@@ -1,15 +1,6 @@
 import { Box, Menu, MenuItem, TextField, Typography } from '@mui/material';
 import { BLOCK_TYPE_OPTIONS } from '@features/workspaces/files/constants/block.constants';
-import type { BlockType } from '@features/workspaces/files/types/block.types';
-
-interface BlockTypeMenuProps {
-    open: boolean;
-    anchorEl: HTMLElement | null;
-    query: string;
-    onQueryChange: (query: string) => void;
-    onSelect: (type: BlockType) => void;
-    onClose: () => void;
-}
+import type { BlockTypeMenuProps } from '@features/workspaces/files/types/block.types';
 
 export function BlockTypeMenu({
     open,

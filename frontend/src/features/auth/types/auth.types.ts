@@ -101,4 +101,17 @@ export interface ScopedRouteGuardProps {
   children?: React.ReactElement;
 }
 
+export interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export interface ChangelogFloatingButtonProps {
+  onClick: () => void;
+}
+
+export interface ChangelogModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
 

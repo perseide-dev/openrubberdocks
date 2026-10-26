@@ -7,7 +7,7 @@ import {
   Chip,
 } from '@mui/material';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { WorkspaceHeader } from '@components/ui/WorkspaceHeader';
 import { useUserAdmin } from '@features/admin/users/hooks/useUserAdmin';
 import { UsersAdminTable } from '@features/admin/users/components/UsersAdminTable';
 import { CreateUserModal } from '@features/admin/users/components/CreateUserModal';

@@ -1,10 +1,70 @@
 import { useState, useMemo } from 'react';
 import {
   useApiKeysService,
+  useCreateApiKeyService,
   useRevokeApiKeyService,
   useDeleteApiKeyService,
 } from '@features/admin/api-keys/services/api-keys.service';
 import type { ApiKeyItem } from '@features/admin/api-keys/types/api-keys.types';
+
+export function useCreateApiKeyModal(
+  onClose: () => void,
+  onSuccess: (rawKey: string, name: string) => void,
+) {
+  const [name, setName] = useState('');
+  const [expiresInDays, setExpiresInDays] = useState<string>('30');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const createMutation = useCreateApiKeyService();
+
+  const handleClose = () => {
+    if (createMutation.isPending) return;
+    setName('');
+    setExpiresInDays('30');
+    setErrorMessage(null);
+    onClose();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setErrorMessage('Token name is required.');
+      return;
+    }
+
+    try {
+      setErrorMessage(null);
+      const days = expiresInDays.trim() ? parseInt(expiresInDays, 10) : undefined;
+      const result = await createMutation.mutateAsync({
+        name: name.trim(),
+        expiresInDays: days && !isNaN(days) ? days : undefined,
+      });
+
+      if (result.rawKey) {
+        onSuccess(result.rawKey, result.name);
+      } else {
+        onClose();
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage('Failed to create API key');
+      }
+    }
+  };
+
+  return {
+    name,
+    setName,
+    expiresInDays,
+    setExpiresInDays,
+    errorMessage,
+    isPending: createMutation.isPending,
+    handleClose,
+    handleSubmit,
+  };
+}
 
 export function useApiKeys() {
   const { data: keys = [], isLoading, refetch } = useApiKeysService();

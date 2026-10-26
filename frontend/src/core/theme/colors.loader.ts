@@ -1,5 +1,5 @@
-import { defaultColors } from './default-colors';
-import type { ThemeColors } from './colors.interface';
+import { defaultColors } from '@theme/default-colors';
+import type { ThemeColors } from '@theme/colors.interface';
 
 /**
  * Dynamically and safely attempts to load local `colors.ts`.

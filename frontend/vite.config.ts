@@ -21,6 +21,7 @@ export default defineConfig({
       '@http-error': path.resolve(__dirname, './src/core/http/error'),
       '@http-interceptors': path.resolve(__dirname, './src/core/http/interceptors'),
       '@http-middelware': path.resolve(__dirname, './src/core/http/middelware'),
+      '@http-middleware': path.resolve(__dirname, './src/core/http/middelware'),
       '@http-types': path.resolve(__dirname, './src/core/http/types'),
       '@layout': path.resolve(__dirname, './src/core/layout'),
       '@request': path.resolve(__dirname, './src/core/request'),
@@ -31,6 +32,8 @@ export default defineConfig({
       '@utils-functions': path.resolve(__dirname, './src/core/utils/functions'),
       '@utils-labels': path.resolve(__dirname, './src/core/utils/labels'),
       '@features': path.resolve(__dirname, './src/features'),
+      '@features-auth': path.resolve(__dirname, './src/features/auth'),
+      '@features-admin': path.resolve(__dirname, './src/features/admin'),
       '@features-workspaces': path.resolve(__dirname, './src/features/workspaces')
     }
   }

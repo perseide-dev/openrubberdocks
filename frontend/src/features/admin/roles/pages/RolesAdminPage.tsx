@@ -8,7 +8,7 @@ import {
   Alert,
 } from '@mui/material';
 import AddModeratorOutlinedIcon from '@mui/icons-material/AddModeratorOutlined';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { WorkspaceHeader } from '@components/ui/WorkspaceHeader';
 import { useRoleAdmin } from '@features/admin/roles/hooks/useRoleAdmin';
 import { RolesAdminTable } from '@features/admin/roles/components/RolesAdminTable';
 import { RoleFormModal } from '@features/admin/roles/components/RoleFormModal';

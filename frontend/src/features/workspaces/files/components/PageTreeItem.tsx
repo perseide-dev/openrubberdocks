@@ -14,7 +14,7 @@ import { Can } from '@components/ui';
 import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 import type { PageTreeItemProps, PageTreeNode } from '@features/workspaces/files/types/file.types';
 
-export const PageTreeItem: React.FC<PageTreeItemProps> = ({
+export const PageTreeItem: React.FC<PageTreeItemProps> = React.memo(({
   node,
   activeFileUuid,
   workspaceUuid,
@@ -190,4 +190,4 @@ export const PageTreeItem: React.FC<PageTreeItemProps> = ({
       )}
     </Box>
   );
-};
+});

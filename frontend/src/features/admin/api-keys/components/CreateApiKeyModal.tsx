@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
-import { useCreateApiKeyService } from '@features/admin/api-keys/services/api-keys.service';
+import { useCreateApiKeyModal } from '@features/admin/api-keys/hooks/useApiKeys';
 import { API_KEYS_MESSAGES } from '@features/admin/api-keys/constants/api-keys.constants';
 import type { CreateApiKeyModalProps } from '@features/admin/api-keys/types/api-keys.types';
 
@@ -21,48 +21,16 @@ export const CreateApiKeyModal: React.FC<CreateApiKeyModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [name, setName] = useState('');
-  const [expiresInDays, setExpiresInDays] = useState<string>('30');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const createMutation = useCreateApiKeyService();
-
-  const handleClose = () => {
-    if (createMutation.isPending) return;
-    setName('');
-    setExpiresInDays('30');
-    setErrorMessage(null);
-    onClose();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setErrorMessage('Token name is required.');
-      return;
-    }
-
-    try {
-      setErrorMessage(null);
-      const days = expiresInDays.trim() ? parseInt(expiresInDays, 10) : undefined;
-      const result = await createMutation.mutateAsync({
-        name: name.trim(),
-        expiresInDays: days && !isNaN(days) ? days : undefined,
-      });
-
-      if (result.rawKey) {
-        onSuccess(result.rawKey, result.name);
-      } else {
-        onClose();
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Failed to create API key');
-      }
-    }
-  };
+  const {
+    name,
+    setName,
+    expiresInDays,
+    setExpiresInDays,
+    errorMessage,
+    isPending,
+    handleClose,
+    handleSubmit,
+  } = useCreateApiKeyModal(onClose, onSuccess);
 
   return (
     <Dialog
@@ -126,7 +94,7 @@ export const CreateApiKeyModal: React.FC<CreateApiKeyModalProps> = ({
               placeholder="e.g. Cursor VPS Agent or Claude Desktop"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
               required
               fullWidth
               slotProps={{ input: { sx: { borderRadius: 0, fontFamily: 'monospace' } } }}
@@ -143,7 +111,7 @@ export const CreateApiKeyModal: React.FC<CreateApiKeyModalProps> = ({
               placeholder="e.g. 30"
               value={expiresInDays}
               onChange={(e) => setExpiresInDays(e.target.value)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
               fullWidth
               slotProps={{ input: { sx: { borderRadius: 0, fontFamily: 'monospace' } } }}
             />
@@ -156,7 +124,7 @@ export const CreateApiKeyModal: React.FC<CreateApiKeyModalProps> = ({
             variant="outlined"
             color="inherit"
             onClick={handleClose}
-            disabled={createMutation.isPending}
+            disabled={isPending}
             sx={{ borderRadius: 0, fontFamily: 'monospace' }}
           >
             CANCEL
@@ -165,8 +133,8 @@ export const CreateApiKeyModal: React.FC<CreateApiKeyModalProps> = ({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={createMutation.isPending}
-            startIcon={createMutation.isPending ? <CircularProgress size={16} /> : undefined}
+            disabled={isPending}
+            startIcon={isPending ? <CircularProgress size={16} /> : undefined}
             sx={{ borderRadius: 0, fontFamily: 'monospace', fontWeight: 700 }}
           >
             GENERATE KEY

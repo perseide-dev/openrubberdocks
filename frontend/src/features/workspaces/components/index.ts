@@ -1,2 +1,2 @@
-export { WorkspaceHeader } from './WorkspaceHeader';
-export type { WorkspaceHeaderProps } from './WorkspaceHeader';
+export { WorkspaceHeader } from '@components/ui/WorkspaceHeader';
+export type { WorkspaceHeaderProps } from '@components/ui/types/header.types';

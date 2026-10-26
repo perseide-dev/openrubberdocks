@@ -57,3 +57,14 @@ export interface WorkspaceCardProps {
     onDelete?: (workspace: Workspace) => void;
 }
 
+export interface CreateWorkspaceDrawerProps {
+    open: boolean;
+    onClose: () => void;
+    form: CreateWorkspaceFormController;
+}
+
+export interface WorkspaceAuditTabContentProps {
+    workspaceUuid: string;
+}
+
+

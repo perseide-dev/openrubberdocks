@@ -1,4 +1,4 @@
-import { useCallback, type KeyboardEvent, type ClipboardEvent, type MouseEvent } from 'react';
+import { useCallback, type KeyboardEvent } from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -6,23 +6,7 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BlockContent } from '@features/workspaces/files/components/BlockContent';
-import type { FileEditorBlock } from '@features/workspaces/files/types/block.types';
-
-interface SortableBlockProps {
-    block: FileEditorBlock;
-    number?: number;
-    isSelected?: boolean;
-    onChange: (id: string, content: string) => void;
-    onKeyDown: (id: string, event: KeyboardEvent<HTMLElement>) => void;
-    onPaste?: (id: string, event: ClipboardEvent<HTMLElement>) => void;
-    onMouseDown?: (id: string, event: MouseEvent<HTMLElement>) => void;
-    onPointerMove?: (event: React.PointerEvent<HTMLElement>) => void;
-    onMouseEnter?: (id: string) => void;
-    onRemove: (id: string) => void;
-    onToggleChecked: (id: string) => void;
-    onInsert: (element: HTMLElement, blockId: string) => void;
-    registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
-}
+import type { SortableBlockProps } from '@features/workspaces/files/types/block.types';
 
 const ghostButtonSx = {
     border: 'none',

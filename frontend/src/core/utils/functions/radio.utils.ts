@@ -1,4 +1,5 @@
 // src/core/utils/functions/radio.utils.ts
+import { ASCII_BLOCKS } from '@utils-constants/radio.constants';
 
 /**
  * Formats a duration in seconds into MM:SS or HH:MM:SS format
@@ -22,8 +23,6 @@ export function formatRadioTime(totalSeconds: number): string {
 
   return `${paddedMinutes}:${paddedSeconds}`;
 }
-
-const ASCII_BLOCKS = [' ', ' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 
 /**
  * Generates dynamic frequencies for a realistic equalizer visualization.

@@ -1,3 +1,24 @@
+import { type Options } from 'ky';
+
+export interface BaseRequestOptions extends Omit<Options, 'json'> {
+  /**
+   * If true (default), automatically flattens incoming JSON:API responses.
+   */
+  unwrapJsonApi?: boolean;
+  /**
+   * If true (default), automatically wraps outgoing body in JSON:API format { data: { attributes } }.
+   */
+  wrapJsonApi?: boolean;
+  /**
+   * Type identifier to include when serializing JSON:API payload.
+   */
+  resourceType?: string;
+  /**
+   * If true disable automatically wraps outgoing body in JSON:API format { data: { attributes: {payload} } }.
+   */
+  disableAttributesNesting?: boolean;
+}
+
 export interface JsonApiResource<T = Record<string, unknown>> {
   type: string;
   id: string;

@@ -1,3 +1,3 @@
-export { ThemeProvider } from './ThemeProvider';
-export { AuthProvider } from './AuthProvider';
-export { AuthContext } from './auth.context';
+export { ThemeProvider } from '@global-providers/ThemeProvider';
+export { AuthProvider } from '@global-providers/AuthProvider';
+export { AuthContext } from '@global-providers/auth.context';

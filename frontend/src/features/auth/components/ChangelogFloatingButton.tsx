@@ -1,9 +1,6 @@
 import { Button } from '@mui/material';
 import HistoryEduOutlinedIcon from '@mui/icons-material/HistoryEduOutlined';
-
-interface ChangelogFloatingButtonProps {
-  onClick: () => void;
-}
+import type { ChangelogFloatingButtonProps } from '@features/auth/types/auth.types';
 
 export function ChangelogFloatingButton({ onClick }: ChangelogFloatingButtonProps) {
   return (

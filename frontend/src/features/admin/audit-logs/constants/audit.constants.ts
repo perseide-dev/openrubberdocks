@@ -15,6 +15,13 @@ export const AUDIT_QUERY_KEYS = {
   WORKSPACES_LOOKUP: ['audit-logs', 'workspaces-lookup'] as const,
 } as const;
 
+export const AUDIT_STALE_TIMES = {
+  LIST: 1000 * 10,
+  WORKSPACES_LOOKUP: 1000 * 60 * 5,
+} as const;
+
+export const AUDIT_ACTION_DEBOUNCE_MS = 300;
+
 export const DEFAULT_AUDIT_FILTERS: AuditLogFilters = {
   page: 1,
   limit: 20,

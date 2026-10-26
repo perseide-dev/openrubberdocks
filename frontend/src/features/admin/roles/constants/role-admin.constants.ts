@@ -9,6 +9,10 @@ export const ROLE_ADMIN_QUERY_KEYS = {
   PERMISSIONS: ['admin-permissions-list'] as const,
 };
 
+export const ROLE_ADMIN_STALE_TIMES = {
+  PERMISSIONS: 1000 * 60 * 15,
+} as const;
+
 export const ROLE_ADMIN_RESOURCE_TYPE = 'roles';
 
 export const ROLE_ADMIN_MESSAGES = {

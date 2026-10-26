@@ -5,7 +5,10 @@ import {
   updateAdminUserRepository,
   getAdminRolesRepository,
 } from '@features/admin/users/repositories/user-admin.repository';
-import { USER_ADMIN_QUERY_KEYS } from '@features/admin/users/constants/user-admin.constants';
+import {
+  USER_ADMIN_QUERY_KEYS,
+  USER_ADMIN_STALE_TIMES,
+} from '@features/admin/users/constants/user-admin.constants';
 import type {
   CreateUserPayload,
   UpdateUserPayload,
@@ -25,7 +28,7 @@ export function useCreateAdminUserService() {
       createAdminUserRepository(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['admin-users'],
+        queryKey: USER_ADMIN_QUERY_KEYS.ALL_USERS,
       });
     },
   });
@@ -38,7 +41,7 @@ export function useUpdateAdminUserService() {
       updateAdminUserRepository(uuid, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['admin-users'],
+        queryKey: USER_ADMIN_QUERY_KEYS.ALL_USERS,
       });
     },
   });
@@ -48,6 +51,6 @@ export function useAdminRolesService() {
   return useQuery({
     queryKey: USER_ADMIN_QUERY_KEYS.ROLES,
     queryFn: getAdminRolesRepository,
-    staleTime: 1000 * 60 * 10,
+    staleTime: USER_ADMIN_STALE_TIMES.ROLES,
   });
 }

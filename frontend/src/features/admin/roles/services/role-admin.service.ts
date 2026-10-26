@@ -6,7 +6,10 @@ import {
   updateAdminRoleRepository,
   deleteAdminRoleRepository,
 } from '@features/admin/roles/repositories/role-admin.repository';
-import { ROLE_ADMIN_QUERY_KEYS } from '@features/admin/roles/constants/role-admin.constants';
+import {
+  ROLE_ADMIN_QUERY_KEYS,
+  ROLE_ADMIN_STALE_TIMES,
+} from '@features/admin/roles/constants/role-admin.constants';
 import type {
   CreateRolePayload,
   UpdateRolePayload,
@@ -23,7 +26,7 @@ export function useAdminPermissionsService() {
   return useQuery({
     queryKey: ROLE_ADMIN_QUERY_KEYS.PERMISSIONS,
     queryFn: getAdminPermissionsRepository,
-    staleTime: 1000 * 60 * 15,
+    staleTime: ROLE_ADMIN_STALE_TIMES.PERMISSIONS,
   });
 }
 

@@ -1,10 +1,6 @@
-import type { BlockType, FileEditorBlock } from '@features/workspaces/files/types/block.types';
+import type { FileEditorBlock, ParsedBlock } from '@features/workspaces/files/types/block.types';
 
-export interface ParsedBlock {
-    type: BlockType;
-    content: string;
-    checked?: boolean;
-}
+export type { ParsedBlock };
 
 /**
  * Parses raw text or markdown clipboard data into structured editor blocks.

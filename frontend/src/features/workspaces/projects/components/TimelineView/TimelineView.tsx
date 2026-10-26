@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -9,16 +9,14 @@ import {
     LinearProgress,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { TimeLogModal } from '@features-workspaces/projects/components/TimelineView/TimeLogModal';
-import type { TimelineViewProps, Task } from '@features-workspaces/projects/types/project.types';
+import type { TimelineViewProps } from '@features-workspaces/projects/types/project.types';
 
 export const TimelineView: React.FC<TimelineViewProps> = ({
     tasks,
     canManage,
     onTaskClick,
+    onOpenTimeLog,
 }) => {
-    const [selectedTaskForLog, setSelectedTaskForLog] = useState<Task | null>(null);
-
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Box
@@ -168,7 +166,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                             size="small"
                                             variant="outlined"
                                             startIcon={<AccessTimeIcon />}
-                                            onClick={() => setSelectedTaskForLog(task)}
+                                            onClick={() => onOpenTimeLog(task)}
                                         >
                                             Time Logs
                                         </Button>
@@ -179,12 +177,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     })}
                 </Box>
             )}
-
-            <TimeLogModal
-                open={Boolean(selectedTaskForLog)}
-                task={selectedTaskForLog}
-                onClose={() => setSelectedTaskForLog(null)}
-            />
         </Box>
     );
 };

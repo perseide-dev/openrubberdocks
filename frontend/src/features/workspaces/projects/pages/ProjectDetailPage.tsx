@@ -13,17 +13,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePermissions } from '@global-hooks/usePermissions';
 import { useProjectDetail } from '@features-workspaces/projects/hooks/useProjectDetail';
-import {
-    useCreateTaskService,
-    useMoveTaskService,
-    useDeleteTaskService,
-    useProjectPropertiesService,
-    useProjectStatusesService,
-    useProjectTypesService,
-} from '@features-workspaces/projects/services/project.service';
-import { ConfirmModal } from '@components/ui/ConfirmModal';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
-import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
+import { useKanbanBoard } from '@features-workspaces/projects/hooks/useKanbanBoard';
+import { useTimeline } from '@features-workspaces/projects/hooks/useTimeline';
+import { ConfirmModal, WorkspaceHeader } from '@components/ui';
 import { KanbanBoard } from '@features-workspaces/projects/components/KanbanBoard/KanbanBoard';
 import { TimelineView } from '@features-workspaces/projects/components/TimelineView/TimelineView';
 import { TasksTable } from '@features-workspaces/projects/components/TasksListView/TasksTable';
@@ -45,56 +37,33 @@ export const ProjectDetailPage: React.FC = () => {
     const pUuid = projectUuid ?? '';
     const wsUuid = workspaceUuid ?? '';
 
-    const { project, tasks, isLoading, isError, activeTab, setActiveTab } = useProjectDetail(pUuid);
-    const { data: workspace } = useWorkspaceDetailService(wsUuid);
+    const {
+        project,
+        tasks,
+        workspace,
+        statuses,
+        types,
+        properties,
+        isLoading,
+        isError,
+        activeTab,
+        setActiveTab,
+        deleteTask,
+        isDeletingTask,
+    } = useProjectDetail(pUuid, wsUuid);
+    const { handleMoveTask, handleQuickAddTask } = useKanbanBoard(pUuid);
+    const { selectedTaskForLog, setSelectedTaskForLog } = useTimeline(pUuid);
     const { canMutateInWorkspace, isExternal } = usePermissions();
     const canManage = canMutateInWorkspace(wsUuid);
 
-    const createTaskMutation = useCreateTaskService();
-    const moveTaskMutation = useMoveTaskService();
-    const deleteTaskMutation = useDeleteTaskService();
-
-    const { data: projectProperties } = useProjectPropertiesService(pUuid);
-    const { data: projectStatuses } = useProjectStatusesService(pUuid);
-    const { data: projectTypes } = useProjectTypesService(pUuid);
-
     const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-    const [timeLogTask, setTimeLogTask] = useState<Task | null>(null);
     const [taskToDelete, setTaskToDelete] = useState<{ uuid: string; title: string } | null>(null);
 
     const handleDeleteTaskFromTable = async () => {
         if (!taskToDelete) return;
-        await deleteTaskMutation.mutateAsync({
-            taskUuid: taskToDelete.uuid,
-            projectUuid: pUuid,
-        });
+        await deleteTask(taskToDelete.uuid);
         setTaskToDelete(null);
-    };
-
-    const handleQuickAddTask = async (statusUuid: string, title: string) => {
-        await createTaskMutation.mutateAsync({
-            projectUuid: pUuid,
-            payload: {
-                title,
-                statusUuid,
-            },
-        });
-    };
-
-    const handleMoveTask = async (
-        taskUuid: string,
-        targetStatusUuid: string,
-        newOrderIndex: number,
-    ) => {
-        await moveTaskMutation.mutateAsync({
-            taskUuid,
-            projectUuid: pUuid,
-            payload: {
-                statusUuid: targetStatusUuid,
-                orderIndex: newOrderIndex,
-            },
-        });
     };
 
     const handleOpenCreateTask = () => {
@@ -136,10 +105,6 @@ export const ProjectDetailPage: React.FC = () => {
             </Box>
         );
     }
-
-    const statuses = projectStatuses ?? project.statuses ?? [];
-    const types = projectTypes ?? project.types ?? [];
-    const properties = projectProperties ?? project.propertyDefinitions ?? [];
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -234,7 +199,7 @@ export const ProjectDetailPage: React.FC = () => {
                             tasks={tasks}
                             canManage={canManage}
                             onTaskClick={handleTaskClick}
-                            onOpenTimeLog={(t) => setTimeLogTask(t)}
+                            onOpenTimeLog={(t) => setSelectedTaskForLog(t)}
                         />
                     )}
 
@@ -284,9 +249,10 @@ export const ProjectDetailPage: React.FC = () => {
             />
 
             <TimeLogModal
-                open={Boolean(timeLogTask)}
-                task={timeLogTask}
-                onClose={() => setTimeLogTask(null)}
+                open={Boolean(selectedTaskForLog)}
+                task={selectedTaskForLog}
+                canManage={canManage}
+                onClose={() => setSelectedTaskForLog(null)}
             />
 
             {/* Confirm task deletion from TasksTable */}
@@ -294,7 +260,7 @@ export const ProjectDetailPage: React.FC = () => {
                 open={Boolean(taskToDelete)}
                 title="DELETE TASK"
                 description={`Are you sure you want to delete task "${taskToDelete?.title}"? All subtasks and logged hours will be removed.`}
-                isLoading={deleteTaskMutation.isPending}
+                isLoading={isDeletingTask}
                 onConfirm={handleDeleteTaskFromTable}
                 onClose={() => setTaskToDelete(null)}
             />

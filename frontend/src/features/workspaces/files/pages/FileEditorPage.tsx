@@ -1,22 +1,13 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
-import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
-import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
-import { BrutalistBreadcrumbs } from '@components/ui';
+import { WorkspaceHeader, BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files as fileRoutes } from '@features-workspaces/files/routes/routes';
 import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/components';
-import { useFileCreation } from '@features-workspaces/files/hooks/useFileCreation';
+import { useFileCreation, useFileCreationPageData } from '@features-workspaces/files/hooks/useFileCreation';
 import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
-
-interface FileCreationContentProps {
-    workspaceUuid: string;
-    draftId: string;
-    workspaceName?: string;
-    onDraftInfoChange?: (info: { title: string; icon: string | null }) => void;
-}
+import type { FileCreationContentProps } from '@features-workspaces/files/types/file.types';
 
 function FileCreationContent({
     workspaceUuid,
@@ -96,8 +87,7 @@ export function FileEditorPage() {
     const { uuid } = useParams<{ uuid: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
     const workspaceUuid = uuid ?? '';
-    const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
-    const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
+    const { workspace, workspaceFiles } = useFileCreationPageData(workspaceUuid);
     const parentPageUuid = searchParams.get('parent') || undefined;
 
     useEffect(() => {

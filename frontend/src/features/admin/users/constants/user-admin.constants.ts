@@ -7,9 +7,14 @@ export const USER_ADMIN_ENDPOINTS = {
 };
 
 export const USER_ADMIN_QUERY_KEYS = {
+  ALL_USERS: ['admin-users'] as const,
   USERS: (search?: string) => ['admin-users', search || 'all'] as const,
   ROLES: ['admin-roles'] as const,
 };
+
+export const USER_ADMIN_STALE_TIMES = {
+  ROLES: 1000 * 60 * 10,
+} as const;
 
 export const USER_ADMIN_RESOURCE_TYPE = 'users';
 

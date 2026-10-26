@@ -297,6 +297,7 @@ export interface TimelineViewProps {
 export interface TimeLogModalProps {
     open: boolean;
     task: Task | null;
+    canManage?: boolean;
     onClose: () => void;
 }
 

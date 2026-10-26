@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import TerminalOutlinedIcon from '@mui/icons-material/TerminalOutlined';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { WorkspaceHeader } from '@components/ui/WorkspaceHeader';
 import { ConfirmModal } from '@components/ui/ConfirmModal';
 import { useApiKeys } from '@features/admin/api-keys/hooks/useApiKeys';
 import { ApiKeysTable } from '@features/admin/api-keys/components/ApiKeysTable';

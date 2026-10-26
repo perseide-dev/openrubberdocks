@@ -1,4 +1,4 @@
-import type { ThemeColors } from './colors.interface';
+import type { ThemeColors } from '@theme/colors.interface';
 
 /**
  * CUSTOM COLORS TEMPLATE

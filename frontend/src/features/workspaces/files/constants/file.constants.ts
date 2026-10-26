@@ -1,4 +1,13 @@
 import type { FileFilters } from '@features/workspaces/files/types/file.types';
+import {
+    DRAFT_PREFIX,
+    AUTOSAVE_PREF_KEY,
+    TABS_PREFIX,
+} from '@utils-constants/storage.constants';
+
+export { DRAFT_PREFIX, AUTOSAVE_PREF_KEY, TABS_PREFIX };
+
+export const AUTOSAVE_DELAY_MS = 2500;
 
 export const FILE_ENDPOINTS = {
     BASE: 'pages',

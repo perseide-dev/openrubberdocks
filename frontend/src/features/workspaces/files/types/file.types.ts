@@ -187,4 +187,17 @@ export interface TemplateSelectorModalProps {
     onSelectTemplate: (template: BuiltInTemplate | WorkspaceFile) => void;
 }
 
+export interface FileEditContentProps {
+    wsUuid: string;
+    fUuid: string;
+    workspaceName?: string;
+}
+
+export interface FileCreationContentProps {
+    workspaceUuid: string;
+    draftId: string;
+    workspaceName?: string;
+    onDraftInfoChange?: (info: { title: string; icon: string | null }) => void;
+}
+
 export type { BreadcrumbItem, BrutalistBreadcrumbsProps } from '@components/ui';

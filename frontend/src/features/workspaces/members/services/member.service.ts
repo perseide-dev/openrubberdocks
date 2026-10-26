@@ -7,7 +7,10 @@ import {
   getAvailableRolesRepository,
   searchUsersRepository,
 } from '@features-workspaces/members/repositories/member.repository';
-import { MEMBER_QUERY_KEYS } from '@features-workspaces/members/constants/member.constants';
+import {
+  MEMBER_QUERY_KEYS,
+  MEMBER_STALE_TIMES,
+} from '@features-workspaces/members/constants/member.constants';
 import type {
   AddMemberPayload,
   UpdateMemberRolePayload,
@@ -69,7 +72,7 @@ export function useAvailableRolesService() {
   return useQuery({
     queryKey: MEMBER_QUERY_KEYS.ROLES,
     queryFn: getAvailableRolesRepository,
-    staleTime: 1000 * 60 * 10,
+    staleTime: MEMBER_STALE_TIMES.ROLES,
   });
 }
 

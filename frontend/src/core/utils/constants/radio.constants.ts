@@ -88,3 +88,4 @@ export const CLIAMP_ASCII_LOGO = `
 export const DEFAULT_RADIO_VOLUME = 0.8;
 export const EQUALIZER_BARS_COUNT = 32;
 export const CLIAMP_STORAGE_KEY = 'openrubberdocks_cliamp_prefs';
+export const ASCII_BLOCKS = [' ', ' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'] as const;

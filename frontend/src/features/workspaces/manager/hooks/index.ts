@@ -1,3 +1,4 @@
-export { useCreateWorkspaceForm } from './useCreateWorkspaceForm';
-export { useCreateWorkspaceDrawer } from './useCreateWorkspaceDrawer';
-export { useWorkspaceList } from './useWorkspaceList';
+export { useCreateWorkspaceForm } from '@features-workspaces/manager/hooks/useCreateWorkspaceForm';
+export { useCreateWorkspaceDrawer } from '@features-workspaces/manager/hooks/useCreateWorkspaceDrawer';
+export { useWorkspaceList } from '@features-workspaces/manager/hooks/useWorkspaceList';
+export { useWorkspaceDetail } from '@features-workspaces/manager/hooks/useWorkspaceDetail';

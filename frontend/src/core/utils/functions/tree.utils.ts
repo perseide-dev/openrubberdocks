@@ -1,14 +1,6 @@
-export interface HasTreeHierarchy {
-  uuid: string;
-  parentPageUuid?: string | null;
-  title?: string;
-}
+import type { HasTreeHierarchy, PageTreeNode } from '@components/ui/types/breadcrumbs.types';
 
-export interface PageTreeNode<T extends HasTreeHierarchy = HasTreeHierarchy> {
-  file: T;
-  children: PageTreeNode<T>[];
-  level: number;
-}
+export type { HasTreeHierarchy, PageTreeNode } from '@components/ui/types/breadcrumbs.types';
 
 /**
  * Builds a nested hierarchical tree of items from a flat list.

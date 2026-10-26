@@ -16,6 +16,10 @@ export const MEMBER_QUERY_KEYS = {
   USERS: (search: string) => ['users-search', search] as const,
 };
 
+export const MEMBER_STALE_TIMES = {
+  ROLES: 1000 * 60 * 10,
+} as const;
+
 export const MEMBER_RESOURCE_TYPE = 'workspace_members';
 
 export const MEMBER_MESSAGES = {

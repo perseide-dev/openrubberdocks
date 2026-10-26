@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -18,12 +18,7 @@ import AddIcon from '@mui/icons-material/Add';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import { useNavigate } from 'react-router-dom';
-import {
-    useProjectFilesService,
-    useLinkProjectFileService,
-    useUnlinkProjectFileService,
-} from '@features-workspaces/projects/services/project.service';
-import { useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import { useProjectFiles } from '@features-workspaces/projects/hooks/useProjectFiles';
 import { files as filesRoutes } from '@features-workspaces/files/routes/routes';
 import { PROJECT_LABELS } from '@features-workspaces/projects/constants/project.constants';
 import type { ProjectFilesTabProps } from '@features-workspaces/projects/types/project.types';
@@ -34,34 +29,18 @@ export const ProjectFilesTab: React.FC<ProjectFilesTabProps> = ({
     canManage,
 }) => {
     const navigate = useNavigate();
-    const { data: linkedFiles = [], isLoading } = useProjectFilesService(projectUuid);
-    const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
-    const linkMutation = useLinkProjectFileService();
-    const unlinkMutation = useUnlinkProjectFileService();
-
-    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-    const [selectedFileUuid, setSelectedFileUuid] = useState('');
-
-    // Available files not yet linked
-    const linkedUuids = new Set(linkedFiles.map((l) => l.fileUuid));
-    const unlinkedFiles = workspaceFiles.filter((f) => !linkedUuids.has(f.uuid));
-
-    const handleLinkFile = async () => {
-        if (!selectedFileUuid) return;
-        await linkMutation.mutateAsync({
-            projectUuid,
-            payload: { fileUuid: selectedFileUuid },
-        });
-        setSelectedFileUuid('');
-        setIsLinkModalOpen(false);
-    };
-
-    const handleUnlink = async (fileUuid: string) => {
-        await unlinkMutation.mutateAsync({
-            projectUuid,
-            fileUuid,
-        });
-    };
+    const {
+        linkedFiles,
+        unlinkedFiles,
+        isLoading,
+        isLinkModalOpen,
+        setIsLinkModalOpen,
+        selectedFileUuid,
+        setSelectedFileUuid,
+        handleLinkFile,
+        handleUnlink,
+        isLinking,
+    } = useProjectFiles(projectUuid, workspaceUuid);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -217,7 +196,7 @@ export const ProjectFilesTab: React.FC<ProjectFilesTabProps> = ({
                     <Button
                         variant="contained"
                         onClick={handleLinkFile}
-                        disabled={!selectedFileUuid || linkMutation.isPending}
+                        disabled={!selectedFileUuid || isLinking}
                     >
                         Link
                     </Button>

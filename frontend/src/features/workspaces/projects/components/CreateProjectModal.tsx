@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -9,7 +9,7 @@ import {
     Box,
     CircularProgress,
 } from '@mui/material';
-import { useCreateProjectService } from '@features-workspaces/projects/services/project.service';
+import { useCreateProjectModal } from '@features-workspaces/projects/hooks/useWorkspaceProjects';
 import { PROJECT_LABELS } from '@features-workspaces/projects/constants/project.constants';
 import type { CreateProjectModalProps } from '@features-workspaces/projects/types/project.types';
 
@@ -18,31 +18,18 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     onClose,
     workspaceUuid,
 }) => {
-    const createProjectMutation = useCreateProjectService();
-
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [targetDate, setTargetDate] = useState('');
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!name.trim()) return;
-
-        await createProjectMutation.mutateAsync({
-            name: name.trim(),
-            description: description.trim() || undefined,
-            workspaceUuid,
-            startDate: startDate || undefined,
-            targetDate: targetDate || undefined,
-        });
-
-        setName('');
-        setDescription('');
-        setStartDate('');
-        setTargetDate('');
-        onClose();
-    };
+    const {
+        name,
+        setName,
+        description,
+        setDescription,
+        startDate,
+        setStartDate,
+        targetDate,
+        setTargetDate,
+        handleSubmit,
+        isPending,
+    } = useCreateProjectModal(workspaceUuid, onClose);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -109,9 +96,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                     <Button
                         type="submit"
                         variant="contained"
-                        disabled={createProjectMutation.isPending || !name.trim()}
+                        disabled={isPending || !name.trim()}
                         startIcon={
-                            createProjectMutation.isPending ? (
+                            isPending ? (
                                 <CircularProgress size={16} color="inherit" />
                             ) : undefined
                         }

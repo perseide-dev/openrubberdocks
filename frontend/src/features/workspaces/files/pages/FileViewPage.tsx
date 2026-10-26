@@ -1,15 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { WorkspaceHeader, ConfirmModal, BrutalistBreadcrumbs } from '@components/ui';
 import { FileViewer, DocumentTabsBar } from '@features-workspaces/files/components';
 import { useFileView } from '@features-workspaces/files/hooks/useFileView';
-import { useDeleteFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
-import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
-import { ConfirmModal, BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
+import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
 import { RevisionHistoryDrawer } from '@features-workspaces/files/components/RevisionHistoryDrawer';
 import { REVISION_LABELS } from '@features-workspaces/files/constants/revision.constants';
 import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
@@ -19,21 +17,19 @@ export function FileViewPage() {
     const navigate = useNavigate();
     const wsUuid = workspaceUuid ?? '';
     const fUuid = fileUuid ?? '';
-    const { file, blocks, isLoading } = useFileView(wsUuid, fUuid);
+    const { file, blocks, allFiles, workspace, isLoading, isDeleting, deleteFile } = useFileView(wsUuid, fUuid);
 
     const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
         useDocumentTabs(wsUuid, file ? { uuid: fUuid, title: file.title, icon: file.icon, mode: 'view' } : undefined);
 
-    const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
-    const { data: workspace } = useWorkspaceDetailService(wsUuid);
-    const { canMutateInWorkspace, hasPermission } = usePermissions();
-    const canMutate = canMutateInWorkspace(wsUuid);
-    const canReadHistory = hasPermission('document:read', wsUuid);
-    const canRestore = canMutate && hasPermission('document:write', wsUuid);
+    const { hasPermission } = usePermissions();
+    const canWriteDocument = hasPermission(BASE_PERMISSIONS_ACTIONS.DOCUMENT_WRITE, wsUuid);
+    const canDeleteDocument = hasPermission(BASE_PERMISSIONS_ACTIONS.DOCUMENT_DELETE, wsUuid) || canWriteDocument;
+    const canReadHistory = hasPermission(BASE_PERMISSIONS_ACTIONS.DOCUMENT_READ, wsUuid);
+    const canRestore = canWriteDocument;
 
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const deleteFileMutation = useDeleteFileService();
 
     const breadcrumbItems = useMemo(() => {
         if (!fUuid || allFiles.length === 0) return [];
@@ -49,7 +45,7 @@ export function FileViewPage() {
 
     const handleConfirmDelete = async () => {
         if (fUuid) {
-            await deleteFileMutation.mutateAsync(fUuid);
+            await deleteFile(fUuid);
             setIsDeleteOpen(false);
             navigate(`/workspaces/${wsUuid}`);
         }
@@ -73,7 +69,7 @@ export function FileViewPage() {
                 title={file?.title || 'Untitled'}
                 subtitle={workspace?.name ? `// WORKSPACE: ${workspace.name.toUpperCase()}` : '// DOCUMENT'}
                 action={
-                    canMutate ? (
+                    canWriteDocument || canDeleteDocument ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             {canReadHistory && (
                                 <Button
@@ -85,21 +81,25 @@ export function FileViewPage() {
                                     {REVISION_LABELS.BUTTON_HISTORY}
                                 </Button>
                             )}
-                            <Button
-                                color="inherit"
-                                onClick={() => navigate(files.edit.build(wsUuid, fUuid))}
-                                disabled={isLoading || !file}
-                            >
-                                Edit
-                            </Button>
-                            <Button
-                                color="error"
-                                variant="outlined"
-                                onClick={() => setIsDeleteOpen(true)}
-                                disabled={isLoading || !file}
-                            >
-                                Delete
-                            </Button>
+                            {canWriteDocument && (
+                                <Button
+                                    color="inherit"
+                                    onClick={() => navigate(files.edit.build(wsUuid, fUuid))}
+                                    disabled={isLoading || !file}
+                                >
+                                    Edit
+                                </Button>
+                            )}
+                            {canDeleteDocument && (
+                                <Button
+                                    color="error"
+                                    variant="outlined"
+                                    onClick={() => setIsDeleteOpen(true)}
+                                    disabled={isLoading || !file}
+                                >
+                                    Delete
+                                </Button>
+                            )}
                         </Box>
                     ) : (
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -143,7 +143,7 @@ export function FileViewPage() {
                 open={isDeleteOpen}
                 title={`DELETE DOCUMENT: ${file?.title || 'Untitled'}`}
                 description={`Are you sure you want to delete "${file?.title || 'Untitled'}"? All contained content blocks and revision snapshots will be permanently removed. This action cannot be undone.`}
-                isLoading={deleteFileMutation.isPending}
+                isLoading={isDeleting}
                 onConfirm={handleConfirmDelete}
                 onClose={() => setIsDeleteOpen(false)}
             />

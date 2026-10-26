@@ -11,13 +11,7 @@ import {
 } from '@mui/material';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import type { CreateWorkspaceFormController } from '@features/workspaces/manager/types/workspace.types';
-
-interface CreateWorkspaceDrawerProps {
-    open: boolean;
-    onClose: () => void;
-    form: CreateWorkspaceFormController;
-}
+import type { CreateWorkspaceDrawerProps } from '@features/workspaces/manager/types/workspace.types';
 
 /**
  * Presentational drawer hosting the create-workspace form.

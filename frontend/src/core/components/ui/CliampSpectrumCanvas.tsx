@@ -1,5 +1,6 @@
 // src/core/components/ui/CliampSpectrumCanvas.tsx
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '@mui/material/styles';
 import type { CliampSpectrumCanvasProps } from '@components/ui/types/radio.types';
 import { EQUALIZER_BARS_COUNT } from '@utils-constants/radio.constants';
 import { generateSimulatedEqualizer } from '@utils-functions/radio.utils';
@@ -14,10 +15,24 @@ export const CliampSpectrumCanvas: React.FC<CliampSpectrumCanvasProps> = ({
   height = 26,
   barCount = EQUALIZER_BARS_COUNT,
 }) => {
+  const theme = useTheme();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const stepRef = useRef<number>(0);
+  const cachedSizeRef = useRef<{ width: number; height: number }>({
+    width: 0,
+    height,
+  });
+
+  const accentPalette = (
+    theme.palette as unknown as {
+      accent?: { green?: string; yellow?: string; orange?: string };
+    }
+  ).accent;
+  const colorGreen = accentPalette?.green || theme.palette.success.main;
+  const colorYellow = accentPalette?.yellow || theme.palette.warning.main;
+  const colorOrange = accentPalette?.orange || theme.palette.error.main;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,28 +51,22 @@ export const CliampSpectrumCanvas: React.FC<CliampSpectrumCanvasProps> = ({
       const displayWidth = Math.max(10, Math.floor(rect.width));
       const displayHeight = height;
 
+      cachedSizeRef.current = {
+        width: displayWidth,
+        height: displayHeight,
+      };
+
       canvas.width = Math.floor(displayWidth * dpr);
       canvas.height = Math.floor(displayHeight * dpr);
       canvas.style.width = `${displayWidth}px`;
       canvas.style.height = `${displayHeight}px`;
 
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    updateCanvasDimensions();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateCanvasDimensions();
-      if (!isPlaying) {
-        drawFrame(false);
-      }
-    });
-    resizeObserver.observe(container);
-
     const drawFrame = (active: boolean) => {
-      const rect = container.getBoundingClientRect();
-      const w = rect.width;
-      const h = height;
+      const w = cachedSizeRef.current.width;
+      const h = cachedSizeRef.current.height;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -67,7 +76,7 @@ export const CliampSpectrumCanvas: React.FC<CliampSpectrumCanvasProps> = ({
         const totalGaps = (barCount - 1) * gap;
         const barWidth = Math.max(1, (w - totalGaps) / barCount);
 
-        ctx.fillStyle = 'rgba(128, 128, 128, 0.35)';
+        ctx.fillStyle = theme.palette.divider;
         for (let i = 0; i < barCount; i++) {
           const x = i * (barWidth + gap);
           ctx.fillRect(x, h - 2, barWidth, 2);
@@ -90,10 +99,20 @@ export const CliampSpectrumCanvas: React.FC<CliampSpectrumCanvasProps> = ({
         const y = h - barHeight;
 
         // Tri-color retro spectrum gradient: Green -> Yellow -> Orange
-        ctx.fillStyle = norm < 0.38 ? '#00E676' : norm < 0.72 ? '#FFE600' : '#FF5522';
+        ctx.fillStyle = norm < 0.38 ? colorGreen : norm < 0.72 ? colorYellow : colorOrange;
         ctx.fillRect(x, y, barWidth, barHeight);
       }
     };
+
+    updateCanvasDimensions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasDimensions();
+      if (!isPlaying) {
+        drawFrame(false);
+      }
+    });
+    resizeObserver.observe(container);
 
     if (isPlaying) {
       const loop = () => {
@@ -113,7 +132,7 @@ export const CliampSpectrumCanvas: React.FC<CliampSpectrumCanvasProps> = ({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [isPlaying, height, barCount]);
+  }, [isPlaying, height, barCount, colorGreen, colorYellow, colorOrange, theme.palette.divider]);
 
   return (
     <div

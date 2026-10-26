@@ -1,11 +1,7 @@
 import React from 'react';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { brutalistTheme } from '@theme';
-
-interface ThemeProviderProps {
-  children: React.ReactNode;
-}
+import { brutalistTheme, type ThemeProviderProps } from '@theme';
 
 /**
  * Global ThemeProvider wrapping the application with the contemporary digital brutalist MUI theme

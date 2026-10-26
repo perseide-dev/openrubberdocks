@@ -1,5 +1,5 @@
 import { createTheme, type Theme } from '@mui/material/styles';
-import { activeColors } from './colors.loader';
+import { activeColors } from '@theme/colors.loader';
 
 declare module '@mui/material/styles' {
   interface Palette {

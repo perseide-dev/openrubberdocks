@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -11,9 +11,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import { Can } from '@components/ui';
 import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
-import { useWorkspaceFilesService } from '@features/workspaces/files/services/file.service';
-import { useWorkspaceDetailService } from '@features/workspaces/manager/services/workspace.service';
-import { buildPageTree } from '@utils-functions/tree.utils';
+import { usePageTreeSidebar } from '@features/workspaces/files/hooks/usePageTreeSidebar';
 import { files as fileRoutes } from '@features/workspaces/files/routes/routes';
 import { PageTreeItem } from '@features/workspaces/files/components/PageTreeItem';
 import type { PageTreeSidebarProps } from '@features/workspaces/files/types/file.types';
@@ -24,12 +22,7 @@ export const PageTreeSidebar: React.FC<PageTreeSidebarProps> = ({
   onCloseMobile,
 }) => {
   const navigate = useNavigate();
-  const { data: workspaceData } = useWorkspaceDetailService(workspaceUuid);
-  const { data: filesData = [], isLoading } = useWorkspaceFilesService(workspaceUuid);
-
-  const pageTree = useMemo(() => {
-    return buildPageTree(filesData);
-  }, [filesData]);
+  const { workspaceData, filesData, pageTree, isLoading } = usePageTreeSidebar(workspaceUuid);
 
   const handleBackToWorkspaces = () => {
     navigate('/workspaces');

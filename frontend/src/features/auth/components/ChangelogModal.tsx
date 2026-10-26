@@ -14,11 +14,7 @@ import {
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import { CHANGELOG_DATA } from '@features/auth/constants/auth.constants';
-
-interface ChangelogModalProps {
-  open: boolean;
-  onClose: () => void;
-}
+import type { ChangelogModalProps } from '@features/auth/types/auth.types';
 
 export function ChangelogModal({ open, onClose }: ChangelogModalProps) {
   return (

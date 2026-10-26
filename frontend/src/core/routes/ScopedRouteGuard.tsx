@@ -23,14 +23,11 @@ export const ScopedRouteGuard: React.FC<ScopedRouteGuardProps> = ({
     ? params[scopeParamName]
     : params.workspaceUuid || params.uuid;
 
-  let isAuthorized = false;
-  if (isCoreAdmin) {
-    isAuthorized = true;
-  } else if (requiredPermissions && requiredPermissions.length > 0) {
-    isAuthorized = hasAnyPermission(requiredPermissions, workspaceUuid);
-  } else {
-    isAuthorized = hasPermission(requiredPermission, workspaceUuid);
-  }
+  const isAuthorized = isCoreAdmin
+    ? true
+    : requiredPermissions && requiredPermissions.length > 0
+      ? hasAnyPermission(requiredPermissions, workspaceUuid)
+      : hasPermission(requiredPermission, workspaceUuid);
 
   if (!isAuthorized) {
     return <Navigate to={redirectTo} replace />;

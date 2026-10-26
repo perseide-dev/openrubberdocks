@@ -63,7 +63,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         handleDeleteTask,
         isSaving,
         isDeleting,
-    } = useTaskModal(projectUuid, taskUuid);
+    } = useTaskModal(projectUuid, taskUuid, open, statuses, types);
 
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
     const [isTimeLogOpen, setIsTimeLogOpen] = useState(false);
@@ -546,7 +546,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                                 DELETE
                             </Button>
                         )}
-                        {taskUuid && (
+                        {taskUuid && canManage && (
                             <Button
                                 color="secondary"
                                 startIcon={<AccessTimeIcon />}
@@ -587,6 +587,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <TimeLogModal
                     open={isTimeLogOpen}
                     task={task}
+                    canManage={canManage}
                     onClose={() => setIsTimeLogOpen(false)}
                 />
             )}

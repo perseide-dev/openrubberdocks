@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useMeService,
@@ -7,24 +7,21 @@ import {
 } from '@features/auth/services/auth.service';
 import { setUnauthorizedCallback } from '@http-interceptors/auth-refresh.interceptor';
 import { AUTH_QUERY_KEYS } from '@features/auth/constants/auth.constants';
-import { AuthContext } from './auth.context';
+import { AuthContext } from '@global-providers/auth.context';
 import type {
   AuthContextValue,
+  AuthProviderProps,
   AuthUser,
   LoginCredentials,
 } from '@features/auth/types/auth.types';
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
-  const meQuery = useMeService();
-  const loginMutation = useLoginService();
-  const logoutMutation = useLogoutService();
+  const { data: meData, isLoading: isMeLoading, refetch: refetchMe } = useMeService();
+  const { mutateAsync: loginMutateAsync } = useLoginService();
+  const { mutateAsync: logoutMutateAsync } = useLogoutService();
 
-  const user = meQuery.data ?? null;
+  const user = meData ?? null;
 
   // Handle unrecoverable 401s when token refresh fails
   useEffect(() => {
@@ -35,35 +32,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = useCallback(
     async (credentials: LoginCredentials): Promise<AuthUser> => {
-      const loggedUser = await loginMutation.mutateAsync(credentials);
+      const loggedUser = await loginMutateAsync(credentials);
       return loggedUser;
     },
-    [loginMutation]
+    [loginMutateAsync]
   );
 
   const logout = useCallback(async (): Promise<void> => {
-    await logoutMutation.mutateAsync();
-  }, [logoutMutation]);
+    await logoutMutateAsync();
+  }, [logoutMutateAsync]);
 
   const refreshProfile = useCallback(async (): Promise<AuthUser | null> => {
-    const result = await meQuery.refetch();
+    const result = await refetchMe();
     return result.data ?? null;
-  }, [meQuery]);
+  }, [refetchMe]);
 
-  const contextValue = useMemo<AuthContextValue>(
+  const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: Boolean(user),
-      isLoading: meQuery.isLoading,
+      isLoading: isMeLoading,
       login,
       logout,
       refreshProfile,
     }),
-    [user, meQuery.isLoading, login, logout, refreshProfile]
+    [user, isMeLoading, login, logout, refreshProfile]
   );
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

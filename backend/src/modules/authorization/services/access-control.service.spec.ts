@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { AccessControlService } from './access-control.service';
+import { AccessControlService } from '@moduleAuthorization/services/access-control.service';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';
 import { User } from '@moduleUsers/entities/user.entity';
 import { UserType } from '@moduleUsers/enums/users.enum';

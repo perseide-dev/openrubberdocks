@@ -29,8 +29,27 @@ export class AccessControlService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async hasPermission(userId: number, requiredPermission: string, workspaceUuid?: string, squadId?: number): Promise<boolean> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+  async hasPermission(
+    userOrId: number | string | User,
+    requiredPermission: string,
+    workspaceUuid?: string,
+    squadId?: number,
+  ): Promise<boolean> {
+    let user: User | null = null;
+    let preloadedScopes: UserRoleScope[] | undefined;
+
+    if (typeof userOrId === 'object' && userOrId !== null) {
+      user = userOrId;
+      if (
+        Array.isArray(user.scopes) &&
+        user.scopes.every((s) => s.role && Array.isArray(s.role.permissions))
+      ) {
+        preloadedScopes = user.scopes;
+      }
+    } else {
+      user = await this.userRepository.findOne({ where: { id: userOrId as number } });
+    }
+
     if (!user) {
       return false;
     }
@@ -40,11 +59,13 @@ export class AccessControlService {
       return true;
     }
 
-    // Fetch all user scopes with roles, permissions, and workspace
-    const scopes = await this.userRoleScopeRepository.find({
-      where: { user: { id: userId } },
-      relations: ['role', 'role.permissions', 'workspace'],
-    });
+    // Fetch all user scopes with roles, permissions, and workspace if not preloaded
+    const scopes =
+      preloadedScopes ??
+      (await this.userRoleScopeRepository.find({
+        where: { user: { id: user.id } },
+        relations: ['role', 'role.permissions', 'workspace'],
+      }));
 
     if (scopes.length === 0) {
       return false;

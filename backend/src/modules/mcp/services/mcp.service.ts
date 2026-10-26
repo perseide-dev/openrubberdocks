@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
@@ -17,6 +18,7 @@ import { WorkspaceService } from '@moduleWorkspace/services/workspace.service';
 import { ProjectsService } from '@moduleProjects/services/projects.service';
 import { TasksService } from '@moduleProjects/services/tasks.service';
 import { TaskTimeLogsService } from '@moduleProjects/services/task-time-logs.service';
+import { AccessControlService } from '@moduleAuthorization/services/access-control.service';
 import { User } from '@moduleUsers/entities/user.entity';
 import { UserType } from '@moduleUsers/enums/users.enum';
 
@@ -37,7 +39,28 @@ export class McpService {
     private readonly projectsService: ProjectsService,
     private readonly tasksService: TasksService,
     private readonly taskTimeLogsService: TaskTimeLogsService,
+    @Optional() private readonly accessControlService?: AccessControlService,
   ) {}
+
+  private async assertPermission(
+    user: User,
+    action: string,
+    workspaceUuid?: string,
+  ): Promise<void> {
+    if (!this.accessControlService) {
+      return;
+    }
+    const allowed = await this.accessControlService.hasPermission(
+      Array.isArray(user.scopes) ? user : user.id,
+      action,
+      workspaceUuid,
+    );
+    if (!allowed) {
+      throw new ForbiddenException(
+        `Missing permission '${action}' in workspace scope '${workspaceUuid ?? 'global'}'`,
+      );
+    }
+  }
 
   async handleSseConnection(req: Request, res: Response, user: User): Promise<void> {
     const server = new Server(
@@ -77,10 +100,19 @@ export class McpService {
     this.logger.log(`MCP session established: ${sessionId} for user @${user.rubberHandle}`);
   }
 
-  async handlePostMessage(sessionId: string, req: Request, res: Response): Promise<void> {
+  async handlePostMessage(
+    sessionId: string,
+    req: Request,
+    res: Response,
+    user?: User,
+  ): Promise<void> {
     const session = this.sessions.get(sessionId);
     if (!session) {
       throw new NotFoundException(`MCP session ${sessionId} not found`);
+    }
+
+    if (user && session.user.id !== user.id) {
+      throw new ForbiddenException('MCP session belongs to another user');
     }
 
     await session.transport.handlePostMessage(req, res, req.body);
@@ -277,6 +309,7 @@ export class McpService {
             if (!workspaceUuid) {
               throw new McpError(ErrorCode.InvalidParams, 'workspaceUuid is required');
             }
+            await this.assertPermission(user, 'project:read', workspaceUuid);
             const projects = await this.projectsService.findAll(workspaceUuid);
             const formatted = projects.map((p) => ({
               uuid: p.uuid,
@@ -303,6 +336,10 @@ export class McpService {
             const projectUuid = String(args?.projectUuid || '');
             if (!projectUuid) {
               throw new McpError(ErrorCode.InvalidParams, 'projectUuid is required');
+            }
+            if (this.projectsService.findOne) {
+              const project = await this.projectsService.findOne(projectUuid);
+              await this.assertPermission(user, 'task:read', project?.workspaceUuid);
             }
             const tasks = await this.tasksService.findAll(projectUuid);
             const formatted = tasks.map((t) => ({
@@ -334,6 +371,7 @@ export class McpService {
               throw new McpError(ErrorCode.InvalidParams, 'taskUuid is required');
             }
             const task = await this.tasksService.findOne(taskUuid);
+            await this.assertPermission(user, 'task:read', task.project?.workspaceUuid);
             const timeLogs = await this.taskTimeLogsService.findAll(taskUuid);
             const totalLoggedMinutes = timeLogs.reduce((sum, l) => sum + (l.minutes || 0), 0);
 
@@ -382,6 +420,12 @@ export class McpService {
             if (!projectUuid || !title) {
               throw new McpError(ErrorCode.InvalidParams, 'projectUuid and title are required');
             }
+            if (this.projectsService.findOne) {
+              const project = await this.projectsService.findOne(projectUuid);
+              await this.assertPermission(user, 'task:create', project?.workspaceUuid);
+            } else {
+              await this.assertPermission(user, 'task:create');
+            }
 
             const created = await this.tasksService.create(
               projectUuid,
@@ -428,6 +472,12 @@ export class McpService {
             if (!taskUuid) {
               throw new McpError(ErrorCode.InvalidParams, 'taskUuid is required');
             }
+            if (this.tasksService.findOne) {
+              const existingTask = await this.tasksService.findOne(taskUuid);
+              await this.assertPermission(user, 'task:update', existingTask?.project?.workspaceUuid);
+            } else {
+              await this.assertPermission(user, 'task:update');
+            }
 
             const updated = await this.tasksService.update(taskUuid, {
               title: args?.title !== undefined ? String(args.title) : undefined,
@@ -470,6 +520,12 @@ export class McpService {
             const minutes = Number(args?.minutes);
             if (!taskUuid || !minutes || isNaN(minutes) || minutes <= 0) {
               throw new McpError(ErrorCode.InvalidParams, 'taskUuid and a positive minutes value are required');
+            }
+            if (this.tasksService.findOne) {
+              const existingTask = await this.tasksService.findOne(taskUuid);
+              await this.assertPermission(user, 'task:time_log', existingTask?.project?.workspaceUuid);
+            } else {
+              await this.assertPermission(user, 'task:time_log');
             }
 
             const logged = await this.taskTimeLogsService.create(

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FilesController } from './files.controller';
+import { FilesController } from '@moduleFiles/manager/controllers/files.controller';
 import { FilesService } from '@moduleFiles/manager/services/files.service';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';

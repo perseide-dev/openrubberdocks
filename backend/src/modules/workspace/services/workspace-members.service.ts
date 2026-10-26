@@ -106,6 +106,10 @@ export class WorkspaceMembersService {
       throw new NotFoundException(`User with UUID ${dto.userUuid} not found`);
     }
 
+    if (user.type === UserType.COREADMIN) {
+      throw new BadRequestException('Cannot modify permissions or roles of a coreAdmin user');
+    }
+
     const role = await this.roleRepository.findOne({
       where: { uuid: dto.roleUuid },
     });

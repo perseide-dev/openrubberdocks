@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { WorkspaceMembersService } from './workspace-members.service';
+import { WorkspaceMembersService } from '@moduleWorkspace/services/workspace-members.service';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 import { WorkspaceMember } from '@moduleWorkspace/entities/workspace-member.entity';
 import { User } from '@moduleUsers/entities/user.entity';

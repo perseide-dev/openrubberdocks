@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+    Injectable,
+    NotFoundException,
+    ConflictException,
+    BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from '@moduleProjects/entities/project.entity';
@@ -66,7 +71,13 @@ export class TaskConfigurationService {
         if (!status) {
             throw new NotFoundException(`Task status ${statusUuid} not found in project`);
         }
-        await this.statusRepository.remove(status);
+        try {
+            await this.statusRepository.remove(status);
+        } catch {
+            throw new ConflictException(
+                `Cannot delete task status "${status.name}" because tasks are still assigned to it`,
+            );
+        }
     }
 
     // --- Task Types ---
@@ -98,7 +109,13 @@ export class TaskConfigurationService {
         if (!type) {
             throw new NotFoundException(`Task type ${typeUuid} not found in project`);
         }
-        await this.typeRepository.remove(type);
+        try {
+            await this.typeRepository.remove(type);
+        } catch {
+            throw new ConflictException(
+                `Cannot delete task type "${type.name}" because tasks are still assigned to it`,
+            );
+        }
     }
 
     // --- Task Properties (Notion-like) ---
@@ -149,6 +166,17 @@ export class TaskConfigurationService {
         const file = await this.fileRepository.findOne({ where: { uuid: fileUuid } });
         if (!file) {
             throw new NotFoundException(`File with uuid ${fileUuid} not found`);
+        }
+
+        if (
+            (project.workspaceId !== undefined &&
+                file.workspaceId !== undefined &&
+                project.workspaceId !== file.workspaceId) ||
+            (project.workspaceUuid !== undefined &&
+                file.workspaceUuid !== undefined &&
+                project.workspaceUuid !== file.workspaceUuid)
+        ) {
+            throw new BadRequestException('Cannot link a file from a different workspace');
         }
 
         const existing = await this.fileLinkRepository.findOne({

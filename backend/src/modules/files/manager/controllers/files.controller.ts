@@ -45,7 +45,7 @@ export class FilesController {
   }
 
   @Delete(':uuid')
-  @RequirePermissions('document:write')
+  @RequirePermissions('document:delete')
   remove(@Param('uuid') uuid: string) {
     return this.filesService.remove(uuid);
   }

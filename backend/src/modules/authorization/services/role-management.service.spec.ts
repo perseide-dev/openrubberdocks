@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { RoleManagementService } from './role-management.service';
+import { RoleManagementService } from '@moduleAuthorization/services/role-management.service';
 import { Role } from '@moduleAuthorization/entities/role.entity';
 import { Permission } from '@moduleAuthorization/entities/permission.entity';
 import { UserRoleScope } from '@moduleAuthorization/entities/user-role-scope.entity';

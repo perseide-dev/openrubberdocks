@@ -3,8 +3,8 @@ jest.mock('@nestjs/mapped-types', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { WorkspaceController } from './workspace.controller';
-import { WorkspaceService } from '../services/workspace.service';
+import { WorkspaceController } from '@moduleWorkspace/controllers/workspace.controller';
+import { WorkspaceService } from '@moduleWorkspace/services/workspace.service';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
 import { AuthGuard } from '@nestjs/passport';
 

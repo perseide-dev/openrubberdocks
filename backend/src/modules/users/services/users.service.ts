@@ -35,6 +35,9 @@ export class UsersService {
 
     let initialRole: Role | null = null;
     if (createDto.initialRoleUuid) {
+      if (createDto.type === UserType.EXTERNAL) {
+        throw new BadRequestException(AUTHORIZATION_ERRORS.INVALID_SCOPE_ASSIGNMENT());
+      }
       initialRole = await this.roleRepository.findOne({
         where: { uuid: createDto.initialRoleUuid },
       });
@@ -82,6 +85,10 @@ export class UsersService {
       throw new NotFoundException(`User with UUID ${uuid} not found`);
     }
 
+    if (user.type === UserType.COREADMIN) {
+      throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_MODIFY_CORE_USER());
+    }
+
     if (updateDto.rubberHandle && updateDto.rubberHandle !== user.rubberHandle) {
       const existingUser = await this.usersRepository.findOne({
         where: { rubberHandle: updateDto.rubberHandle },
@@ -97,9 +104,6 @@ export class UsersService {
     }
 
     if (updateDto.type && updateDto.type !== user.type) {
-      if (user.type === UserType.COREADMIN) {
-        throw new BadRequestException('Cannot modify Core Admin user type');
-      }
       if (updateDto.type === UserType.COREADMIN) {
         throw new BadRequestException('Cannot promote user to Core Admin');
       }
@@ -119,10 +123,6 @@ export class UsersService {
     }
 
     if (updateDto.globalRoleUuid !== undefined) {
-      if (user.type === UserType.COREADMIN) {
-        throw new BadRequestException(AUTHORIZATION_ERRORS.CANNOT_MODIFY_CORE_USER());
-      }
-
       if (user.type === UserType.EXTERNAL && updateDto.globalRoleUuid) {
         throw new BadRequestException(AUTHORIZATION_ERRORS.INVALID_SCOPE_ASSIGNMENT());
       }

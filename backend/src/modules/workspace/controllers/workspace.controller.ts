@@ -46,7 +46,7 @@ export class WorkspaceController {
   }
 
   @Delete(':uuid')
-  @RequirePermissions('workspace:write')
+  @RequirePermissions('workspace:delete')
   @CheckScope('uuid')
   remove(@Param('uuid') uuid: string) {
     return this.workspaceService.remove(uuid);

@@ -1,4 +1,4 @@
-import { PermissionsGuard } from './permissions.guard';
+import { PermissionsGuard } from '@commonGuards/permissions.guard';
 import { Reflector } from '@nestjs/core';
 import { AccessControlService } from '@moduleAuthorization/services/access-control.service';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';

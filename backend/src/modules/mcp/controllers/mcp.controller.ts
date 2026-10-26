@@ -28,6 +28,7 @@ export class McpController {
   }
 
   @Post('messages')
+  @UseGuards(McpAuthGuard)
   async messages(
     @Query('sessionId') sessionId: string,
     @Req() req: Request,
@@ -36,6 +37,7 @@ export class McpController {
     if (!sessionId) {
       throw new BadRequestException('Query parameter "sessionId" is required.');
     }
-    await this.mcpService.handlePostMessage(sessionId, req, res);
+    const user = (req as any).user as User | undefined;
+    await this.mcpService.handlePostMessage(sessionId, req, res, user);
   }
 }

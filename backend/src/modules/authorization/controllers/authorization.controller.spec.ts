@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthorizationController } from './authorization.controller';
+import { AuthorizationController } from '@moduleAuthorization/controllers/authorization.controller';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
 import { AuthGuard } from '@nestjs/passport';
-import { RoleManagementService } from '../services/role-management.service';
-import { CreateRoleDto } from '../dto/create-role.dto';
-import { UpdateRoleDto } from '../dto/update-role.dto';
-import { AssignRoleScopeDto } from '../dto/assign-role-scope.dto';
+import { RoleManagementService } from '@moduleAuthorization/services/role-management.service';
+import { CreateRoleDto } from '@moduleAuthorization/dto/create-role.dto';
+import { UpdateRoleDto } from '@moduleAuthorization/dto/update-role.dto';
+import { AssignRoleScopeDto } from '@moduleAuthorization/dto/assign-role-scope.dto';
 
 describe('AuthorizationController', () => {
   let controller: AuthorizationController;

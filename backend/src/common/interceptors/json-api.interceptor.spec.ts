@@ -1,4 +1,4 @@
-import { JsonApiInterceptor } from './json-api.interceptor';
+import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { of } from 'rxjs';
 
@@ -147,6 +147,32 @@ describe('JsonApiInterceptor', () => {
     interceptor.intercept(context, next).subscribe((result) => {
       expect(result.data.attributes.createdAt).toBe(date);
       expect(result.data.relationships).toBeUndefined();
+      done();
+    });
+  });
+
+  it('should strip sensitive fields (password, hashedRefreshToken, refreshToken, keyHash) and handle { data: null }', (done) => {
+    const context = {} as ExecutionContext;
+    const next = {
+      handle: () =>
+        of({
+          id: 1,
+          uuid: 'u-1',
+          username: 'admin',
+          password: '$2b$12$secret',
+          hashedRefreshToken: '$2b$12$refresh',
+          refreshToken: 'jwt-refresh',
+          keyHash: 'sha256-hash',
+        }),
+    } as CallHandler;
+
+    interceptor.intercept(context, next).subscribe((result) => {
+      expect(result.data.attributes.username).toBe('admin');
+      expect(result.data.attributes.uuid).toBe('u-1');
+      expect(result.data.attributes.password).toBeUndefined();
+      expect(result.data.attributes.hashedRefreshToken).toBeUndefined();
+      expect(result.data.attributes.refreshToken).toBeUndefined();
+      expect(result.data.attributes.keyHash).toBeUndefined();
       done();
     });
   });

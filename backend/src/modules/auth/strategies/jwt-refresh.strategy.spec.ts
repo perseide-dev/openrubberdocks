@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtRefreshStrategy } from './jwt-refresh.strategy';
+import { JwtRefreshStrategy } from '@moduleAuth/strategies/jwt-refresh.strategy';
 import { UsersService } from '@moduleUsers/services/users.service';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';

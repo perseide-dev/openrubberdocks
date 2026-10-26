@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
-import { AuthService } from '../services/auth.service';
+import { AuthController } from '@moduleAuth/controllers/auth.controller';
+import { AuthService } from '@moduleAuth/services/auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { HttpStatus } from '@nestjs/common';
 import type { Response, Request } from 'express';

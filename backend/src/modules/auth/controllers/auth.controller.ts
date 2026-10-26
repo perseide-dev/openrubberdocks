@@ -71,8 +71,14 @@ export class AuthController {
       path: '/',
     });
 
-    // We can return the user object, or null
-    return user;
+    const {
+      refreshToken: _rt,
+      password: _pwd,
+      hashedRefreshToken: _hrt,
+      ...safeUser
+    } = user as any;
+
+    return safeUser;
   }
 
   @UseGuards(AuthGuard('jwt'))

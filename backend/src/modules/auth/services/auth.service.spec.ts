@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
+import { createHash } from 'crypto';
+import { AuthService } from '@moduleAuth/services/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '@moduleUsers/services/users.service';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
@@ -66,6 +67,14 @@ describe('AuthService', () => {
 
       await expect(service.validateUser({ rubberHandle: 'test', pwd: 'wrong' })).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should throw UnauthorizedException when user handle is not found (preventing enumeration)', async () => {
+      usersService.findByRubberHandle.mockRejectedValue(new NotFoundException('User not found'));
+
+      await expect(service.validateUser({ rubberHandle: 'nonexistent', pwd: 'wrong' })).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
   });
 
   describe('generateTokens', () => {
@@ -87,14 +96,15 @@ describe('AuthService', () => {
   });
 
   describe('updateRefreshToken', () => {
-    it('should hash token and call usersService', async () => {
+    it('should pre-hash token with SHA-256, hash with bcrypt, and call usersService', async () => {
       configService.get.mockReturnValue(12);
       (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_token');
 
       await service.updateRefreshToken({ userUUID: 'u-1', refreshToken: 'token' });
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('token', 'salt');
+      const expectedSha256 = createHash('sha256').update('token').digest('hex');
+      expect(bcrypt.hash).toHaveBeenCalledWith(expectedSha256, 'salt');
       expect(usersService.updateRefreshToken).toHaveBeenCalledWith('u-1', 'hashed_token');
     });
   });

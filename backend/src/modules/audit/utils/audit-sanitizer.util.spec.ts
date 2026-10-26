@@ -6,6 +6,7 @@ describe('audit-sanitizer.util', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: 'superSecretPassword123',
+      pwd: 'loginPassword123',
       refreshToken: 'xyz-jwt-token',
       apiKey: 'sk-123456789',
       metadata: {
@@ -20,6 +21,7 @@ describe('audit-sanitizer.util', () => {
     expect(result.name).toBe('John Doe');
     expect(result.email).toBe('john@example.com');
     expect(result.password).toBe('[REDACTED]');
+    expect(result.pwd).toBe('[REDACTED]');
     expect(result.refreshToken).toBe('[REDACTED]');
     expect(result.apiKey).toBe('[REDACTED]');
     expect(result.metadata.authorization).toBe('[REDACTED]');

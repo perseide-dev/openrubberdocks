@@ -109,11 +109,17 @@ export class AuditService {
     }
 
     if (query.from) {
-      qb.andWhere('log.created_at >= :from', { from: new Date(query.from) });
+      const fromDate = new Date(query.from);
+      if (!isNaN(fromDate.getTime())) {
+        qb.andWhere('log.created_at >= :from', { from: fromDate });
+      }
     }
 
     if (query.to) {
-      qb.andWhere('log.created_at <= :to', { to: new Date(query.to) });
+      const toDate = new Date(query.to);
+      if (!isNaN(toDate.getTime())) {
+        qb.andWhere('log.created_at <= :to', { to: toDate });
+      }
     }
 
     qb.orderBy('log.created_at', 'DESC')

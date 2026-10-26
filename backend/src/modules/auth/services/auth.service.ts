@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException, Optional } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, Optional } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 import { UsersService } from '@moduleUsers/services/users.service';
 import { UpdateTokenDTO, ValidateUserDTO, RefreshTokenDto, GenerateTokenDto } from '@moduleAuth/dto/index';
 import * as bcrypt from 'bcrypt';
@@ -20,8 +21,21 @@ export class AuthService {
     @Optional() private auditService?: AuditService,
   ) { }
 
+  private sha256Token(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
   async validateUser(validateUserDto: ValidateUserDTO): Promise<User> {
-    const user = await this.usersService.findByRubberHandle(validateUserDto.rubberHandle);
+    let user: User | null = null;
+    try {
+      user = await this.usersService.findByRubberHandle(validateUserDto.rubberHandle);
+    } catch (err) {
+      if (!(err instanceof NotFoundException)) {
+        throw err;
+      }
+      user = null;
+    }
+
     if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
       void this.auditService?.logEvent({
         userId: user.id,
@@ -72,7 +86,8 @@ export class AuthService {
   async updateRefreshToken(updateToken: UpdateTokenDTO) {
     const saltRounds = Number(this.configService.get<number>('BCRYPT_SALT_ROUNDS')) || 12;
     const salt = await bcrypt.genSalt(saltRounds);
-    const hashedRefreshToken = await bcrypt.hash(updateToken.refreshToken, salt);
+    const tokenDigest = this.sha256Token(updateToken.refreshToken);
+    const hashedRefreshToken = await bcrypt.hash(tokenDigest, salt);
     await this.usersService.updateRefreshToken(updateToken.userUUID, hashedRefreshToken);
   }
 
@@ -82,10 +97,10 @@ export class AuthService {
       throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.ACCESS_DENIED());
     }
 
-    const refreshTokenMatches = await bcrypt.compare(
-      refreshToken.refreshToken,
-      user.hashedRefreshToken,
-    );
+    const tokenDigest = this.sha256Token(refreshToken.refreshToken);
+    const refreshTokenMatches =
+      (await bcrypt.compare(tokenDigest, user.hashedRefreshToken)) ||
+      (await bcrypt.compare(refreshToken.refreshToken, user.hashedRefreshToken));
 
     if (!refreshTokenMatches) {
       throw new UnauthorizedException(AUTH_ERRORS_CONSTANTS.ACCESS_DENIED());

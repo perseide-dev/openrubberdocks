@@ -1,5 +1,6 @@
 const SENSITIVE_KEY_PATTERNS = [
   /password/i,
+  /^pwd$/i,
   /token/i,
   /secret/i,
   /authorization/i,

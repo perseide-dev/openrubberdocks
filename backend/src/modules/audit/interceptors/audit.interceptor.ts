@@ -58,9 +58,8 @@ export class AuditInterceptor implements NestInterceptor {
     // Extract workspaceUuid if relevant
     const workspaceUuid =
       req.params?.workspaceUuid ||
-      req.params?.uuid ||
-      req.query?.workspaceUuid ||
       (resourceType === 'workspaces' && req.params?.uuid ? req.params.uuid : undefined) ||
+      req.query?.workspaceUuid ||
       (req.body as any)?.workspaceUuid ||
       (req.body as any)?.data?.attributes?.workspaceUuid ||
       null;
@@ -93,7 +92,7 @@ export class AuditInterceptor implements NestInterceptor {
 
           void this.auditService.logEvent({
             userId: user?.id ?? null,
-            userEmail: user?.email ?? null,
+            userEmail: user?.rubberHandle ?? user?.username ?? user?.email ?? null,
             userType: user?.type ?? null,
             action,
             resourceType,
@@ -114,7 +113,7 @@ export class AuditInterceptor implements NestInterceptor {
 
           void this.auditService.logEvent({
             userId: user?.id ?? null,
-            userEmail: user?.email ?? null,
+            userEmail: user?.rubberHandle ?? user?.username ?? user?.email ?? null,
             userType: user?.type ?? null,
             action,
             resourceType,

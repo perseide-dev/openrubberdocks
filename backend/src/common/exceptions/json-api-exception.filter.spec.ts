@@ -1,4 +1,4 @@
-import { JsonApiExceptionFilter } from './json-api-exception.filter';
+import { JsonApiExceptionFilter } from '@commonExceptions/json-api-exception.filter';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('JsonApiExceptionFilter', () => {

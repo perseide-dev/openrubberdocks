@@ -75,11 +75,11 @@ API Token:    ord_live_7a8b9c...
 ### Opción B: Vía API REST (JSON:API)
 Con una sesión iniciada en la plataforma:
 
-- **Crear token**: `POST /api/v1/api-keys`
+- **Crear token**: `POST /api-keys`
   ```json
   {
     "data": {
-      "type": "api-keys",
+      "type": "api_keys",
       "attributes": {
         "name": "Cursor Agent",
         "expiresInDays": 30
@@ -87,9 +87,9 @@ Con una sesión iniciada en la plataforma:
     }
   }
   ```
-- **Listar tokens del usuario**: `GET /api/v1/api-keys`
-- **Revocar token**: `PATCH /api/v1/api-keys/:uuid/revoke`
-- **Eliminar token**: `DELETE /api/v1/api-keys/:uuid`
+- **Listar tokens del usuario**: `GET /api-keys`
+- **Revocar token**: `PATCH /api-keys/:uuid/revoke`
+- **Eliminar token**: `DELETE /api-keys/:uuid`
 
 ---
 

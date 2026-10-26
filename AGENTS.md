@@ -55,6 +55,9 @@ All backend imports targeting `src/` MUST use the following aliases:
 | `@moduleWorkspace/*` | `src/modules/workspace/*` | Workspace module entities, services, controllers |
 | `@moduleFiles/*` | `src/modules/files/*` | File upload and storage module |
 | `@moduleAuthorization/*`| `src/modules/authorization/*`| Scoped RBAC permissions and access control module |
+| `@moduleProjects/*` | `src/modules/projects/*` | Projects, Kanban tasks, statuses, types, properties, time logs |
+| `@moduleMcp/*` | `src/modules/mcp/*` | Model Context Protocol (MCP) SSE server and tools |
+| `@moduleAudit/*` | `src/modules/audit/*` | System-wide and workspace-scoped audit logging |
 
 #### Backend Import Examples:
 ```typescript
@@ -102,6 +105,10 @@ All frontend imports targeting `src/` MUST use the following aliases:
 | `@utils-labels/*` | `src/core/utils/labels/*` | Static dictionaries, text labels, i18n |
 | `@features/*` | `src/features/*` | Business domain features root |
 | `@features-workspaces/*`| `src/features/workspaces/*`| Workspaces feature module |
+| `@features-projects/*` | `src/features/projects/*` | Projects & Kanban feature module |
+| `@features-files/*` | `src/features/files/*` | Files & Pages block editor feature module |
+| `@features-admin/*` | `src/features/admin/*` | Administration & RBAC management feature module |
+| `@features-audit/*` | `src/features/audit/*` | Audit logs feature module |
 
 #### Frontend Import Examples:
 ```typescript

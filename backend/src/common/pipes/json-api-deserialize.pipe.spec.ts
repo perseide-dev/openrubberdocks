@@ -1,4 +1,4 @@
-import { JsonApiDeserializePipe } from './json-api-deserialize.pipe';
+import { JsonApiDeserializePipe } from '@commonPipes/json-api-deserialize.pipe';
 import { BadRequestException } from '@nestjs/common';
 
 describe('JsonApiDeserializePipe', () => {

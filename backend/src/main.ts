@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from '@/app.module';
 import { JsonApiExceptionFilter } from '@commonExceptions/json-api-exception.filter'
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';

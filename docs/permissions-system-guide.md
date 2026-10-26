@@ -91,6 +91,7 @@ export const BASE_PERMISSIONS = [
   { action: 'role:delete' },
   { action: 'role:assign' },
   { action: 'global:audit' },
+  { action: 'workspace:audit' },
 ];
 ```
 

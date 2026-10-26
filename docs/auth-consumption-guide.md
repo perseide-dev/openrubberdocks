@@ -26,7 +26,7 @@ When the user enters their credentials, `/auth/login` is called. The backend wil
 import { api } from '../api/axios';
 
 interface LoginCredentials {
-  email: string; // Or rubberHandle
+  rubberHandle: string;
   pwd: string;
 }
 

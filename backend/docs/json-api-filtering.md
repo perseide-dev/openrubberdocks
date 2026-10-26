@@ -33,8 +33,8 @@ The engine includes a catalog of operators to define the search behavior in the 
 - **Multi-field Operators (Compound Searches):**
   - `orLike`: Searches for the **same** partial term across multiple columns using an "OR" (e.g., search for the word "John" in `firstName` OR `lastName`).
   - `orEq`: Same as `orLike`, but requires an exact match.
-  - `splitLike`: Split search. Ideal for global search bars. Splits the search string by spaces and performs a partial search assigning each segment to its respective column.
-  - `splitEq`: Same as `splitLike` but demanding exact match for each segment.
+  - `splitLike`: Split search. Ideal for multi-column search bars. Splits the search string by the pipe character (`|`) and performs a partial search assigning each segment to its respective column.
+  - `splitEq`: Same as `splitLike` (splitting by `|`) but demanding exact match for each segment.
 
 ## 3. URL Format (Client)
 

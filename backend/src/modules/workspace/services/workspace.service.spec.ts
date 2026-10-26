@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { WorkspaceService } from './workspace.service';
+import { WorkspaceService } from '@moduleWorkspace/services/workspace.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Workspace } from '../entities/workspace.entity';
+import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
 import { NotFoundException } from '@nestjs/common';
 
 describe('WorkspaceService', () => {
@@ -69,8 +69,8 @@ describe('WorkspaceService', () => {
 
     it('should include relations if provided', async () => {
       mockQueryBuilder.getMany.mockResolvedValue([{ id: 1 }]);
-      await service.findAll({ relations: ['owner'] });
-      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('workspace.owner', 'owner');
+      await service.findAll({ relations: ['createdBy'] });
+      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('workspace.createdBy', 'createdBy');
     });
 
     it('should apply filters if provided', async () => {

@@ -1,5 +1,5 @@
 import { IsUUID, IsOptional, IsObject, IsNumber, IsEnum } from 'class-validator';
-import { BlockType } from '../enums/block-type.enum';
+import { BlockType } from '@moduleFiles/blocks/enums/block-type.enum';
 
 export class CreateBlockDto {
     @IsUUID()

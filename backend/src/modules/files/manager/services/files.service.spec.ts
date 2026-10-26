@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FilesService } from './files.service';
+import { FilesService } from '@moduleFiles/manager/services/files.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { File } from '@moduleFiles/manager/entities/file.entity';
 import { NotFoundException } from '@nestjs/common';

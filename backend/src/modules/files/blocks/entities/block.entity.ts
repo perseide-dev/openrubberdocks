@@ -12,8 +12,8 @@ import {
 import { Exclude } from 'class-transformer';
 import { File } from '@moduleFiles/manager/entities/file.entity';
 import { User } from '@moduleUsers/entities/user.entity';
-import { BlockType } from '../enums/block-type.enum';
-import { BlockRevision } from './block-revision.entity';
+import { BlockType } from '@moduleFiles/blocks/enums/block-type.enum';
+import { BlockRevision } from '@moduleFiles/blocks/entities/block-revision.entity';
 
 @Entity('blocks')
 export class Block {

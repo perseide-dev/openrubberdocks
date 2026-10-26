@@ -26,6 +26,9 @@ export class Workspace {
     @JoinColumn({ name: 'created_by_id' })
     createdBy: User;
 
+    @Column({ name: 'created_by_id', type: 'int', nullable: true })
+    createdById?: number | null;
+
     @Column({ name: 'created_by_uuid', type: 'uuid' })
     createdByUUID: string;
 

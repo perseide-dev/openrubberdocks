@@ -1,27 +1,61 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Workspace } from '@moduleWorkspace/entities/workspace.entity';
+import { WorkspaceMember } from '@moduleWorkspace/entities/workspace-member.entity';
+import { User } from '@moduleUsers/entities/user.entity';
 import { CreateWorkspaceDto } from '@moduleWorkspace/dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from '@moduleWorkspace/dto/update-workspace.dto';
 import { JsonApiQueryOptions } from '@commonDecorators/json-api-query.decorator';
-import { applyJsonApiFilters } from '@common/utils/typeorm-filter.util';
+import { applyJsonApiFilters } from '@commonUtils/typeorm-filter.util';
 import { UserType } from '@moduleUsers/enums/users.enum';
-import { WORKSPACE_ERRORS_CONSTANTS } from '../constants/workspace.errors.constants';
+import { WORKSPACE_ERRORS_CONSTANTS } from '@moduleWorkspace/constants/workspace.errors.constants';
+
+const ALLOWED_WORKSPACE_RELATIONS = new Set(['createdBy', 'members', 'files']);
 
 @Injectable()
 export class WorkspaceService {
   constructor(
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
+    @Optional()
+    @InjectRepository(User)
+    private readonly userRepository?: Repository<User>,
+    @Optional()
+    @InjectRepository(WorkspaceMember)
+    private readonly memberRepository?: Repository<WorkspaceMember>,
   ) { }
 
   async create(createWorkspaceDto: CreateWorkspaceDto, userUUID: string): Promise<Workspace> {
+    let creator: User | null = null;
+    if (this.userRepository && userUUID) {
+      creator = await this.userRepository.findOne({ where: { uuid: userUUID } });
+    }
+
     const workspace = this.workspaceRepository.create({
       ...createWorkspaceDto,
       createdByUUID: userUUID,
+      ...(creator?.id !== undefined ? { createdById: creator.id } : {}),
     });
-    return await this.workspaceRepository.save(workspace);
+    const savedWorkspace = await this.workspaceRepository.save(workspace);
+
+    if (creator && this.memberRepository) {
+      const existingMember = await this.memberRepository.findOne({
+        where: { workspaceId: savedWorkspace.id, userId: creator.id },
+      });
+      if (!existingMember) {
+        const member = this.memberRepository.create({
+          workspace: savedWorkspace,
+          workspaceId: savedWorkspace.id,
+          user: creator,
+          userId: creator.id,
+          joinedAt: new Date(),
+        });
+        await this.memberRepository.save(member);
+      }
+    }
+
+    return savedWorkspace;
   }
 
   async findAll(query: JsonApiQueryOptions, user?: any): Promise<Workspace[]> {
@@ -29,9 +63,11 @@ export class WorkspaceService {
 
     // 1. Apply Relationships Inclusion (if any)
     if (query.relations?.length) {
-      query.relations.forEach((relation) => {
-        qb.leftJoinAndSelect(`workspace.${relation}`, relation);
-      });
+      query.relations
+        .filter((relation) => ALLOWED_WORKSPACE_RELATIONS.has(relation))
+        .forEach((relation) => {
+          qb.leftJoinAndSelect(`workspace.${relation}`, relation);
+        });
     }
 
     // 2. Dynamic Filter Construction
@@ -41,7 +77,12 @@ export class WorkspaceService {
 
     // 3. User Scoping
     if (user && user.type !== UserType.COREADMIN) {
-      const hasGlobalScope = user.scopes?.some((s: any) => !s.workspace && !s.workspaceId);
+      const hasGlobalScope = user.scopes?.some(
+        (s: any) =>
+          !s.workspace &&
+          !s.workspaceId &&
+          s.role?.permissions?.some((p: any) => p.action === 'workspace:read'),
+      );
       if (!hasGlobalScope) {
         qb.andWhere(
           `workspace.id IN (
@@ -63,9 +104,11 @@ export class WorkspaceService {
       .where('workspace.uuid = :uuid', { uuid });
 
     if (query?.relations?.length) {
-      query.relations.forEach((relation) => {
-        qb.leftJoinAndSelect(`workspace.${relation}`, relation);
-      });
+      query.relations
+        .filter((relation) => ALLOWED_WORKSPACE_RELATIONS.has(relation))
+        .forEach((relation) => {
+          qb.leftJoinAndSelect(`workspace.${relation}`, relation);
+        });
     }
 
     const workspace = await qb.getOne();

@@ -65,15 +65,15 @@ export class ProjectsService {
             { name: 'Done', category: 'DONE' as const, color: '#10B981', orderIndex: 4, isDefault: false },
         ];
 
-        for (const s of defaultStatuses) {
-            const statusEntity = this.taskStatusRepository.create({
+        const statusEntities = defaultStatuses.map((s) =>
+            this.taskStatusRepository.create({
                 ...s,
                 project: savedProject,
                 projectId: savedProject.id,
                 projectUuid: savedProject.uuid,
-            });
-            await this.taskStatusRepository.save(statusEntity);
-        }
+            }),
+        );
+        await this.taskStatusRepository.save(statusEntities);
 
         // Seed default task types
         const defaultTypes = [
@@ -83,15 +83,15 @@ export class ProjectsService {
             { name: 'Milestone', icon: 'flag', color: '#8B5CF6', isDefault: false },
         ];
 
-        for (const t of defaultTypes) {
-            const typeEntity = this.taskTypeRepository.create({
+        const typeEntities = defaultTypes.map((t) =>
+            this.taskTypeRepository.create({
                 ...t,
                 project: savedProject,
                 projectId: savedProject.id,
                 projectUuid: savedProject.uuid,
-            });
-            await this.taskTypeRepository.save(typeEntity);
-        }
+            }),
+        );
+        await this.taskTypeRepository.save(typeEntities);
 
         return this.findOne(savedProject.uuid);
     }
@@ -106,7 +106,7 @@ export class ProjectsService {
     async findOne(uuid: string): Promise<Project> {
         const project = await this.projectRepository.findOne({
             where: { uuid },
-            relations: ['statuses', 'types', 'propertyDefinitions', 'tasks'],
+            relations: ['statuses', 'types', 'propertyDefinitions'],
         });
 
         if (!project) {

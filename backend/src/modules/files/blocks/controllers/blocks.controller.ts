@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Param, UseGuards, UseInterceptors, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, UseGuards, UseInterceptors, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import { BlocksService } from '@moduleFiles/blocks/services/blocks.service';
 import { CreateBlockDto } from '@moduleFiles/blocks/dto/create-block.dto';
 import { UpdateBlockDto } from '@moduleFiles/blocks/dto/update-block.dto';
 import { MoveBlockDto } from '@moduleFiles/blocks/dto/move-block.dto';
+import { SyncBlocksDto } from '@moduleFiles/blocks/dto/sync-blocks.dto';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
 import { JsonApiQuery } from '@commonDecorators/json-api-query.decorator';
@@ -23,6 +24,17 @@ export class BlocksController {
   create(@JsonApiBody() createBlockDto: CreateBlockDto, @Req() request: Request) {
     const user = request.user as any;
     return this.blocksService.create(createBlockDto, user.uuid);
+  }
+
+  @Put('file/:fileUuid')
+  @RequirePermissions('document:write')
+  syncFileBlocks(
+    @Param('fileUuid') fileUuid: string,
+    @JsonApiBody() syncBlocksDto: SyncBlocksDto,
+    @Req() request: Request,
+  ) {
+    const user = request.user as any;
+    return this.blocksService.syncFileBlocks(fileUuid, syncBlocksDto, user.uuid);
   }
 
   @Get()
@@ -51,7 +63,7 @@ export class BlocksController {
   }
 
   @Delete(':uuid')
-  @RequirePermissions('document:write')
+  @RequirePermissions('document:delete')
   remove(@Param('uuid') uuid: string) {
     return this.blocksService.remove(uuid);
   }

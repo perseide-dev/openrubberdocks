@@ -11,6 +11,7 @@ describe('BlocksController', () => {
   beforeEach(async () => {
     service = {
       create: jest.fn(),
+      syncFileBlocks: jest.fn(),
       findAll: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),

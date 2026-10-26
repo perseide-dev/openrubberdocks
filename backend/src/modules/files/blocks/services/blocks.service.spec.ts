@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BlocksService } from './blocks.service';
+import { BlocksService } from '@moduleFiles/blocks/services/blocks.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Block } from '../entities/block.entity';
-import { BlockRevision } from '../entities/block-revision.entity';
+import { Block } from '@moduleFiles/blocks/entities/block.entity';
+import { BlockRevision } from '@moduleFiles/blocks/entities/block-revision.entity';
 import { NotFoundException } from '@nestjs/common';
-import { BlockType } from '../enums/block-type.enum';
+import { BlockType } from '@moduleFiles/blocks/enums/block-type.enum';
 import { File } from '@moduleFiles/manager/entities/file.entity';
 
 describe('BlocksService', () => {
@@ -102,8 +102,8 @@ describe('BlocksService', () => {
 
     it('should apply filters and relations', async () => {
       mockQueryBuilder.getMany.mockResolvedValue([{ id: 1 }]);
-      await service.findAll({ relations: ['page'], filters: [{ field: 'type', operator: 'eq', value: 'paragraph' }] });
-      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('block.page', 'page');
+      await service.findAll({ relations: ['file'], filters: [{ field: 'type', operator: 'eq', value: 'paragraph' }] as any });
+      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('block.file', 'file');
       expect(mockQueryBuilder.andWhere).toHaveBeenCalled();
     });
   });
@@ -168,6 +168,30 @@ describe('BlocksService', () => {
       
       await service.remove('b-1');
       expect(blockRepo.remove).toHaveBeenCalledWith(existingBlock);
+    });
+  });
+
+  describe('syncFileBlocks', () => {
+    it('should replace all blocks for a file', async () => {
+      fileRepo.findOne.mockResolvedValue({ id: 7, uuid: 'p-1' });
+      blockRepo.delete = jest.fn().mockResolvedValue({});
+      blockRepo.create.mockImplementation((item: any) => item);
+      blockRepo.save.mockImplementation(async (items: any) => items);
+
+      const result = await service.syncFileBlocks(
+        'p-1',
+        {
+          blocks: [
+            { type: BlockType.HEADING_1, properties: { text: 'Title' }, orderIndex: 0 },
+            { type: BlockType.TEXT, properties: { text: 'Body' }, orderIndex: 1 },
+          ],
+        },
+        'u-1',
+      );
+
+      expect(blockRepo.delete).toHaveBeenCalledWith({ fileId: 7 });
+      expect(result).toHaveLength(2);
+      expect(result[0].type).toBe(BlockType.HEADING_1);
     });
   });
 });

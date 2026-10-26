@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Task } from '@moduleProjects/entities/task.entity';
@@ -194,6 +194,9 @@ export class TasksService {
                 task.parentTaskId = null;
                 task.parentTaskUuid = null;
             } else {
+                if (dto.parentTaskUuid === task.uuid) {
+                    throw new BadRequestException('A task cannot be its own parent');
+                }
                 const parent = await this.taskRepository.findOne({
                     where: { uuid: dto.parentTaskUuid, projectId: task.projectId },
                 });

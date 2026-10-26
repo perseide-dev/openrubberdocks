@@ -18,8 +18,9 @@ RUN pnpm run build
 FROM base AS production
 ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
-RUN pnpm install --frozen-lockfile --prod
-COPY --from=build /app/dist ./dist
+RUN pnpm install --frozen-lockfile --prod && chown -R node:node /app
+COPY --chown=node:node --from=build /app/dist ./dist
 
+USER node
 EXPOSE 3000
 CMD ["node", "dist/main"]

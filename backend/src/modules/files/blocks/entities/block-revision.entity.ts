@@ -8,7 +8,7 @@ import {
     Generated
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Block } from './block.entity';
+import { Block } from '@moduleFiles/blocks/entities/block.entity';
 import { User } from '@moduleUsers/entities/user.entity';
 
 @Entity('block_revisions')

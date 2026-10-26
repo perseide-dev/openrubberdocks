@@ -8,6 +8,7 @@ export const BLOCK_ENDPOINTS = {
     BASE: 'blocks',
     BY_UUID: (uuid: string) => `blocks/${uuid}`,
     MOVE: (uuid: string) => `blocks/${uuid}/move`,
+    SYNC_FILE: (fileUuid: string) => `blocks/file/${fileUuid}`,
 } as const;
 
 export const BLOCK_RESOURCE_TYPE = 'blocks';
@@ -23,6 +24,7 @@ export const BLOCK_MUTATION_KEYS = {
     UPDATE: ['blocks', 'update'] as const,
     MOVE: ['blocks', 'move'] as const,
     DELETE: ['blocks', 'delete'] as const,
+    SYNC_FILE: ['blocks', 'sync-file'] as const,
 } as const;
 
 export const BLOCK_DEFAULTS = {

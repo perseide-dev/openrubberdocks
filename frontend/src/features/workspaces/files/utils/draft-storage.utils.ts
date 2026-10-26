@@ -1,8 +1,12 @@
 import type { DocumentDraft, DocumentTab } from '@features-workspaces/files/types/file.types';
+import {
+    DRAFT_PREFIX,
+    AUTOSAVE_PREF_KEY,
+    TABS_PREFIX,
+} from '@features-workspaces/files/constants/file.constants';
+import { clearAllDraftsAndTabs } from '@utils-functions/storage.utils';
 
-const DRAFT_PREFIX = 'openrubberdocks_draft';
-const AUTOSAVE_PREF_KEY = 'openrubberdocks_autosave_enabled';
-const TABS_PREFIX = 'openrubberdocks_tabs';
+export { clearAllDraftsAndTabs };
 
 export function getDraftKey(workspaceUuid: string, fileUuid: string = 'new'): string {
     return `${DRAFT_PREFIX}_${workspaceUuid}_${fileUuid}`;

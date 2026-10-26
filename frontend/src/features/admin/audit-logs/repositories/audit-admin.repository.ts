@@ -1,14 +1,17 @@
 import { baseAPIrequest } from '@http-base/baseAPIrequest';
+import { deserializeJsonApi } from '@http-interceptors/json-api.interceptor';
+import type { JsonApiResponse } from '@http-types/json-api.types';
 import { AUDIT_ENDPOINTS } from '@features/admin/audit-logs/constants/audit.constants';
 import type {
   AuditLogItem,
   AuditLogFilters,
+  AuditLogPaginatedResult,
   WorkspaceLookupItem,
 } from '@features/admin/audit-logs/types/audit.types';
 
 export async function getAuditLogsRepository(
   filters?: Partial<AuditLogFilters>,
-): Promise<AuditLogItem[]> {
+): Promise<AuditLogPaginatedResult> {
   const queryParams = new URLSearchParams();
 
   if (filters?.page) queryParams.set('page', String(filters.page));
@@ -26,7 +29,24 @@ export async function getAuditLogsRepository(
     ? `${AUDIT_ENDPOINTS.LIST}?${queryString}`
     : AUDIT_ENDPOINTS.LIST;
 
-  return baseAPIrequest.get<AuditLogItem[]>(url);
+  const rawResponse = await baseAPIrequest.get<JsonApiResponse<AuditLogItem>>(url, {
+    unwrapJsonApi: false,
+  });
+
+  const deserialized = deserializeJsonApi<AuditLogItem>(rawResponse);
+  const data = Array.isArray(deserialized) ? deserialized : deserialized ? [deserialized] : [];
+  const meta = rawResponse?.meta ?? {};
+
+  const totalPages = Number(meta.lastPage ?? meta.totalPages ?? 1) || 1;
+  const total = Number(meta.total ?? data.length) || 0;
+  const page = Number(meta.currentPage ?? meta.page ?? filters?.page ?? 1) || 1;
+
+  return {
+    data,
+    totalPages,
+    total,
+    page,
+  };
 }
 
 export async function getAuditLogDetailRepository(uuid: string): Promise<AuditLogItem> {

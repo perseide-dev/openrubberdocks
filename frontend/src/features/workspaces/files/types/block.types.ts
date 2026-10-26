@@ -51,6 +51,33 @@ export interface MoveBlockVariables {
     payload: MoveBlockPayload;
 }
 
+export interface SyncBlockItemPayload extends Record<string, unknown> {
+    type: BlockType;
+    properties?: Record<string, unknown>;
+    orderIndex?: number;
+    parentBlockUuid?: string;
+}
+
+export interface SyncBlocksPayload extends Record<string, unknown> {
+    blocks: SyncBlockItemPayload[];
+}
+
+export interface SyncFileBlocksVariables {
+    fileUuid: string;
+    payload: SyncBlocksPayload;
+}
+
+export interface ParsedBlock {
+    type: BlockType;
+    content: string;
+    checked?: boolean;
+}
+
+export interface BlockProperties {
+    text?: unknown;
+    checked?: unknown;
+}
+
 export interface BlockFilters {
     fileUuid?: string;
     parentBlockUuid?: string;
@@ -129,4 +156,43 @@ export interface BlockEditorController {
     canRedo: boolean;
     setBlocksState: (blocks: FileEditorBlock[]) => void;
     reset: () => void;
+}
+
+export interface BlockContentProps {
+    block: FileEditorBlock;
+    number?: number;
+    inputRef: (element: HTMLTextAreaElement | null) => void;
+    onChange: (content: string) => void;
+    onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+    onPaste?: (event: React.ClipboardEvent<HTMLElement>) => void;
+    onToggleChecked: () => void;
+}
+
+export interface BlockEditorProps {
+    blockEditor: BlockEditorController;
+}
+
+export interface BlockTypeMenuProps {
+    open: boolean;
+    anchorEl: HTMLElement | null;
+    query: string;
+    onQueryChange: (query: string) => void;
+    onSelect: (type: BlockType) => void;
+    onClose: () => void;
+}
+
+export interface SortableBlockProps {
+    block: FileEditorBlock;
+    number?: number;
+    isSelected?: boolean;
+    onChange: (id: string, content: string) => void;
+    onKeyDown: (id: string, event: React.KeyboardEvent<HTMLElement>) => void;
+    onPaste?: (id: string, event: React.ClipboardEvent<HTMLElement>) => void;
+    onMouseDown?: (id: string, event: React.MouseEvent<HTMLElement>) => void;
+    onPointerMove?: (event: React.PointerEvent<HTMLElement>) => void;
+    onMouseEnter?: (id: string) => void;
+    onRemove: (id: string) => void;
+    onToggleChecked: (id: string) => void;
+    onInsert: (element: HTMLElement, blockId: string) => void;
+    registerInput: (id: string, element: HTMLTextAreaElement | null) => void;
 }

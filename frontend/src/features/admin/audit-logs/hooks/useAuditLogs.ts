@@ -1,26 +1,69 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   useAuditLogsService,
   useAuditWorkspacesLookupService,
 } from '@features/admin/audit-logs/services/audit-admin.service';
-import { DEFAULT_AUDIT_FILTERS } from '@features/admin/audit-logs/constants/audit.constants';
-import type { AuditLogFilters, AuditLogItem } from '@features/admin/audit-logs/types/audit.types';
+import {
+  DEFAULT_AUDIT_FILTERS,
+  AUDIT_ACTION_DEBOUNCE_MS,
+} from '@features/admin/audit-logs/constants/audit.constants';
+import type {
+  AuditLogFilters,
+  AuditLogItem,
+  UseAuditLogsOptions,
+} from '@features/admin/audit-logs/types/audit.types';
 
-export function useAuditLogs(initialFilters?: Partial<AuditLogFilters>) {
+export function useAuditLogs(
+  initialFilters?: Partial<AuditLogFilters>,
+  options?: UseAuditLogsOptions,
+) {
   const [filters, setFilters] = useState<AuditLogFilters>(() => ({
     ...DEFAULT_AUDIT_FILTERS,
     ...initialFilters,
   }));
 
+  const [debouncedAction, setDebouncedAction] = useState<string | undefined>(
+    filters.action,
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAction(filters.action);
+    }, AUDIT_ACTION_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [filters.action]);
+
+  const debouncedFilters = useMemo<AuditLogFilters>(
+    () => ({
+      ...filters,
+      action: debouncedAction,
+    }),
+    [filters, debouncedAction],
+  );
+
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const { data: rawLogs, isLoading, isError, refetch } = useAuditLogsService(filters);
-  const { data: rawWorkspaces } = useAuditWorkspacesLookupService();
+  const { data: rawResult, isLoading, isError, refetch } = useAuditLogsService(debouncedFilters);
+  const { data: rawWorkspaces } = useAuditWorkspacesLookupService(
+    options?.enableWorkspacesLookup ?? true,
+  );
 
   const logs = useMemo(() => {
-    return Array.isArray(rawLogs) ? rawLogs : [];
-  }, [rawLogs]);
+    if (!rawResult) return [];
+    if (Array.isArray(rawResult)) return rawResult;
+    return Array.isArray(rawResult.data) ? rawResult.data : [];
+  }, [rawResult]);
+
+  const totalPages = useMemo(() => {
+    if (!rawResult || Array.isArray(rawResult)) return 1;
+    return rawResult.totalPages || 1;
+  }, [rawResult]);
+
+  const total = useMemo(() => {
+    if (!rawResult || Array.isArray(rawResult)) return logs.length;
+    return rawResult.total ?? logs.length;
+  }, [rawResult, logs.length]);
 
   const workspaces = useMemo(() => {
     return Array.isArray(rawWorkspaces) ? rawWorkspaces : [];
@@ -42,6 +85,7 @@ export function useAuditLogs(initialFilters?: Partial<AuditLogFilters>) {
       ...DEFAULT_AUDIT_FILTERS,
       workspaceUuid: initialFilters?.workspaceUuid,
     });
+    setDebouncedAction(undefined);
   }, [initialFilters?.workspaceUuid]);
 
   const handleSelectLog = useCallback((log: AuditLogItem) => {
@@ -62,6 +106,8 @@ export function useAuditLogs(initialFilters?: Partial<AuditLogFilters>) {
 
   return {
     logs,
+    totalPages,
+    total,
     workspaces,
     isLoading,
     isError,

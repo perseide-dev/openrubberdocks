@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
     useTaskDetailService,
     useCreateTaskService,
@@ -8,9 +8,17 @@ import {
 import type {
     CreateTaskPayload,
     UpdateTaskPayload,
+    TaskStatus,
+    TaskType,
 } from '@features-workspaces/projects/types/project.types';
 
-export function useTaskModal(projectUuid: string, taskUuid: string | null) {
+export function useTaskModal(
+    projectUuid: string,
+    taskUuid: string | null,
+    open = true,
+    statuses: TaskStatus[] = [],
+    types: TaskType[] = [],
+) {
     const { data: task, isLoading } = useTaskDetailService(taskUuid);
     const createTaskMutation = useCreateTaskService();
     const updateTaskMutation = useUpdateTaskService();
@@ -28,12 +36,33 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
     const [customProperties, setCustomProperties] = useState<Record<string, unknown>>({});
     const [subtaskTitle, setSubtaskTitle] = useState('');
 
+    const prevOpenRef = useRef(open);
+
+    useEffect(() => {
+        const openedForCreate = open && !prevOpenRef.current && taskUuid === null;
+        prevOpenRef.current = open;
+
+        if (openedForCreate) {
+            setPrevTaskUuid(null);
+            setTitle('');
+            setDescription('');
+            setStatusUuid(statuses[0]?.uuid ?? '');
+            setTypeUuid(types[0]?.uuid ?? '');
+            setParentTaskUuid(null);
+            setStartDate('');
+            setDueDate('');
+            setEstimatedMinutes('');
+            setCustomProperties({});
+            setSubtaskTitle('');
+        }
+    }, [open, taskUuid, statuses, types]);
+
     if (task && task.uuid !== prevTaskUuid) {
         setPrevTaskUuid(task.uuid);
         setTitle(task.title);
         setDescription(task.description || '');
-        setStatusUuid(task.statusUuid);
-        setTypeUuid(task.typeUuid);
+        setStatusUuid(task.statusUuid || (statuses[0]?.uuid ?? ''));
+        setTypeUuid(task.typeUuid || (types[0]?.uuid ?? ''));
         setParentTaskUuid(task.parentTaskUuid);
         setStartDate(task.startDate ? task.startDate.split('T')[0] : '');
         setDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
@@ -43,24 +72,28 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
         setPrevTaskUuid(null);
         setTitle('');
         setDescription('');
-        setStatusUuid('');
-        setTypeUuid('');
+        setStatusUuid(statuses[0]?.uuid ?? '');
+        setTypeUuid(types[0]?.uuid ?? '');
         setParentTaskUuid(null);
         setStartDate('');
         setDueDate('');
         setEstimatedMinutes('');
         setCustomProperties({});
+        setSubtaskTitle('');
     }
 
     const handleSaveTask = useCallback(async () => {
         if (!title.trim()) return;
 
+        const resolvedStatusUuid = statusUuid || statuses[0]?.uuid || undefined;
+        const resolvedTypeUuid = typeUuid || types[0]?.uuid || undefined;
+
         if (taskUuid) {
             const payload: UpdateTaskPayload = {
                 title: title.trim(),
                 description: description.trim() || undefined,
-                statusUuid: statusUuid || undefined,
-                typeUuid: typeUuid || undefined,
+                statusUuid: resolvedStatusUuid,
+                typeUuid: resolvedTypeUuid,
                 parentTaskUuid,
                 startDate: startDate || null,
                 dueDate: dueDate || null,
@@ -76,8 +109,8 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
             const payload: CreateTaskPayload = {
                 title: title.trim(),
                 description: description.trim() || undefined,
-                statusUuid: statusUuid || undefined,
-                typeUuid: typeUuid || undefined,
+                statusUuid: resolvedStatusUuid,
+                typeUuid: resolvedTypeUuid,
                 parentTaskUuid: parentTaskUuid || undefined,
                 startDate: startDate || undefined,
                 dueDate: dueDate || undefined,
@@ -94,6 +127,8 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
         description,
         statusUuid,
         typeUuid,
+        statuses,
+        types,
         parentTaskUuid,
         startDate,
         dueDate,
@@ -112,12 +147,12 @@ export function useTaskModal(projectUuid: string, taskUuid: string | null) {
             payload: {
                 title: subtaskTitle.trim(),
                 parentTaskUuid: taskUuid,
-                statusUuid,
-                typeUuid,
+                statusUuid: statusUuid || statuses[0]?.uuid || undefined,
+                typeUuid: typeUuid || types[0]?.uuid || undefined,
             },
         });
         setSubtaskTitle('');
-    }, [subtaskTitle, taskUuid, projectUuid, statusUuid, typeUuid, createTaskMutation]);
+    }, [subtaskTitle, taskUuid, projectUuid, statusUuid, typeUuid, statuses, types, createTaskMutation]);
 
     const handleDeleteTask = useCallback(async () => {
         if (!taskUuid) return;

@@ -1,20 +1,20 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { useAuditLogs } from '@features/admin/audit-logs/hooks/useAuditLogs';
-import { AuditLogFilters } from '@features/admin/audit-logs/components/AuditLogFilters';
-import { AuditLogTable } from '@features/admin/audit-logs/components/AuditLogTable';
-import { AuditLogDetailDrawer } from '@features/admin/audit-logs/components/AuditLogDetailDrawer';
-
-export interface WorkspaceAuditTabContentProps {
-  workspaceUuid: string;
-}
+import {
+  useAuditLogs,
+  AuditLogFilters,
+  AuditLogTable,
+  AuditLogDetailDrawer,
+} from '@components/audit';
+import type { WorkspaceAuditTabContentProps } from '@features-workspaces/manager/types/workspace.types';
 
 export const WorkspaceAuditTabContent: React.FC<WorkspaceAuditTabContentProps> = ({
   workspaceUuid,
 }) => {
   const {
     logs,
+    totalPages,
     workspaces,
     isLoading,
     filters,
@@ -26,7 +26,7 @@ export const WorkspaceAuditTabContent: React.FC<WorkspaceAuditTabContentProps> =
     handleCloseDrawer,
     handlePageChange,
     refetch,
-  } = useAuditLogs({ workspaceUuid });
+  } = useAuditLogs({ workspaceUuid }, { enableWorkspacesLookup: false });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, paddingY: 2 }}>
@@ -64,7 +64,7 @@ export const WorkspaceAuditTabContent: React.FC<WorkspaceAuditTabContentProps> =
         isLoading={isLoading}
         onSelectLog={handleSelectLog}
         page={filters.page}
-        totalPages={1}
+        totalPages={totalPages}
         onPageChange={handlePageChange}
       />
 

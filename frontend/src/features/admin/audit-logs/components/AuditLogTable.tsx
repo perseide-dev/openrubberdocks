@@ -23,6 +23,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
   isLoading,
   onSelectLog,
   page,
+  totalPages,
   onPageChange,
 }) => {
   if (isLoading) {
@@ -138,7 +139,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingY: 1 }}>
         <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-          // PAGE: {page} | RETRIEVED: {logs.length} RECORDS
+          // PAGE: {page} / {totalPages} | RETRIEVED: {logs.length} RECORDS
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -157,7 +158,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
             variant="outlined"
             color="inherit"
             endIcon={<ChevronRightIcon />}
-            disabled={logs.length < 20}
+            disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
           >
             NEXT

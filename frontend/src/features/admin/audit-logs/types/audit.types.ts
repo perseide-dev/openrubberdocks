@@ -40,6 +40,17 @@ export interface AuditLogsResponse {
   };
 }
 
+export interface AuditLogPaginatedResult {
+  data: AuditLogItem[];
+  totalPages: number;
+  total: number;
+  page: number;
+}
+
+export interface UseAuditLogsOptions {
+  enableWorkspacesLookup?: boolean;
+}
+
 export interface WorkspaceLookupItem {
   id?: string | number;
   uuid: string;

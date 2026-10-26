@@ -1,19 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Box, Button, Tooltip } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
+import { WorkspaceHeader, ConfirmModal } from '@components/ui';
 import { FilesView } from '@features-workspaces/files/components/FilesView';
 import { MembersTabContent } from '@features-workspaces/members/components/MembersTabContent';
 import { ProjectsTabContent } from '@features-workspaces/projects/components/ProjectsTabContent';
 import { WorkspaceAuditTabContent } from '@features/workspaces/audit/components/WorkspaceAuditTabContent';
 import { useWorkspaceFiles } from '@features-workspaces/files/hooks/useWorkspaceFiles';
-import { useWorkspaceDetailService, useDeleteWorkspaceService } from '@features-workspaces/manager/services/workspace.service';
-import { useDeleteFileService } from '@features-workspaces/files/services/file.service';
-import { ConfirmModal } from '@components/ui/ConfirmModal';
+import { useWorkspaceDetail } from '@features-workspaces/manager/hooks/useWorkspaceDetail';
 import { files } from '@features-workspaces/files/routes/routes';
 import { usePermissions } from '@global-hooks/usePermissions';
 import { BASE_PERMISSIONS_ACTIONS } from '@utils-constants/permissions.constants';
-import type { WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
 export function WorkspaceDetailPage() {
     const { uuid } = useParams<{ uuid: string }>();
@@ -22,6 +19,9 @@ export function WorkspaceDetailPage() {
 
     const { canMutateInWorkspace, isExternal, canViewDocuments, canViewProjects, hasPermission } = usePermissions();
     const canMutate = canMutateInWorkspace(wsUuid);
+    const canWriteDocument = hasPermission(BASE_PERMISSIONS_ACTIONS.DOCUMENT_WRITE, wsUuid);
+    const canDeleteDocument = hasPermission(BASE_PERMISSIONS_ACTIONS.DOCUMENT_DELETE, wsUuid) || canWriteDocument;
+    const canDeleteWorkspace = hasPermission(BASE_PERMISSIONS_ACTIONS.WORKSPACE_DELETE, wsUuid) || canMutate;
 
     const showFiles = !isExternal || canViewDocuments;
     const showMembers = !isExternal;
@@ -34,51 +34,47 @@ export function WorkspaceDetailPage() {
         return 'files';
     });
 
-    useEffect(() => {
-        if (activeTab === 'files' && !showFiles) {
-            if (showProjects) setActiveTab('projects');
-            else if (showAudit) setActiveTab('audit');
-        } else if (activeTab === 'members' && !showMembers) {
-            if (showFiles) setActiveTab('files');
-            else if (showProjects) setActiveTab('projects');
-            else if (showAudit) setActiveTab('audit');
-        } else if (activeTab === 'projects' && !showProjects) {
-            if (showFiles) setActiveTab('files');
-            else if (showAudit) setActiveTab('audit');
-        } else if (activeTab === 'audit' && !showAudit) {
-            if (showFiles) setActiveTab('files');
-            else if (showProjects) setActiveTab('projects');
-        }
-    }, [activeTab, showFiles, showMembers, showProjects, showAudit]);
+    const resolvedActiveTab: 'files' | 'members' | 'projects' | 'audit' = (() => {
+        if (activeTab === 'files' && showFiles) return 'files';
+        if (activeTab === 'members' && showMembers) return 'members';
+        if (activeTab === 'projects' && showProjects) return 'projects';
+        if (activeTab === 'audit' && showAudit) return 'audit';
+        if (showFiles) return 'files';
+        if (showProjects) return 'projects';
+        if (showMembers) return 'members';
+        if (showAudit) return 'audit';
+        return 'files';
+    })();
 
-    const { data: workspace } = useWorkspaceDetailService(wsUuid);
+    const {
+        workspace,
+        isDeleteWorkspaceOpen,
+        setIsDeleteWorkspaceOpen,
+        fileToDelete,
+        setFileToDelete,
+        deleteWorkspace,
+        isDeletingWorkspace,
+        deleteFile,
+        isDeletingFile,
+    } = useWorkspaceDetail(wsUuid);
+
     const { files: workspaceFiles, viewMode, setViewMode } = useWorkspaceFiles(wsUuid);
 
-    const [isDeleteWorkspaceOpen, setIsDeleteWorkspaceOpen] = useState(false);
-    const [fileToDelete, setFileToDelete] = useState<WorkspaceFile | null>(null);
-
-    const deleteWorkspaceMutation = useDeleteWorkspaceService();
-    const deleteFileMutation = useDeleteFileService();
-
     const handleCreateFile = () => {
-        if (wsUuid && canMutate) {
+        if (wsUuid && canWriteDocument) {
             navigate(files.create.build(wsUuid));
         }
     };
 
     const handleConfirmDeleteWorkspace = async () => {
         if (wsUuid) {
-            await deleteWorkspaceMutation.mutateAsync(wsUuid);
-            setIsDeleteWorkspaceOpen(false);
+            await deleteWorkspace();
             navigate('/workspaces');
         }
     };
 
     const handleConfirmDeleteFile = async () => {
-        if (fileToDelete) {
-            await deleteFileMutation.mutateAsync(fileToDelete.uuid);
-            setFileToDelete(null);
-        }
+        await deleteFile();
     };
 
     return (
@@ -87,18 +83,22 @@ export function WorkspaceDetailPage() {
                 title={workspace?.name || 'Workspace'}
                 subtitle={workspace?.description ? `// ${workspace.description}` : '// WORKSPACE OVERVIEW'}
                 action={
-                    canMutate ? (
+                    canWriteDocument || canDeleteWorkspace ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button color="inherit" onClick={handleCreateFile}>
-                                Create File
-                            </Button>
-                            <Button
-                                color="error"
-                                variant="outlined"
-                                onClick={() => setIsDeleteWorkspaceOpen(true)}
-                            >
-                                Delete Space
-                            </Button>
+                            {canWriteDocument && (
+                                <Button color="inherit" onClick={handleCreateFile}>
+                                    Create File
+                                </Button>
+                            )}
+                            {canDeleteWorkspace && (
+                                <Button
+                                    color="error"
+                                    variant="outlined"
+                                    onClick={() => setIsDeleteWorkspaceOpen(true)}
+                                >
+                                    Delete Space
+                                </Button>
+                            )}
                         </Box>
                     ) : (
                         <Tooltip title="// ACCESS: READ ONLY - MUTATION LOCKED">
@@ -124,7 +124,7 @@ export function WorkspaceDetailPage() {
             >
                 {showFiles && (
                     <Button
-                        variant={activeTab === 'files' ? 'contained' : 'outlined'}
+                        variant={resolvedActiveTab === 'files' ? 'contained' : 'outlined'}
                         color="inherit"
                         onClick={() => setActiveTab('files')}
                         sx={{
@@ -139,7 +139,7 @@ export function WorkspaceDetailPage() {
                 )}
                 {showMembers && (
                     <Button
-                        variant={activeTab === 'members' ? 'contained' : 'outlined'}
+                        variant={resolvedActiveTab === 'members' ? 'contained' : 'outlined'}
                         color="inherit"
                         onClick={() => setActiveTab('members')}
                         sx={{
@@ -154,7 +154,7 @@ export function WorkspaceDetailPage() {
                 )}
                 {showProjects && (
                     <Button
-                        variant={activeTab === 'projects' ? 'contained' : 'outlined'}
+                        variant={resolvedActiveTab === 'projects' ? 'contained' : 'outlined'}
                         color="inherit"
                         onClick={() => setActiveTab('projects')}
                         sx={{
@@ -169,7 +169,7 @@ export function WorkspaceDetailPage() {
                 )}
                 {showAudit && (
                     <Button
-                        variant={activeTab === 'audit' ? 'contained' : 'outlined'}
+                        variant={resolvedActiveTab === 'audit' ? 'contained' : 'outlined'}
                         color="inherit"
                         onClick={() => setActiveTab('audit')}
                         sx={{
@@ -184,30 +184,30 @@ export function WorkspaceDetailPage() {
                 )}
             </Box>
 
-            {showFiles && activeTab === 'files' && (
+            {showFiles && resolvedActiveTab === 'files' && (
                 <FilesView
                     files={workspaceFiles}
                     viewMode={viewMode}
                     onViewModeChange={setViewMode}
-                    onDeleteFile={canMutate ? setFileToDelete : undefined}
+                    onDeleteFile={canDeleteDocument ? setFileToDelete : undefined}
                 />
             )}
 
-            {showMembers && activeTab === 'members' && (
+            {showMembers && resolvedActiveTab === 'members' && (
                 <MembersTabContent
                     workspaceUuid={wsUuid}
                     canManage={canMutate}
                 />
             )}
 
-            {showProjects && activeTab === 'projects' && (
+            {showProjects && resolvedActiveTab === 'projects' && (
                 <ProjectsTabContent
                     workspaceUuid={wsUuid}
                     canManage={canMutate}
                 />
             )}
 
-            {showAudit && activeTab === 'audit' && (
+            {showAudit && resolvedActiveTab === 'audit' && (
                 <WorkspaceAuditTabContent workspaceUuid={wsUuid} />
             )}
 
@@ -216,7 +216,7 @@ export function WorkspaceDetailPage() {
                 open={isDeleteWorkspaceOpen}
                 title={`DELETE WORKSPACE: ${workspace?.name || ''}`}
                 description={`Are you sure you want to delete workspace "${workspace?.name}"? All nested files, blocks, and permissions will be permanently destroyed. This action is irreversible.`}
-                isLoading={deleteWorkspaceMutation.isPending}
+                isLoading={isDeletingWorkspace}
                 onConfirm={handleConfirmDeleteWorkspace}
                 onClose={() => setIsDeleteWorkspaceOpen(false)}
             />
@@ -226,7 +226,7 @@ export function WorkspaceDetailPage() {
                 open={Boolean(fileToDelete)}
                 title={`DELETE DOCUMENT: ${fileToDelete?.title || 'Untitled'}`}
                 description={`Are you sure you want to delete "${fileToDelete?.title || 'Untitled'}"? All contained content blocks and revision snapshots will be permanently deleted.`}
-                isLoading={deleteFileMutation.isPending}
+                isLoading={isDeletingFile}
                 onConfirm={handleConfirmDeleteFile}
                 onClose={() => setFileToDelete(null)}
             />

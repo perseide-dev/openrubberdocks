@@ -9,6 +9,7 @@ import { AuditLogDetailDrawer } from '@features/admin/audit-logs/components/Audi
 export const AuditLogsAdminPage: React.FC = () => {
   const {
     logs,
+    totalPages,
     workspaces,
     isLoading,
     filters,
@@ -58,7 +59,7 @@ export const AuditLogsAdminPage: React.FC = () => {
         isLoading={isLoading}
         onSelectLog={handleSelectLog}
         page={filters.page}
-        totalPages={1}
+        totalPages={totalPages}
         onPageChange={handlePageChange}
       />
 

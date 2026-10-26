@@ -1,20 +1,12 @@
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
-import { WorkspaceHeader } from '@features-workspaces/components/WorkspaceHeader';
-import { BrutalistBreadcrumbs } from '@components/ui';
-import { useWorkspaceFilesService, useFileDetailService } from '@features-workspaces/files/services/file.service';
-import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
+import { WorkspaceHeader, BrutalistBreadcrumbs } from '@components/ui';
 import { getPageAncestors } from '@utils-functions/tree.utils';
 import { FileEditor, DocumentTabsBar } from '@features-workspaces/files/components';
-import { useFileEdit } from '@features-workspaces/files/hooks/useFileEdit';
+import { useFileEdit, useFileEditPageData } from '@features-workspaces/files/hooks/useFileEdit';
 import { useDocumentTabs } from '@features-workspaces/files/hooks/useDocumentTabs';
-
-interface FileEditContentProps {
-    wsUuid: string;
-    fUuid: string;
-    workspaceName?: string;
-}
+import type { FileEditContentProps } from '@features-workspaces/files/types/file.types';
 
 function FileEditContent({ wsUuid, fUuid, workspaceName }: FileEditContentProps) {
     const navigate = useNavigate();
@@ -104,7 +96,7 @@ export function FileEditPage() {
     const wsUuid = workspaceUuid ?? '';
     const fUuid = fileUuid ?? '';
 
-    const { data: file } = useFileDetailService(fUuid);
+    const { file, allFiles, workspace } = useFileEditPageData(wsUuid, fUuid);
     const { tabs, activeTabUuid, handleSelectTab, handleCloseTab, handleNewTab } =
         useDocumentTabs(
             wsUuid,
@@ -112,9 +104,6 @@ export function FileEditPage() {
                 ? { uuid: fUuid, title: file.title, icon: file.icon, mode: 'edit' }
                 : { uuid: fUuid, title: '', icon: null, mode: 'edit' }
         );
-
-    const { data: allFiles = [] } = useWorkspaceFilesService(wsUuid);
-    const { data: workspace } = useWorkspaceDetailService(wsUuid);
 
     const breadcrumbItems = useMemo(() => {
         if (!fUuid || allFiles.length === 0) return [];

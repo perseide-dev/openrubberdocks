@@ -1,16 +1,15 @@
 import { useState, useCallback, useEffect, useRef, useMemo, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { useFileDetailService, useUpdateFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
 import {
     useFileBlocksService,
-    useCreateBlockService,
-    useDeleteBlockService,
-    fetchFileBlocks,
+    useSyncFileBlocksService,
+    useFetchFileBlocksService,
 } from '@features-workspaces/files/services/block.service';
 import { useCreateFileRevisionService } from '@features-workspaces/files/services/revision.service';
 import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
-import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
+import { FILE_MESSAGES, AUTOSAVE_DELAY_MS } from '@features-workspaces/files/constants/file.constants';
 import { files } from '@features-workspaces/files/routes/routes';
 import {
     loadDraft,
@@ -35,15 +34,26 @@ function mapBlockToEditor(block: WorkspaceBlock) {
     };
 }
 
+export function useFileEditPageData(workspaceUuid: string, fileUuid: string) {
+    const { data: file } = useFileDetailService(fileUuid);
+    const { data: allFiles = [] } = useWorkspaceFilesService(workspaceUuid);
+    const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
+
+    return {
+        file,
+        allFiles,
+        workspace,
+    };
+}
+
 export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
+    const fetchBlocksByFile = useFetchFileBlocksService();
     const { data: file, isLoading: isFileLoading } = useFileDetailService(fileUuid);
     const { data: serverBlocks, isLoading: isBlocksLoading } = useFileBlocksService(fileUuid);
     const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
     const updateFileMutation = useUpdateFileService();
-    const createBlockMutation = useCreateBlockService();
-    const deleteBlockMutation = useDeleteBlockService();
+    const syncBlocksMutation = useSyncFileBlocksService();
     const createRevisionMutation = useCreateFileRevisionService();
     const blockEditor = useBlockEditor();
 
@@ -67,6 +77,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
     const isHydratedRef = useRef(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const isPersistingRef = useRef(false);
+    const activePersistPromiseRef = useRef<Promise<boolean> | null>(null);
 
     const toggleAutosave = useCallback((enabled: boolean) => {
         setAutosaveEnabled(enabled);
@@ -171,7 +182,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             setIcon(fileTmpl.icon || null);
             setCoverImage(fileTmpl.coverImage || null);
             try {
-                const blocks = await fetchFileBlocks(queryClient, fileTmpl.uuid);
+                const blocks = await fetchBlocksByFile(fileTmpl.uuid);
                 blockEditor.reset();
                 const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
                 sorted.forEach((b) => {
@@ -188,7 +199,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                 // Keep empty blocks if template blocks couldn't be loaded
             }
         }
-    }, [blockEditor, queryClient]);
+    }, [blockEditor, fetchBlocksByFile]);
 
     const persistFile = useCallback(async () => {
         if (isPersistingRef.current) return false;
@@ -200,68 +211,78 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
         setErrorMessage(null);
 
         isPersistingRef.current = true;
-        try {
-            if (file) {
-                await updateFileMutation.mutateAsync({
-                    uuid: file.uuid,
+        const promise = (async () => {
+            try {
+                if (file) {
+                    await updateFileMutation.mutateAsync({
+                        uuid: file.uuid,
+                        payload: {
+                            title: trimmedTitle,
+                            icon,
+                            coverImage,
+                            isTemplate,
+                        },
+                    });
+                }
+
+                const editorBlocks = blockEditor.blocks;
+                await syncBlocksMutation.mutateAsync({
+                    fileUuid,
                     payload: {
-                        title: trimmedTitle,
-                        icon,
-                        coverImage,
-                        isTemplate,
+                        blocks: editorBlocks.map((b, i) => ({
+                            type: b.type,
+                            properties:
+                                b.type === 'todo'
+                                    ? { text: b.content, checked: Boolean(b.checked) }
+                                    : { text: b.content },
+                            orderIndex: i,
+                        })),
                     },
                 });
-            }
 
-            const currentBlocks = serverBlocks || [];
-            for (let i = 0; i < currentBlocks.length; i++) {
-                await deleteBlockMutation.mutateAsync(currentBlocks[i].uuid);
-            }
+                try {
+                    await createRevisionMutation.mutateAsync(fileUuid);
+                } catch {
+                    // Non-fatal if revision creation fails
+                }
 
-            const editorBlocks = blockEditor.blocks;
-            for (let i = 0; i < editorBlocks.length; i++) {
-                const b = editorBlocks[i];
-                await createBlockMutation.mutateAsync({
-                    fileUuid,
-                    type: b.type,
-                    properties: b.type === 'todo' ? { text: b.content, checked: Boolean(b.checked) } : { text: b.content },
-                    orderIndex: i,
-                });
+                clearDraft(workspaceUuid, fileUuid);
+                setIsUserDirty(false);
+                setAutosaveStatus('saved');
+                return true;
+            } finally {
+                isPersistingRef.current = false;
+                activePersistPromiseRef.current = null;
             }
+        })();
 
-            try {
-                await createRevisionMutation.mutateAsync(fileUuid);
-            } catch {
-                // Non-fatal if revision creation fails
-            }
-
-            clearDraft(workspaceUuid, fileUuid);
-            setIsUserDirty(false);
-            setAutosaveStatus('saved');
-            return true;
-        } finally {
-            isPersistingRef.current = false;
-        }
+        activePersistPromiseRef.current = promise;
+        return promise;
     }, [
         title,
         icon,
         coverImage,
         isTemplate,
         file,
-        serverBlocks,
         blockEditor.blocks,
         updateFileMutation,
-        deleteBlockMutation,
-        createBlockMutation,
+        syncBlocksMutation,
         createRevisionMutation,
         workspaceUuid,
         fileUuid,
     ]);
 
-    // Manual Save: persists and navigates to view
+    // Manual Save: waits for any active autosave to finish, then persists and navigates to view
     const handleSave = useCallback(async () => {
         setIsManualSaving(true);
         try {
+            if (activePersistPromiseRef.current) {
+                try {
+                    await activePersistPromiseRef.current;
+                } catch {
+                    // Ignore in-flight autosave failure and retry immediately
+                }
+            }
             const success = await persistFile();
             if (success) {
                 navigate(files.view.build(workspaceUuid, fileUuid));
@@ -289,7 +310,7 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
             } catch {
                 setAutosaveStatus('unsaved');
             }
-        }, 2500);
+        }, AUTOSAVE_DELAY_MS);
 
         return () => clearTimeout(timer);
     }, [autosaveEnabled, autosaveStatus, persistFile, file]);

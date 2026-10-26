@@ -8,9 +8,9 @@ import type {
     CreateBlockPayload,
     UpdateBlockPayload,
     MoveBlockPayload,
+    SyncBlocksPayload,
+    BlockFilters,
 } from '@features/workspaces/files/types/block.types';
-
-import type { BlockFilters } from '@features/workspaces/files/types/block.types';
 
 /**
  * Fetches the raw blocks list from the backend (GET /blocks).
@@ -74,4 +74,18 @@ export async function moveBlockRepository(
  */
 export async function deleteBlockRepository(uuid: string): Promise<void> {
     return baseAPIrequest.delete<void>(BLOCK_ENDPOINTS.BY_UUID(uuid));
+}
+
+/**
+ * Atomically replaces all blocks of a file in a single transaction (PUT /blocks/file/:fileUuid).
+ */
+export async function syncFileBlocksRepository(
+    fileUuid: string,
+    payload: SyncBlocksPayload
+): Promise<WorkspaceBlock[]> {
+    return baseAPIrequest.put<WorkspaceBlock[], SyncBlocksPayload>(
+        BLOCK_ENDPOINTS.SYNC_FILE(fileUuid),
+        payload,
+        { resourceType: BLOCK_RESOURCE_TYPE }
+    );
 }

@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { useCreateFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
-import { useCreateBlockService, fetchFileBlocks } from '@features-workspaces/files/services/block.service';
+import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
+import { useSyncFileBlocksService, useFetchFileBlocksService } from '@features-workspaces/files/services/block.service';
 import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
 import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
 import {
@@ -13,18 +13,28 @@ import {
 import type { AppError } from '@http-error/http-error.handler';
 import type { BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/types/file.types';
 
+export function useFileCreationPageData(workspaceUuid: string) {
+    const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
+    const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
+
+    return {
+        workspace,
+        workspaceFiles,
+    };
+}
+
 /**
  * Orchestrates the file creation flow: title, media (icon/cover), templates,
- * block canvas and persistence of the file followed by each of its blocks.
+ * block canvas and persistence of the file followed by atomic batch block syncing.
  */
 export function useFileCreation(workspaceUuid: string, draftId: string = 'new') {
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
+    const fetchBlocksByFile = useFetchFileBlocksService();
     const [searchParams] = useSearchParams();
     const parentPageUuid = searchParams.get('parent') || undefined;
 
     const createFileMutation = useCreateFileService();
-    const createBlockMutation = useCreateBlockService();
+    const syncBlocksMutation = useSyncFileBlocksService();
     const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
 
     const parentFile = useMemo(() => {
@@ -119,7 +129,7 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
             setIcon(fileTmpl.icon || null);
             setCoverImage(fileTmpl.coverImage || null);
             try {
-                const blocks = await fetchFileBlocks(queryClient, fileTmpl.uuid);
+                const blocks = await fetchBlocksByFile(fileTmpl.uuid);
                 blockEditor.reset();
                 const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
                 sorted.forEach((b) => {
@@ -136,7 +146,7 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
                 // Keep empty blocks if template blocks couldn't be loaded
             }
         }
-    }, [blockEditor, queryClient]);
+    }, [blockEditor, fetchBlocksByFile]);
 
     const handleSave = useCallback(async () => {
         const trimmedTitle = title.trim();
@@ -159,16 +169,19 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
             });
 
             const blocks = blockEditor.blocks;
-            for (let index = 0; index < blocks.length; index += 1) {
-                const block = blocks[index];
-                await createBlockMutation.mutateAsync({
+            if (blocks.length > 0) {
+                await syncBlocksMutation.mutateAsync({
                     fileUuid: file.uuid,
-                    type: block.type,
-                    properties:
-                        block.type === 'todo'
-                            ? { text: block.content, checked: Boolean(block.checked) }
-                            : { text: block.content },
-                    orderIndex: index,
+                    payload: {
+                        blocks: blocks.map((block, index) => ({
+                            type: block.type,
+                            properties:
+                                block.type === 'todo'
+                                    ? { text: block.content, checked: Boolean(block.checked) }
+                                    : { text: block.content },
+                            orderIndex: index,
+                        })),
+                    },
                 });
             }
 
@@ -185,7 +198,7 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
 
             setErrorMessage(errorDetail);
         }
-    }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, draftId, createFileMutation, createBlockMutation, blockEditor, navigate]);
+    }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, draftId, createFileMutation, syncBlocksMutation, blockEditor, navigate]);
 
     // Ctrl+S / Cmd+S shortcut
     useEffect(() => {
@@ -206,7 +219,7 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
         coverImage,
         isTemplate,
         errorMessage,
-        isSaving: createFileMutation.isPending || createBlockMutation.isPending,
+        isSaving: createFileMutation.isPending || syncBlocksMutation.isPending,
         blockEditor,
         parentFile,
         parentPageUuid,

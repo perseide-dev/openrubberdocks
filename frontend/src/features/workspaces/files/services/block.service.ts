@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
     getBlocksRepository,
     getBlockByUuidRepository,
@@ -6,6 +7,7 @@ import {
     updateBlockRepository,
     moveBlockRepository,
     deleteBlockRepository,
+    syncFileBlocksRepository,
 } from '@features/workspaces/files/repositories/block.repository';
 import {
     BLOCK_QUERY_KEYS,
@@ -17,6 +19,7 @@ import type {
     CreateBlockPayload,
     UpdateBlockVariables,
     MoveBlockVariables,
+    SyncFileBlocksVariables,
     BlockFilters,
 } from '@features/workspaces/files/types/block.types';
 import type { AppError } from '@http-error/http-error.handler';
@@ -38,12 +41,20 @@ export function useFileBlocksService(fileUuid: string) {
     });
 }
 
-export function fetchFileBlocks(queryClient: import('@tanstack/react-query').QueryClient, fileUuid: string): Promise<WorkspaceBlock[]> {
+export function fetchFileBlocks(queryClient: QueryClient, fileUuid: string): Promise<WorkspaceBlock[]> {
     return queryClient.fetchQuery({
         queryKey: [...BLOCK_QUERY_KEYS.ALL, { fileUuid }],
         queryFn: () => getBlocksRepository({ fileUuid }),
         staleTime: BLOCK_DEFAULTS.STALE_TIME,
     });
+}
+
+export function useFetchFileBlocksService() {
+    const queryClient = useQueryClient();
+    return useCallback(
+        (fileUuid: string): Promise<WorkspaceBlock[]> => fetchFileBlocks(queryClient, fileUuid),
+        [queryClient]
+    );
 }
 
 export function useBlockDetailService(uuid: string) {
@@ -106,6 +117,18 @@ export function useDeleteBlockService() {
         onSuccess: (_data, uuid) => {
             queryClient.invalidateQueries({ queryKey: BLOCK_QUERY_KEYS.ALL });
             queryClient.removeQueries({ queryKey: BLOCK_QUERY_KEYS.DETAIL(uuid) });
+        },
+    });
+}
+
+export function useSyncFileBlocksService() {
+    const queryClient = useQueryClient();
+
+    return useMutation<WorkspaceBlock[], AppError, SyncFileBlocksVariables>({
+        mutationKey: BLOCK_MUTATION_KEYS.SYNC_FILE,
+        mutationFn: ({ fileUuid, payload }) => syncFileBlocksRepository(fileUuid, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: BLOCK_QUERY_KEYS.ALL });
         },
     });
 }

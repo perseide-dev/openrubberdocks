@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useUpdateAdminUserService } from '@features/admin/users/services/user-admin.service';
 import type {
   AdminUserItem,
@@ -18,12 +18,15 @@ export function useEditUserModal(
   const [canViewDocuments, setCanViewDocuments] = useState(true);
   const [canViewProjects, setCanViewProjects] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [syncedKey, setSyncedKey] = useState<string | null>(null);
 
   const updateMutation = useUpdateAdminUserService();
 
   const isCoreAdmin = user?.type === 'coreAdmin';
 
-  useEffect(() => {
+  const currentKey = open && user ? user.uuid : null;
+  if (currentKey !== syncedKey) {
+    setSyncedKey(currentKey);
     if (open && user) {
       setUsername(user.username || '');
       setRubberHandle(user.rubberHandle || '');
@@ -35,7 +38,7 @@ export function useEditUserModal(
       setCanViewProjects(user.canViewProjects !== false);
       setErrorMessage(null);
     }
-  }, [open, user]);
+  }
 
   const reset = useCallback(() => {
     setUsername('');

@@ -1,6 +1,10 @@
 import { baseAPIrequest } from '@http-base/baseAPIrequest';
 import { AUDIT_ENDPOINTS } from '@features/admin/audit-logs/constants/audit.constants';
-import type { AuditLogItem, AuditLogFilters } from '@features/admin/audit-logs/types/audit.types';
+import type {
+  AuditLogItem,
+  AuditLogFilters,
+  WorkspaceLookupItem,
+} from '@features/admin/audit-logs/types/audit.types';
 
 export async function getAuditLogsRepository(
   filters?: Partial<AuditLogFilters>,
@@ -27,4 +31,8 @@ export async function getAuditLogsRepository(
 
 export async function getAuditLogDetailRepository(uuid: string): Promise<AuditLogItem> {
   return baseAPIrequest.get<AuditLogItem>(AUDIT_ENDPOINTS.DETAIL(uuid));
+}
+
+export async function getAuditWorkspacesLookupRepository(): Promise<WorkspaceLookupItem[]> {
+  return baseAPIrequest.get<WorkspaceLookupItem[]>(AUDIT_ENDPOINTS.WORKSPACES);
 }

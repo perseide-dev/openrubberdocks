@@ -9,6 +9,7 @@ import { AuditLogDetailDrawer } from '@features/admin/audit-logs/components/Audi
 export const AuditLogsAdminPage: React.FC = () => {
   const {
     logs,
+    workspaces,
     isLoading,
     filters,
     selectedLog,
@@ -47,6 +48,7 @@ export const AuditLogsAdminPage: React.FC = () => {
 
       <AuditLogFilters
         filters={filters}
+        workspaces={workspaces}
         onFilterChange={handleFilterChange}
         onResetFilters={handleResetFilters}
       />
@@ -64,6 +66,7 @@ export const AuditLogsAdminPage: React.FC = () => {
         log={selectedLog}
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
+        workspaces={workspaces}
       />
     </Box>
   );

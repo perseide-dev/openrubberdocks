@@ -17,6 +17,7 @@ import type { AuditLogFiltersProps } from '@features/admin/audit-logs/types/audi
 
 export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
   filters,
+  workspaces = [],
   onFilterChange,
   onResetFilters,
   hideWorkspaceFilter = false,
@@ -80,14 +81,29 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
       </FormControl>
 
       {!hideWorkspaceFilter && (
-        <TextField
-          size="small"
-          label="// WORKSPACE_UUID"
-          value={filters.workspaceUuid || ''}
-          onChange={(e) => onFilterChange('workspaceUuid', e.target.value || undefined)}
-          placeholder="Filter by Workspace UUID"
-          sx={{ minWidth: 220, flex: 1 }}
-        />
+        <FormControl size="small" sx={{ minWidth: 220, flex: 1 }}>
+          <InputLabel id="audit-workspace-label">// WORKSPACE</InputLabel>
+          <Select
+            labelId="audit-workspace-label"
+            value={filters.workspaceUuid || ''}
+            label="// WORKSPACE"
+            onChange={(e) =>
+              onFilterChange(
+                'workspaceUuid',
+                e.target.value ? (e.target.value as string) : undefined,
+              )
+            }
+          >
+            <MenuItem value="">
+              <em>// ALL_WORKSPACES</em>
+            </MenuItem>
+            {workspaces.map((ws) => (
+              <MenuItem key={ws.uuid} value={ws.uuid}>
+                {ws.name.toUpperCase()}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       )}
 
       <TextField

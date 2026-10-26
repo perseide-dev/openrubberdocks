@@ -14,10 +14,15 @@ export const AuditLogDetailDrawer: React.FC<AuditLogDetailDrawerProps> = ({
   log,
   open,
   onClose,
+  workspaces = [],
 }) => {
   if (!log) return null;
 
   const isSuccess = log.status === 'SUCCESS';
+  const matchedWorkspace = workspaces.find((w) => w.uuid === log.workspaceUuid);
+  const workspaceDisplay = matchedWorkspace
+    ? `${matchedWorkspace.name.toUpperCase()} (${log.workspaceUuid})`
+    : log.workspaceUuid || '// GLOBAL_SCOPE';
 
   return (
     <Drawer
@@ -131,10 +136,10 @@ export const AuditLogDetailDrawer: React.FC<AuditLogDetailDrawerProps> = ({
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, gridColumn: 'span 2' }}>
           <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
-            // WORKSPACE_UUID
+            // WORKSPACE
           </Typography>
           <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-            {log.workspaceUuid || '// GLOBAL_SCOPE'}
+            {workspaceDisplay}
           </Typography>
         </Box>
 

@@ -15,6 +15,7 @@ export const WorkspaceAuditTabContent: React.FC<WorkspaceAuditTabContentProps> =
 }) => {
   const {
     logs,
+    workspaces,
     isLoading,
     filters,
     selectedLog,
@@ -71,6 +72,7 @@ export const WorkspaceAuditTabContent: React.FC<WorkspaceAuditTabContentProps> =
         log={selectedLog}
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
+        workspaces={workspaces}
       />
     </Box>
   );

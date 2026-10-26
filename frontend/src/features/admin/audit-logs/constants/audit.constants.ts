@@ -3,6 +3,7 @@ import type { AuditLogFilters } from '@features/admin/audit-logs/types/audit.typ
 export const AUDIT_ENDPOINTS = {
   LIST: '/audit-logs',
   DETAIL: (uuid: string) => `/audit-logs/${uuid}`,
+  WORKSPACES: '/workspaces',
 } as const;
 
 export const AUDIT_RESOURCE_TYPE = 'audit_logs';
@@ -11,6 +12,7 @@ export const AUDIT_QUERY_KEYS = {
   ALL: ['audit-logs'] as const,
   LIST: (filters: Record<string, unknown>) => ['audit-logs', 'list', filters] as const,
   DETAIL: (uuid: string) => ['audit-logs', 'detail', uuid] as const,
+  WORKSPACES_LOOKUP: ['audit-logs', 'workspaces-lookup'] as const,
 } as const;
 
 export const DEFAULT_AUDIT_FILTERS: AuditLogFilters = {

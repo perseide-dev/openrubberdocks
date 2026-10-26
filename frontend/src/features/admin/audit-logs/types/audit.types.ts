@@ -40,6 +40,12 @@ export interface AuditLogsResponse {
   };
 }
 
+export interface WorkspaceLookupItem {
+  id?: string | number;
+  uuid: string;
+  name: string;
+}
+
 export interface AuditLogTableProps {
   logs: AuditLogItem[];
   isLoading: boolean;
@@ -51,6 +57,7 @@ export interface AuditLogTableProps {
 
 export interface AuditLogFiltersProps {
   filters: AuditLogFilters;
+  workspaces?: WorkspaceLookupItem[];
   onFilterChange: <K extends keyof AuditLogFilters>(key: K, value: AuditLogFilters[K]) => void;
   onResetFilters: () => void;
   hideWorkspaceFilter?: boolean;
@@ -60,4 +67,5 @@ export interface AuditLogDetailDrawerProps {
   log: AuditLogItem | null;
   open: boolean;
   onClose: () => void;
+  workspaces?: WorkspaceLookupItem[];
 }

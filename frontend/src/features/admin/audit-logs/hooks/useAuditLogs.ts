@@ -1,5 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
-import { useAuditLogsService } from '@features/admin/audit-logs/services/audit-admin.service';
+import {
+  useAuditLogsService,
+  useAuditWorkspacesLookupService,
+} from '@features/admin/audit-logs/services/audit-admin.service';
 import { DEFAULT_AUDIT_FILTERS } from '@features/admin/audit-logs/constants/audit.constants';
 import type { AuditLogFilters, AuditLogItem } from '@features/admin/audit-logs/types/audit.types';
 
@@ -13,10 +16,15 @@ export function useAuditLogs(initialFilters?: Partial<AuditLogFilters>) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { data: rawLogs, isLoading, isError, refetch } = useAuditLogsService(filters);
+  const { data: rawWorkspaces } = useAuditWorkspacesLookupService();
 
   const logs = useMemo(() => {
     return Array.isArray(rawLogs) ? rawLogs : [];
   }, [rawLogs]);
+
+  const workspaces = useMemo(() => {
+    return Array.isArray(rawWorkspaces) ? rawWorkspaces : [];
+  }, [rawWorkspaces]);
 
   const handleFilterChange = useCallback(
     <K extends keyof AuditLogFilters>(key: K, value: AuditLogFilters[K]) => {
@@ -54,6 +62,7 @@ export function useAuditLogs(initialFilters?: Partial<AuditLogFilters>) {
 
   return {
     logs,
+    workspaces,
     isLoading,
     isError,
     filters,

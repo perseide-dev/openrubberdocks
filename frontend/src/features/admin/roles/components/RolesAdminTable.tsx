@@ -132,13 +132,13 @@ export const RolesAdminTable: React.FC<RolesAdminTableProps> = ({
                     <Chip
                       label={`${permissions.length} PERMS`}
                       size="small"
+                      color="primary"
                       sx={{
                         borderRadius: 0,
                         fontFamily: 'monospace',
                         fontWeight: 700,
                         fontSize: '0.65rem',
                         height: 20,
-                        backgroundColor: 'action.selected',
                       }}
                     />
                     {permissions.map((p) => (

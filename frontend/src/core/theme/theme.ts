@@ -699,6 +699,27 @@ export const brutalistTheme: Theme = createTheme({
           letterSpacing: '0.05em',
           height: 26,
           boxShadow: 'none !important',
+          '&.MuiChip-filled': {
+            '&.MuiChip-colorDefault': {
+              backgroundColor: activeColors.background.subtle ?? '#F5F5F3',
+              color: activeColors.text.primary,
+              border: `1.5px solid ${activeColors.border.main}`,
+            },
+            '&.MuiChip-colorPrimary': {
+              backgroundColor: activeColors.primary.main,
+              color: activeColors.primary.contrastText,
+              border: `1.5px solid ${activeColors.border.main}`,
+            },
+          },
+          '&.MuiChip-outlined': {
+            backgroundColor: activeColors.background.paper,
+            color: activeColors.text.primary,
+            border: `1.5px solid ${activeColors.border.main}`,
+            '&.MuiChip-colorDefault': {
+              color: activeColors.text.primary,
+              borderColor: activeColors.border.main,
+            },
+          },
         },
         filled: {
           backgroundColor: activeColors.primary.main,
@@ -707,6 +728,7 @@ export const brutalistTheme: Theme = createTheme({
         outlined: {
           backgroundColor: activeColors.background.paper,
           color: activeColors.text.primary,
+          borderColor: activeColors.border.main,
         },
         deleteIcon: {
           color: 'inherit',

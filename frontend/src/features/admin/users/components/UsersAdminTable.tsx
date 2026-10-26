@@ -157,6 +157,7 @@ export const UsersAdminTable: React.FC<UsersAdminTableProps> = ({ users, onEditU
                               : `${scope.role.name} [GLOBAL]`
                           }
                           size="small"
+                          variant="outlined"
                           sx={{
                             borderRadius: 0,
                             fontFamily: 'monospace',

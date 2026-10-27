@@ -1,0 +1,11 @@
+{
+  "name": "openrubberdocks",
+  "version": "0.0.9",
+  "description": "Modern, self-hosted developer documentation and project management platform",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "setup": "node install.mjs",
+    "update": "node install.mjs --update",
+    "cors": "node install.mjs --cors"
+  }
+}

@@ -35,33 +35,39 @@ export const AUTH_MESSAGES = {
 
 export const CHANGELOG_DATA: ChangelogItem[] = [
   {
-    version: 'v0.1.0-alpha',
-    date: '2026-09-10',
-    status: 'CURRENT_BUILD',
-    title: 'Genesis Architecture & Contemporary Digital Brutalism',
+    version: 'v0.0.9',
+    date: '2026-10-26',
+    status: 'EARLY_ACCESS',
+    title: 'v0.0.9 "Curious Momotus" // Early Access Genesis Release to Main',
     highlights: [
-      'Contemporary Digital Brutalism Flat Wireframe Theme (MUI 9+)',
-      'Scoped RBAC Engine (coreAdmin, internal, external)',
-      'HttpOnly Cookie-based Authentication & Silent JWT Rotation',
-      'Cross-Platform Terminal Wizard Installer (install.mjs / .sh / .bat)',
-      '4-Tier Clean Architecture API Engine (Ky + TanStack Query)',
+      'Codename: "Curious Momotus" — Official First Public Release',
+      'Contemporary Digital Brutalism Flat Wireframe Theme (MUI 9+ with 90° Geometry)',
+      'Engine-Level Scoped RBAC Security (coreAdmin, internal, external read-only lock)',
+      'HttpOnly Cookie-based Authentication & Silent JWT Refresh Rotation',
+      'Interactive TUI Installer, CORS Wizard & One-Command System Updater (--update)',
+      'VPS Hardening (Strict 127.0.0.1 loopback binding preventing Docker iptables bypass)',
+      'Full Docker Compose Architecture (Backend, DB, Nginx Frontend SPA) & MCP AI Agent Server',
     ],
     details: [
       {
+        category: 'FOUNDATION',
+        description: 'First public Early Access release of OpenRubberDocks codenamed "Curious Momotus". Full-stack modular DDD architecture with NestJS, TypeORM, PostgreSQL, and React 19.',
+      },
+      {
         category: 'THEME',
-        description: 'Enforced 0px border-radius, zero hard/drop shadows, 1.5px solid wireframes, Space Grotesk & Space Mono typography with git-ignored dynamic colors override.',
+        description: 'Contemporary Digital Brutalism design system: 0px border-radius, zero drop shadows, solid 1.5px technical wireframes, Space Grotesk/Mono typography, and dynamic colors.ts override.',
       },
       {
         category: 'SECURITY',
-        description: 'Silent token renewal interceptor with automatic retry on 401 and secure httpOnly cookies for both 15m Access and 7d Refresh tokens.',
+        description: 'Contextual Scoped RBAC engine, engine-level mutation lock for external users, 256-bit JWT secret generation, and secure httpOnly cookies eliminating client-side token storage.',
       },
       {
-        category: 'ARCHITECTURE',
-        description: 'Canonical unidirectional flow: Repositories -> Services -> Hooks -> Components with strict Zero Inline Declarations compliance.',
+        category: 'NETWORKING',
+        description: 'Interactive CLI wizard with zero-code CORS configuration, loopback firewall protections against iptables leaks, and automated single-command updates from main branch.',
       },
       {
-        category: 'INSTALLER',
-        description: 'Interactive CLI/TUI installer parametrizing ports, crypto secrets, coreAdmin handles, theme palettes, and seeders.',
+        category: 'AI & EXTENSIBILITY',
+        description: 'Integrated Model Context Protocol (MCP) server ready for autonomous AI agents, tool invocation, and scoped workspace interaction.',
       },
     ],
   },

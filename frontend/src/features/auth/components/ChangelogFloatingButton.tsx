@@ -1,8 +1,11 @@
 import { Button } from '@mui/material';
 import HistoryEduOutlinedIcon from '@mui/icons-material/HistoryEduOutlined';
+import { CHANGELOG_DATA } from '@features/auth/constants/auth.constants';
 import type { ChangelogFloatingButtonProps } from '@features/auth/types/auth.types';
 
 export function ChangelogFloatingButton({ onClick }: ChangelogFloatingButtonProps) {
+  const currentVersion = CHANGELOG_DATA[0]?.version || 'v0.0.9';
+
   return (
     <Button
       variant="outlined"
@@ -22,7 +25,7 @@ export function ChangelogFloatingButton({ onClick }: ChangelogFloatingButtonProp
         },
       }}
     >
-      // CHANGELOG [v0.1.0]
+      // CHANGELOG [{currentVersion} // Curious Momotus]
     </Button>
   );
 }

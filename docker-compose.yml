@@ -1,37 +1,77 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
     container_name: openrubberdocks-db
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: openrubberdocks
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-openrubberdocks}
     ports:
-      - "5432:5432"
+      # STRICT SECURITY: Always bind PostgreSQL to 127.0.0.1 (loopback only).
+      # This prevents Docker from inserting 0.0.0.0 DNAT rules into iptables that bypass
+      # host firewalls (UFW/firewalld) and prevents exposing the database to the internet.
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - openrubberdocks-net
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-openrubberdocks}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: openrubberdocks-backend
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Bound to 127.0.0.1 by default to respect host iptables/UFW firewalls (safe for local dev or reverse proxy).
+      # Set HOST_BIND_IP=0.0.0.0 in .env only if you want direct public port exposure without a reverse proxy.
+      - "${HOST_BIND_IP:-127.0.0.1}:${PORT:-3000}:3000"
     env_file:
       - ./backend/.env
     environment:
       - DB_HOST=db
+      - DB_PORT=5432
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - openrubberdocks-net
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    profiles:
+      - full
+      - production
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    container_name: openrubberdocks-frontend
+    restart: unless-stopped
+    ports:
+      - "${HOST_BIND_IP:-127.0.0.1}:${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    networks:
+      - openrubberdocks-net
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  openrubberdocks-net:
+    driver: bridge
 
 volumes:
   pgdata:

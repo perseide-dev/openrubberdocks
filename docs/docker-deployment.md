@@ -1,43 +1,56 @@
-# Docker Deployment Guide (OpenRubberDocks)
+# Docker Deployment & Firewall Security Guide (OpenRubberDocks)
 
-This guide explains how to use Docker and Docker Compose to run the project in different scenarios: development (isolating parts of the stack) and production (deploying the entire stack).
+This guide explains how to use Docker and Docker Compose to run the project safely across development (hybrid workflows) and production (full stack), while protecting your host firewall (`iptables` / `ufw`) and preventing accidental database exposure.
 
 ## 🛠️ Docker Structure in the Project
 
-Currently, the project relies on the following core configuration for Docker:
-- `backend/Dockerfile`: Defines how to package and run the Node.js API using `pnpm`.
-- `docker-compose.yml` (root): Orchestrates the connection between services (currently PostgreSQL Database and Backend).
+- [`backend/Dockerfile`](../backend/Dockerfile): Multi-stage `node:20-alpine` image using `pnpm` that compiles NestJS, prunes devDependencies, runs as non-root `node` user, and automatically executes pending TypeORM migrations when `DB_SYNCHRONIZE=false`.
+- [`frontend/Dockerfile`](../frontend/Dockerfile): Multi-stage build (`node:20-alpine` + `nginx:1.27-alpine`) that compiles the React 19 / Vite bundle (including custom git-ignored `colors.ts` palettes) and serves it with SPA routing support.
+- [`docker-compose.yml`](../docker-compose.yml): Orchestrates `db` (PostgreSQL 15), `backend` (NestJS API), and `frontend` (Nginx SPA under the `full` / `production` profile) over an isolated bridge network (`openrubberdocks-net`) with `no-new-privileges:true`.
 
 ---
 
-## 💻 1. Development Environment (Partial Deployments)
+## 🔒 Firewall (`iptables` / `ufw`) & Database Security
 
-During development, it's very common to want to run a part of the code directly on your host machine (e.g., the frontend with live reloading) and let Docker handle the rest of the dependencies (Database and Backend).
+By default, publishing ports in Docker using `"5432:5432"` binds to `0.0.0.0`, which causes Docker to insert DNAT rules into the `DOCKER` chain in `iptables` **before** host firewalls like `ufw` or `firewalld` (`INPUT` chain) are evaluated. On a VPS, this would expose PostgreSQL directly to the public internet.
 
-### Scenario A: Developing the Frontend (Dockerize Backend + DB only)
-If you are purely working on UI/UX in the `frontend/` folder and don't want to deal with installing PostgreSQL or manually starting NestJS:
+To prevent this, `docker-compose.yml` enforces two strict rules:
 
-1. Make sure your `.env` file is configured in the `backend/.env` directory (Especially `DB_SYNCHRONIZE=true`).
-2. Go to the project root and start the backend and database:
+1. **PostgreSQL (`db`) is ALWAYS locked to loopback (`127.0.0.1`)**:
+   ```yaml
+   ports:
+     - "127.0.0.1:${DB_PORT:-5432}:5432"
+   ```
+   External network interfaces cannot reach `127.0.0.1`, so the database is **never exposed to the internet**, while remaining accessible to local host tools (`pnpm run start:dev`, `pnpm run seed:run`) and containers inside `openrubberdocks-net`.
+2. **Configurable `HOST_BIND_IP` (`127.0.0.1` by default) for Backend & Frontend**:
+   - **`HOST_BIND_IP=127.0.0.1` (Default / Recommended)**: Binds Backend (`3000`) and Frontend (`5173`) strictly to localhost. Ideal for local development or VPS deployments behind a reverse proxy (Nginx, Caddy, Traefik, Cloudflare Tunnel) without bypassing `ufw`/`iptables`.
+   - **`HOST_BIND_IP=0.0.0.0` (Optional)**: Only set this in your root `.env` (or via `./install.sh`) if you explicitly want Docker to expose Backend/Frontend ports directly on all network interfaces without a reverse proxy.
+
+---
+
+## 💻 1. Development Environment (Partial / Hybrid Deployments)
+
+During development, you can run parts of the stack directly on your host machine for instant hot-reloading while Docker manages the database (and optionally the backend).
+
+### Scenario A: Developing the Frontend (Dockerize Backend + DB)
+1. Run `./install.sh` (or configure `backend/.env` and `.env`).
+2. Start the backend and database from the project root:
    ```bash
    docker compose up -d
    ```
-3. Now you can go to your terminal, enter the frontend folder, and run your usual development server:
+3. Run the frontend dev server locally:
    ```bash
    cd frontend
    pnpm run dev
    ```
-   *(The frontend will be able to make requests to `http://localhost:3000` seamlessly, and the backend will be backed by the DB running in Docker).*
 
 ### Scenario B: Developing the Backend (Dockerize DB only)
-If you are writing backend code and need fast hot-reloading using `npm run start:dev`, it's best to have **only** the database in Docker:
-
-1. Start only the PostgreSQL service using the service name defined in the compose file:
+1. Start only the PostgreSQL service:
    ```bash
    docker compose up -d db
    ```
-2. The database will be exposed on port `5432` of your `localhost`.
-3. Start your backend locally:
+   *(Accessible locally at `127.0.0.1:5432`, completely isolated from external networks).*
+2. Start your backend locally:
    ```bash
    cd backend
    pnpm run start:dev
@@ -45,36 +58,41 @@ If you are writing backend code and need fast hot-reloading using `npm run start
 
 ---
 
-## 🚀 2. Production Environment (Full Deployment)
+## 🚀 2. Production Environment (Full Containerized Deployment)
 
-For a production or staging environment, the goal is to spin up the **entire** ecosystem (Frontend, Backend, and Database) without relying on the host operating system.
+For production or staging environments, use the `full` (or `production`) Compose profile to deploy **Database + Backend + Frontend (Nginx)**:
 
-> **Note:** For this to work, it assumes you have created a `Dockerfile` in the `frontend/` folder (usually based on Nginx to serve compiled static files or Node.js if using SSR with Next/Nuxt) and added it as a service in your `docker-compose.yml`.
-
-### Steps for a full deployment:
-
-1. **Prepare production environment variables**:
-   Make sure to change `NODE_ENV=production` and `DB_SYNCHRONIZE=false` in your environment variables to prevent TypeORM from accidentally dropping/modifying tables. The DB structure should be managed via [Migrations](./commands.md#migrations).
-
-2. **Start all services**:
-   From the root of the project:
+1. **Provision production environment**:
+   Run `./install.sh` and select **Production Mode** (`NODE_ENV=production`, `DB_SYNCHRONIZE=false`).
+2. **Build and launch all services**:
    ```bash
-   # Build images from scratch (ideal for production)
-   docker compose build
-
-   # Start services in the background
-   docker compose up -d
+   docker compose --profile full up -d --build
+   ```
+3. **Seed initial RBAC permissions and Core Admin (first run)**:
+   ```bash
+   docker compose exec backend pnpm run seed:run
    ```
 
-3. **Check status**:
-   ```bash
-   docker compose ps
-   ```
+---
+
+## 🔄 3. One-Command Automated Update from `main`
+
+To pull the latest changes from `main`, preserve your `.env` and `colors.ts` customizations, install dependencies, compile, and run database migrations + seeders automatically:
+
+```bash
+./install.sh --update
+# or directly with Node:
+node install.mjs --update
+```
 
 ---
 
 ## 🛑 Useful Maintenance Commands
 
+- **Check container status**:
+  ```bash
+  docker compose ps
+  ```
 - **Stop services (without deleting data)**:
   ```bash
   docker compose stop
@@ -83,16 +101,12 @@ For a production or staging environment, the goal is to spin up the **entire** e
   ```bash
   docker compose down
   ```
-- **Stop, remove containers, and destroy the Database (Volumes)**:
+- **Stop, remove containers, and destroy the Database volume**:
   ```bash
-  # Warning! This permanently deletes PostgreSQL data
+  # Warning! Permanently deletes PostgreSQL data
   docker compose down -v
   ```
-- **View logs for a specific service (e.g., backend)**:
+- **View logs for a specific service**:
   ```bash
   docker compose logs -f backend
-  ```
-- **Rebuild the backend image if you installed new dependencies (`npm install`)**:
-  ```bash
-  docker compose up -d --build backend
   ```

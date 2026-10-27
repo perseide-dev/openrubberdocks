@@ -25,6 +25,13 @@ build/
 *.env
 
 # =========================
+# Custom Theme Colors (Local overrides)
+# =========================
+colors.ts
+src/core/theme/colors.ts
+frontend/src/core/theme/colors.ts
+
+# =========================
 # Logs y Testing
 # =========================
 logs/

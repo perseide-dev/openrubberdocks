@@ -1,8 +1,18 @@
 import type { ReactNode } from 'react';
-import { Box, Checkbox, Chip, Divider, Typography } from '@mui/material';
-import type { BlockType, BlockProperties } from '@features-workspaces/files/types/block.types';
+import { Box, Checkbox, Chip, Divider, Paper, Typography } from '@mui/material';
+import type {
+    BlockType,
+    BlockProperties,
+    FileEditorBlock,
+} from '@features-workspaces/files/types/block.types';
 import type { FileViewerProps } from '@features-workspaces/files/types/file.types';
-import { getCoverStyle, sanitizeImageUrl } from '@utils-functions/media.utils';
+import { getCoverStyle } from '@utils-functions/media.utils';
+import { AttachmentBlockView } from '@features-workspaces/files/components/blocks/AttachmentBlockView';
+import { TableBlockView } from '@features-workspaces/files/components/blocks/TableBlockView';
+import { CalloutBlockView } from '@features-workspaces/files/components/blocks/CalloutBlockView';
+import { MermaidBlockView } from '@features-workspaces/files/components/blocks/MermaidBlockView';
+import { OpenApiBlockView } from '@features-workspaces/files/components/blocks/OpenApiBlockView';
+import { InternalLinkBlockView } from '@features-workspaces/files/components/blocks/InternalLinkBlockView';
 
 function getTextFromProperties(props: Record<string, unknown> | null): string {
     if (!props) return '';
@@ -55,30 +65,36 @@ function PrefixRow({ prefix, children }: { prefix: string; children: ReactNode }
             >
                 {prefix}
             </Box>
-            <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>{children}</Box>
+            <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                {children}
+            </Box>
         </Box>
     );
 }
 
-export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: FileViewerProps) {
+export function FileViewer({
+    blocks,
+    workspaceUuid,
+    title,
+    icon,
+    coverImage,
+    isTemplate,
+}: FileViewerProps) {
     const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* Full-width brutalist cover banner */}
             {coverImage && (
-                <Box
+                <Paper
+                    variant="outlined"
                     sx={{
                         width: '100%',
                         height: 180,
                         ...getCoverStyle(coverImage),
-                        border: '2px solid',
-                        borderColor: 'divider',
                     }}
                 />
             )}
 
-            {/* Overlapping or standalone icon & badges */}
             {(icon || isTemplate) && (
                 <Box
                     sx={{
@@ -92,7 +108,8 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                     }}
                 >
                     {icon ? (
-                        <Box
+                        <Paper
+                            variant="outlined"
                             sx={{
                                 width: 56,
                                 height: 56,
@@ -100,15 +117,14 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 fontSize: '2.25rem',
-                                border: '2px solid',
-                                borderColor: 'divider',
-                                backgroundColor: 'background.paper',
                                 userSelect: 'none',
                             }}
                         >
                             {icon}
-                        </Box>
-                    ) : <Box />}
+                        </Paper>
+                    ) : (
+                        <Box />
+                    )}
 
                     {isTemplate && (
                         <Chip
@@ -116,29 +132,61 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                             size="small"
                             variant="outlined"
                             color="primary"
-                            sx={{
-                                fontFamily: 'monospace',
-                                fontWeight: 700,
-                                borderRadius: 0,
-                                border: '1.5px solid',
-                            }}
                         />
                     )}
                 </Box>
             )}
 
-            {/* Document Title if passed */}
             {title && (
-                <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 1 }}>
+                <Typography variant="h4" sx={{ marginBottom: 1 }}>
                     {title}
                 </Typography>
             )}
 
-            {/* Content blocks */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {sorted.map((block, index) => {
                     if (block.type === 'divider') {
                         return <Divider key={block.uuid} sx={{ marginY: 1.5 }} />;
+                    }
+
+                    const text = getTextFromProperties(block.properties);
+                    const editorShape: FileEditorBlock = {
+                        id: block.uuid,
+                        type: block.type,
+                        content: text,
+                        checked: getCheckedFromProperties(block.properties),
+                        properties: block.properties ?? undefined,
+                    };
+
+                    if (block.type === 'image' || block.type === 'file_attachment') {
+                        return <AttachmentBlockView key={block.uuid} block={editorShape} readOnly />;
+                    }
+
+                    if (block.type === 'table') {
+                        return <TableBlockView key={block.uuid} block={editorShape} readOnly />;
+                    }
+
+                    if (block.type === 'callout') {
+                        return <CalloutBlockView key={block.uuid} block={editorShape} readOnly />;
+                    }
+
+                    if (block.type === 'mermaid') {
+                        return <MermaidBlockView key={block.uuid} block={editorShape} readOnly />;
+                    }
+
+                    if (block.type === 'openapi_spec') {
+                        return <OpenApiBlockView key={block.uuid} block={editorShape} readOnly />;
+                    }
+
+                    if (block.type === 'internal_link') {
+                        return (
+                            <InternalLinkBlockView
+                                key={block.uuid}
+                                block={editorShape}
+                                workspaceUuid={workspaceUuid}
+                                readOnly
+                            />
+                        );
                     }
 
                     let numberedCounter = 0;
@@ -157,8 +205,6 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                         }
                     }
                     const number = block.type === 'numbered_list' ? numberedCounter : undefined;
-
-                    const text = getTextFromProperties(block.properties);
 
                     if (block.type === 'bullet_list') {
                         return (
@@ -179,8 +225,11 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                     if (block.type === 'todo') {
                         const checked = getCheckedFromProperties(block.properties);
                         return (
-                            <Box key={block.uuid} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Checkbox checked={checked} disabled sx={{ padding: 0.5, borderRadius: 0 }} />
+                            <Box
+                                key={block.uuid}
+                                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                                <Checkbox checked={checked} disabled sx={{ padding: 0.5 }} />
                                 <Typography
                                     sx={{
                                         ...getViewSx(block.type),
@@ -190,26 +239,6 @@ export function FileViewer({ blocks, title, icon, coverImage, isTemplate }: File
                                 >
                                     {text}
                                 </Typography>
-                            </Box>
-                        );
-                    }
-
-                    if (block.type === 'image') {
-                        const safeSrc = sanitizeImageUrl(text.trim());
-                        return (
-                            <Box key={block.uuid} sx={{ marginY: 1 }}>
-                                {safeSrc && (
-                                    <Box
-                                        component="img"
-                                        src={safeSrc}
-                                        alt=""
-                                        sx={{
-                                            maxWidth: '100%',
-                                            border: '1.5px solid',
-                                            borderColor: 'divider',
-                                        }}
-                                    />
-                                )}
                             </Box>
                         );
                     }

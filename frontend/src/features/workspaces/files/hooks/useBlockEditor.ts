@@ -1,4 +1,10 @@
-import { useState, useCallback, useRef, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import {
+    useState,
+    useCallback,
+    useRef,
+    useEffect,
+    type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import {
     PointerSensor,
     KeyboardSensor,
@@ -8,28 +14,76 @@ import {
 } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useBlockSelector } from '@features/workspaces/files/hooks/useBlockSelector';
-import { BLOCK_SLASH_TRIGGER } from '@features/workspaces/files/constants/block.constants';
-import { parseMarkdownToBlocks, serializeBlocksToMarkdown } from '@features/workspaces/files/utils/markdown-block.parser';
+import { useBlockSelector } from '@features-workspaces/files/hooks/useBlockSelector';
+import {
+    BLOCK_SLASH_TRIGGER,
+    DEFAULT_OPENAPI_SPEC_SAMPLE,
+    DEFAULT_TABLE_DATA,
+    MERMAID_PRESETS,
+} from '@features-workspaces/files/constants/block.constants';
+import {
+    parseMarkdownToBlocks,
+    serializeBlocksToMarkdown,
+} from '@features-workspaces/files/utils/markdown-block.parser';
+import { serializeTableToMarkdown } from '@features-workspaces/files/utils/table-markdown.utils';
 import type {
     BlockType,
+    CalloutVariant,
     FileEditorBlock,
     BlockEditorController,
-} from '@features/workspaces/files/types/block.types';
+    UseBlockEditorOptions,
+} from '@features-workspaces/files/types/block.types';
 
-/**
- * Manages the local, Notion-like block canvas: creation, edition, conversion,
- * removal, drag-and-drop ordering, the floating block selector and the keyboard
- * shortcuts that keep the editing flow uninterrupted.
- */
-export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorController {
+function getDefaultContentAndProperties(type: BlockType): {
+    content: string;
+    properties?: Record<string, unknown>;
+} {
+    switch (type) {
+        case 'table': {
+            const initialTable = {
+                headers: [...DEFAULT_TABLE_DATA.headers],
+                rows: DEFAULT_TABLE_DATA.rows.map((r) => [...r]),
+            };
+            return {
+                content: serializeTableToMarkdown(initialTable),
+                properties: { table: initialTable },
+            };
+        }
+        case 'callout':
+            return {
+                content: '',
+                properties: { calloutVariant: 'INFO' },
+            };
+        case 'mermaid':
+            return {
+                content: MERMAID_PRESETS.architecture.code,
+                properties: {},
+            };
+        case 'openapi_spec':
+            return {
+                content: DEFAULT_OPENAPI_SPEC_SAMPLE,
+                properties: { specFormat: 'yaml' },
+            };
+        case 'internal_link':
+            return {
+                content: '',
+                properties: { internalLink: {} },
+            };
+        default:
+            return { content: '' };
+    }
+}
+
+export function useBlockEditor(
+    initialBlocks?: FileEditorBlock[],
+    options?: UseBlockEditorOptions,
+): BlockEditorController {
     const [blocks, setBlocks] = useState<FileEditorBlock[]>(() => initialBlocks ?? []);
     const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([]);
     const selector = useBlockSelector();
     const inputRefs = useRef(new Map<string, HTMLTextAreaElement>());
     const pendingFocusId = useRef<string | null>(null);
 
-    // Undo / Redo history stacks
     const historyPast = useRef<FileEditorBlock[][]>([]);
     const historyFuture = useRef<FileEditorBlock[][]>([]);
     const [canUndo, setCanUndo] = useState(false);
@@ -42,11 +96,14 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
         setCanRedo(historyFuture.current.length > 0);
     }, []);
 
-    const pushSnapshot = useCallback((blocksToSnapshot: FileEditorBlock[]) => {
-        historyPast.current = [...historyPast.current.slice(-40), blocksToSnapshot];
-        historyFuture.current = [];
-        updateCanUndoRedo();
-    }, [updateCanUndoRedo]);
+    const pushSnapshot = useCallback(
+        (blocksToSnapshot: FileEditorBlock[]) => {
+            historyPast.current = [...historyPast.current.slice(-40), blocksToSnapshot];
+            historyFuture.current = [];
+            updateCanUndoRedo();
+        },
+        [updateCanUndoRedo],
+    );
 
     const undo = useCallback(() => {
         if (historyPast.current.length === 0) return;
@@ -66,12 +123,15 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
         updateCanUndoRedo();
     }, [blocks, updateCanUndoRedo]);
 
-    const setBlocksState = useCallback((newBlocks: FileEditorBlock[]) => {
-        setBlocks(newBlocks);
-        historyPast.current = [];
-        historyFuture.current = [];
-        updateCanUndoRedo();
-    }, [updateCanUndoRedo]);
+    const setBlocksState = useCallback(
+        (newBlocks: FileEditorBlock[]) => {
+            setBlocks(newBlocks);
+            historyPast.current = [];
+            historyFuture.current = [];
+            updateCanUndoRedo();
+        },
+        [updateCanUndoRedo],
+    );
 
     const selectAllBlocks = useCallback(() => {
         setSelectedBlockIds(blocks.map((b) => b.id));
@@ -116,38 +176,35 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 isDraggingRange.current = false;
             }
         },
-        []
+        [],
     );
 
-    const handleCanvasMouseDown = useCallback(
-        (e: React.MouseEvent<HTMLElement>) => {
-            if (e.button === 0) {
-                const target = e.target as HTMLElement | null;
-                if (target?.closest('[data-block="true"]') || target?.closest('button')) {
-                    return;
-                }
-                const blockElements = Array.from(
-                    document.querySelectorAll<HTMLElement>('[data-block="true"]')
-                );
-                let closestId: string | null = null;
-                if (blockElements.length > 0) {
-                    let minDiff = Infinity;
-                    for (const bEl of blockElements) {
-                        const rect = bEl.getBoundingClientRect();
-                        const diff = Math.abs(e.clientY - (rect.top + rect.height / 2));
-                        if (diff < minDiff) {
-                            minDiff = diff;
-                            closestId = bEl.getAttribute('data-block-id');
-                        }
+    const handleCanvasMouseDown = useCallback((e: React.MouseEvent<HTMLElement>) => {
+        if (e.button === 0) {
+            const target = e.target as HTMLElement | null;
+            if (target?.closest('[data-block="true"]') || target?.closest('button')) {
+                return;
+            }
+            const blockElements = Array.from(
+                document.querySelectorAll<HTMLElement>('[data-block="true"]'),
+            );
+            let closestId: string | null = null;
+            if (blockElements.length > 0) {
+                let minDiff = Infinity;
+                for (const bEl of blockElements) {
+                    const rect = bEl.getBoundingClientRect();
+                    const diff = Math.abs(e.clientY - (rect.top + rect.height / 2));
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestId = bEl.getAttribute('data-block-id');
                     }
                 }
-                dragStartBlockId.current = closestId;
-                dragStartPos.current = { x: e.clientX, y: e.clientY };
-                isDraggingRange.current = false;
             }
-        },
-        []
-    );
+            dragStartBlockId.current = closestId;
+            dragStartPos.current = { x: e.clientX, y: e.clientY };
+            isDraggingRange.current = false;
+        }
+    }, []);
 
     const handleBlockMouseEnter = useCallback(
         (id: string) => {
@@ -168,7 +225,7 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 }
             }
         },
-        [blocks]
+        [blocks],
     );
 
     const handlePointerMove = useCallback(
@@ -177,13 +234,16 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
 
             const dist = Math.hypot(
                 e.clientX - dragStartPos.current.x,
-                e.clientY - dragStartPos.current.y
+                e.clientY - dragStartPos.current.y,
             );
             if (dist < 6) return;
 
-            // Release pointer capture from the target element so Chromium doesn't trap the cursor
             const target = e.target as HTMLElement | null;
-            if (target && typeof target.releasePointerCapture === 'function' && 'pointerId' in e) {
+            if (
+                target &&
+                typeof target.releasePointerCapture === 'function' &&
+                'pointerId' in e
+            ) {
                 try {
                     if (target.hasPointerCapture(e.pointerId)) {
                         target.releasePointerCapture(e.pointerId);
@@ -194,7 +254,7 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             }
 
             const blockElements = Array.from(
-                document.querySelectorAll<HTMLElement>('[data-block="true"]')
+                document.querySelectorAll<HTMLElement>('[data-block="true"]'),
             );
             if (blockElements.length === 0 || blocks.length === 0) return;
 
@@ -203,7 +263,8 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             const lastRect = blockElements[blockElements.length - 1].getBoundingClientRect();
 
             if (e.clientY >= lastRect.top) {
-                currentId = blockElements[blockElements.length - 1].getAttribute('data-block-id');
+                currentId =
+                    blockElements[blockElements.length - 1].getAttribute('data-block-id');
             } else if (e.clientY <= firstRect.bottom) {
                 currentId = blockElements[0].getAttribute('data-block-id');
             } else {
@@ -253,11 +314,10 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 }
             }
         },
-        [blocks]
+        [blocks],
     );
 
     useEffect(() => {
-
         const handlePointerUp = () => {
             dragStartBlockId.current = null;
             dragStartPos.current = null;
@@ -335,7 +395,7 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
     );
 
     const registerInput = useCallback((id: string, element: HTMLTextAreaElement | null) => {
@@ -360,110 +420,208 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
         pendingFocusId.current = id;
     }, []);
 
-    const addBlock = useCallback((type: BlockType, overId?: string) => {
-        pushSnapshot(blocks);
-        isTypingRef.current = false;
-        const id = crypto.randomUUID();
-        setSelectedBlockIds([]);
-
-        setBlocks((prev) => {
-            const newBlock: FileEditorBlock = {
-                id,
-                type,
-                content: '',
-                checked: type === 'todo' ? false : undefined,
-            };
-
-            if (!overId) {
-                return [...prev, newBlock];
-            }
-
-            const overIndex = prev.findIndex((block) => block.id === overId);
-            if (overIndex === -1) {
-                return [...prev, newBlock];
-            }
-
-            const next = [...prev];
-            next.splice(overIndex + 1, 0, newBlock);
-            return next;
-        });
-
-        pendingFocusId.current = id;
-        return id;
-    }, [blocks, pushSnapshot]);
-
-    const updateBlock = useCallback((id: string, content: string) => {
-        if (!isTypingRef.current) {
+    const addBlock = useCallback(
+        (type: BlockType, overId?: string, initialProperties?: Record<string, unknown>) => {
             pushSnapshot(blocks);
-            isTypingRef.current = true;
-        }
-        if (typingTimerRef.current) {
-            clearTimeout(typingTimerRef.current);
-        }
-        typingTimerRef.current = setTimeout(() => {
             isTypingRef.current = false;
-        }, 600);
+            const id = crypto.randomUUID();
+            setSelectedBlockIds([]);
 
-        setBlocks((prev) =>
-            prev.map((block) => (block.id === id ? { ...block, content } : block))
-        );
-    }, [blocks, pushSnapshot]);
+            const defaults = getDefaultContentAndProperties(type);
 
-    const convertBlock = useCallback((id: string, type: BlockType, content?: string) => {
-        pushSnapshot(blocks);
-        isTypingRef.current = false;
-        setSelectedBlockIds([]);
-        setBlocks((prev) =>
-            prev.map((block) =>
-                block.id === id
-                    ? {
-                          ...block,
-                          type,
-                          content: content !== undefined ? content : '',
-                          checked: type === 'todo' ? block.checked ?? false : undefined,
-                      }
-                    : block
-            )
-        );
-    }, [blocks, pushSnapshot]);
+            setBlocks((prev) => {
+                const newBlock: FileEditorBlock = {
+                    id,
+                    type,
+                    content: defaults.content,
+                    checked: type === 'todo' ? false : undefined,
+                    properties: initialProperties ?? defaults.properties,
+                };
 
-    const toggleChecked = useCallback((id: string) => {
-        pushSnapshot(blocks);
-        isTypingRef.current = false;
-        setBlocks((prev) =>
-            prev.map((block) => (block.id === id ? { ...block, checked: !block.checked } : block))
-        );
-    }, [blocks, pushSnapshot]);
+                if (!overId) {
+                    return [...prev, newBlock];
+                }
 
-    const removeBlock = useCallback((id: string) => {
-        pushSnapshot(blocks);
-        isTypingRef.current = false;
-        setBlocks((prev) => prev.filter((block) => block.id !== id));
-    }, [blocks, pushSnapshot]);
+                const overIndex = prev.findIndex((block) => block.id === overId);
+                if (overIndex === -1) {
+                    return [...prev, newBlock];
+                }
 
-    const handleDragEnd = useCallback((event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) {
-            return;
-        }
+                const next = [...prev];
+                next.splice(overIndex + 1, 0, newBlock);
+                return next;
+            });
 
-        pushSnapshot(blocks);
-        isTypingRef.current = false;
-        setBlocks((prev) => {
-            const oldIndex = prev.findIndex((block) => block.id === active.id);
-            const newIndex = prev.findIndex((block) => block.id === over.id);
-            if (oldIndex === -1 || newIndex === -1) {
-                return prev;
+            pendingFocusId.current = id;
+            return id;
+        },
+        [blocks, pushSnapshot],
+    );
+
+    const updateBlock = useCallback(
+        (id: string, content: string, properties?: Record<string, unknown>) => {
+            if (!isTypingRef.current) {
+                pushSnapshot(blocks);
+                isTypingRef.current = true;
             }
-            return arrayMove(prev, oldIndex, newIndex);
-        });
-    }, [blocks, pushSnapshot]);
+            if (typingTimerRef.current) {
+                clearTimeout(typingTimerRef.current);
+            }
+            typingTimerRef.current = setTimeout(() => {
+                isTypingRef.current = false;
+            }, 600);
+
+            setBlocks((prev) =>
+                prev.map((block) =>
+                    block.id === id
+                        ? {
+                              ...block,
+                              content,
+                              ...(properties !== undefined
+                                  ? { properties: { ...(block.properties ?? {}), ...properties } }
+                                  : {}),
+                          }
+                        : block,
+                ),
+            );
+        },
+        [blocks, pushSnapshot],
+    );
+
+    const updateBlockProperties = useCallback(
+        (id: string, patch: Record<string, unknown>, nextContent?: string) => {
+            pushSnapshot(blocks);
+            isTypingRef.current = false;
+            setBlocks((prev) =>
+                prev.map((block) =>
+                    block.id === id
+                        ? {
+                              ...block,
+                              content: nextContent !== undefined ? nextContent : block.content,
+                              properties: {
+                                  ...(block.properties ?? {}),
+                                  ...patch,
+                              },
+                          }
+                        : block,
+                ),
+            );
+        },
+        [blocks, pushSnapshot],
+    );
+
+    const convertBlock = useCallback(
+        (
+            id: string,
+            type: BlockType,
+            content?: string,
+            properties?: Record<string, unknown>,
+        ) => {
+            pushSnapshot(blocks);
+            isTypingRef.current = false;
+            setSelectedBlockIds([]);
+            const defaults = getDefaultContentAndProperties(type);
+            setBlocks((prev) =>
+                prev.map((block) =>
+                    block.id === id
+                        ? {
+                              ...block,
+                              type,
+                              content: content !== undefined ? content : defaults.content,
+                              checked: type === 'todo' ? block.checked ?? false : undefined,
+                              properties: properties ?? defaults.properties ?? block.properties,
+                          }
+                        : block,
+                ),
+            );
+        },
+        [blocks, pushSnapshot],
+    );
+
+    const handleBinaryUpload = useCallback(
+        async (
+            file: File,
+            targetBlockId?: string,
+            preferredType?: 'image' | 'file_attachment',
+        ) => {
+            if (!options?.onUploadFile) return;
+            const resolvedType: BlockType =
+                preferredType ?? (file.type.startsWith('image/') ? 'image' : 'file_attachment');
+
+            const uploaded = await options.onUploadFile(file);
+
+            if (targetBlockId) {
+                convertBlock(targetBlockId, resolvedType, uploaded.url, {
+                    attachment: uploaded.attachmentMeta,
+                });
+                return;
+            }
+
+            pushSnapshot(blocks);
+            const id = crypto.randomUUID();
+            setBlocks((prev) => [
+                ...prev,
+                {
+                    id,
+                    type: resolvedType,
+                    content: uploaded.url,
+                    properties: {
+                        attachment: uploaded.attachmentMeta,
+                    },
+                },
+            ]);
+        },
+        [options, convertBlock, pushSnapshot, blocks],
+    );
+
+    const toggleChecked = useCallback(
+        (id: string) => {
+            pushSnapshot(blocks);
+            isTypingRef.current = false;
+            setBlocks((prev) =>
+                prev.map((block) =>
+                    block.id === id ? { ...block, checked: !block.checked } : block,
+                ),
+            );
+        },
+        [blocks, pushSnapshot],
+    );
+
+    const removeBlock = useCallback(
+        (id: string) => {
+            pushSnapshot(blocks);
+            isTypingRef.current = false;
+            setBlocks((prev) => prev.filter((block) => block.id !== id));
+        },
+        [blocks, pushSnapshot],
+    );
+
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+            if (!over || active.id === over.id) {
+                return;
+            }
+
+            pushSnapshot(blocks);
+            isTypingRef.current = false;
+            setBlocks((prev) => {
+                const oldIndex = prev.findIndex((block) => block.id === active.id);
+                const newIndex = prev.findIndex((block) => block.id === over.id);
+                if (oldIndex === -1 || newIndex === -1) {
+                    return prev;
+                }
+                return arrayMove(prev, oldIndex, newIndex);
+            });
+        },
+        [blocks, pushSnapshot],
+    );
 
     const openInsertSelector = useCallback(
         (element: HTMLElement, blockId: string) => {
             selector.open({ element, blockId, mode: 'insert', query: '' });
         },
-        [selector]
+        [selector],
     );
 
     const closeSelector = useCallback(() => {
@@ -473,8 +631,8 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 prev.map((block) =>
                     block.id === targetId && block.content.startsWith(BLOCK_SLASH_TRIGGER)
                         ? { ...block, content: '' }
-                        : block
-                )
+                        : block,
+                ),
             );
             focusBlock(targetId);
         }
@@ -499,14 +657,14 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             addBlock(type, selector.targetBlockId);
             selector.close();
         },
-        [selector, convertBlock, addBlock, focusBlock]
+        [selector, convertBlock, addBlock, focusBlock],
     );
 
     const handleBlockChange = useCallback(
         (id: string, content: string) => {
             if (content.startsWith(BLOCK_SLASH_TRIGGER)) {
                 setBlocks((prev) =>
-                    prev.map((block) => (block.id === id ? { ...block, content } : block))
+                    prev.map((block) => (block.id === id ? { ...block, content } : block)),
                 );
                 const element = document.activeElement;
                 selector.open({
@@ -521,6 +679,29 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             const currentBlock = blocks.find((b) => b.id === id);
 
             if (currentBlock?.type === 'text') {
+                // Smart cross-mention trigger: [[ or @
+                if (content.startsWith('[[') || content === '@') {
+                    convertBlock(id, 'internal_link', '', { internalLink: {} });
+                    return;
+                }
+                // Callout trigger: > [!INFO|WARNING|DANGER|SUCCESS]
+                const calloutMatch = content.match(
+                    /^>\s*\[!(INFO|WARNING|DANGER|SUCCESS)\]\s*(.*)$/i,
+                );
+                if (calloutMatch) {
+                    const calloutVariant = calloutMatch[1].toUpperCase() as CalloutVariant;
+                    convertBlock(id, 'callout', calloutMatch[2], { calloutVariant });
+                    return;
+                }
+                if (content.startsWith('```mermaid')) {
+                    convertBlock(id, 'mermaid', MERMAID_PRESETS.architecture.code);
+                    return;
+                }
+                if (content.startsWith('```openapi') || content.startsWith('```swagger')) {
+                    convertBlock(id, 'openapi_spec', DEFAULT_OPENAPI_SPEC_SAMPLE);
+                    return;
+                }
+
                 const matchNumbered = content.match(/^(\d+)[.)]\s(.*)$/);
                 if (matchNumbered) {
                     convertBlock(id, 'numbered_list', matchNumbered[2]);
@@ -531,7 +712,9 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                     return;
                 }
                 if (content.startsWith('[] ') || content.startsWith('[ ] ')) {
-                    const remaining = content.startsWith('[] ') ? content.slice(3) : content.slice(4);
+                    const remaining = content.startsWith('[] ')
+                        ? content.slice(3)
+                        : content.slice(4);
                     convertBlock(id, 'todo', remaining);
                     return;
                 }
@@ -564,16 +747,32 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             }
             updateBlock(id, content);
         },
-        [selector, blocks, updateBlock, convertBlock, selectedBlockIds.length]
+        [selector, blocks, updateBlock, convertBlock, selectedBlockIds.length],
     );
 
     const handleBlockPaste = useCallback(
         (id: string, event: React.ClipboardEvent<HTMLElement>) => {
+            // 1. Direct binary / image paste from clipboard
+            const clipboardFiles = event.clipboardData?.files;
+            if (clipboardFiles && clipboardFiles.length > 0 && options?.onUploadFile) {
+                event.preventDefault();
+                const file = clipboardFiles[0];
+                if (file) {
+                    const preferred = file.type.startsWith('image/')
+                        ? 'image'
+                        : 'file_attachment';
+                    void handleBinaryUpload(file, id, preferred);
+                }
+                return;
+            }
+
+            // 2. Markdown text paste
             const clipboardText = event.clipboardData.getData('text/plain');
             if (!clipboardText) return;
 
             const hasNewlines = clipboardText.includes('\n');
-            const hasMarkdownTriggers = /^(\s*[-*+]|\s*\d+[.)]|\s*#|\s*>|\s*```|!\[)/m.test(clipboardText);
+            const hasMarkdownTriggers =
+                /^(\s*[-*+]|\s*\d+[.)]|\s*#|\s*>|\s*```|!\[|\|.*\|)/m.test(clipboardText);
 
             if (!hasNewlines && !hasMarkdownTriggers) {
                 return;
@@ -593,13 +792,15 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 }
 
                 const targetBlock = prev[targetIndex];
-                const shouldReplace = targetBlock.content.trim() === '' && targetBlock.type === 'text';
+                const shouldReplace =
+                    targetBlock.content.trim() === '' && targetBlock.type === 'text';
 
                 const newBlocks: FileEditorBlock[] = parsed.map((p) => ({
                     id: crypto.randomUUID(),
                     type: p.type,
                     content: p.content,
                     checked: p.checked,
+                    properties: p.properties,
                 }));
 
                 const nextBlocks = [...prev];
@@ -618,7 +819,7 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             });
             setSelectedBlockIds([]);
         },
-        [blocks, pushSnapshot]
+        [blocks, pushSnapshot, options, handleBinaryUpload],
     );
 
     const handleBlockKeyDown = useCallback(
@@ -627,7 +828,6 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 return;
             }
 
-            // Undo / Redo shortcuts
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.shiftKey) {
                 event.preventDefault();
                 undo();
@@ -642,14 +842,12 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 return;
             }
 
-            // Full file selection via Ctrl+A / Cmd+A
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
                 event.preventDefault();
                 selectAllBlocks();
                 return;
             }
 
-            // Actions when multiple/all blocks are selected
             if (selectedBlockIds.length > 0) {
                 if (event.key === 'Backspace' || event.key === 'Delete') {
                     event.preventDefault();
@@ -680,7 +878,11 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
                 return;
             }
 
-            if (event.key === 'Enter' && !event.shiftKey && block.type !== 'code') {
+            if (
+                event.key === 'Enter' &&
+                !event.shiftKey &&
+                !['code', 'mermaid', 'openapi_spec', 'table'].includes(block.type)
+            ) {
                 event.preventDefault();
 
                 if (['numbered_list', 'bullet_list', 'todo'].includes(block.type)) {
@@ -732,7 +934,7 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
             focusBlock,
             undo,
             redo,
-        ]
+        ],
     );
 
     const reset = useCallback(() => {
@@ -752,6 +954,7 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
         selector,
         addBlock,
         updateBlock,
+        updateBlockProperties,
         convertBlock,
         toggleChecked,
         removeBlock,
@@ -766,6 +969,10 @@ export function useBlockEditor(initialBlocks?: FileEditorBlock[]): BlockEditorCo
         clearBlockSelection,
         deleteSelectedBlocks,
         handleBlockPaste,
+        handleBinaryUpload,
+        isUploadingBinary: options?.isUploadingBinary,
+        mentionCandidates: options?.mentionCandidates,
+        workspaceUuid: options?.workspaceUuid,
         handleBlockMouseDown,
         handleBlockMouseEnter,
         handleCanvasMouseDown,

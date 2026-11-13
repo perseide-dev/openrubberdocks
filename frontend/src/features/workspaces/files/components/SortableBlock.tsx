@@ -5,19 +5,12 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BlockContent } from '@features/workspaces/files/components/BlockContent';
-import type { SortableBlockProps } from '@features/workspaces/files/types/block.types';
+import { BlockContent } from '@features-workspaces/files/components/BlockContent';
+import type { SortableBlockProps } from '@features-workspaces/files/types/block.types';
 
 const ghostButtonSx = {
-    border: 'none',
-    backgroundColor: 'transparent',
     padding: '3px',
     color: 'text.secondary',
-    '&:hover': {
-        backgroundColor: 'transparent',
-        color: 'text.primary',
-        border: 'none',
-    },
 };
 
 export function SortableBlock({
@@ -25,6 +18,11 @@ export function SortableBlock({
     number,
     isSelected,
     onChange,
+    onUpdateProperties,
+    onUploadBinary,
+    isUploadingBinary,
+    mentionCandidates,
+    workspaceUuid,
     onKeyDown,
     onPaste,
     onMouseDown,
@@ -47,7 +45,7 @@ export function SortableBlock({
 
     const setInputRef = useCallback(
         (element: HTMLTextAreaElement | null) => registerInput(block.id, element),
-        [block.id, registerInput]
+        [block.id, registerInput],
     );
 
     const style = {
@@ -57,12 +55,27 @@ export function SortableBlock({
 
     const handleKeyDown = useCallback(
         (event: KeyboardEvent<HTMLTextAreaElement>) => onKeyDown(block.id, event),
-        [block.id, onKeyDown]
+        [block.id, onKeyDown],
     );
 
     const handleChange = useCallback(
         (content: string) => onChange(block.id, content),
-        [block.id, onChange]
+        [block.id, onChange],
+    );
+
+    const handleUpdateProperties = useCallback(
+        (patch: Record<string, unknown>, nextContent?: string) =>
+            onUpdateProperties?.(block.id, patch, nextContent),
+        [block.id, onUpdateProperties],
+    );
+
+    const handleUploadBinary = useCallback(
+        async (file: File, preferredType?: 'image' | 'file_attachment') => {
+            if (onUploadBinary) {
+                await onUploadBinary(block.id, file, preferredType);
+            }
+        },
+        [block.id, onUploadBinary],
     );
 
     return (
@@ -82,21 +95,7 @@ export function SortableBlock({
                 gap: 0.5,
                 padding: '4px 6px',
                 userSelect: isSelected ? 'none' : 'auto',
-                border: '1.5px solid',
-                borderColor: isDragging
-                    ? 'primary.main'
-                    : 'transparent',
-                backgroundColor: isDragging
-                    ? 'action.hover'
-                    : isSelected
-                    ? 'action.selected'
-                    : 'transparent',
                 opacity: isDragging ? 0.55 : 1,
-                transition: 'background-color 0.12s ease, border-color 0.12s ease',
-                '&:hover': {
-                    borderColor: isDragging ? 'primary.main' : isSelected ? 'transparent' : 'divider',
-                    backgroundColor: isSelected ? 'action.selected' : 'action.hover',
-                },
                 '&:hover .block-actions, &:focus-within .block-actions': {
                     opacity: 1,
                 },
@@ -110,7 +109,6 @@ export function SortableBlock({
                     gap: 0.25,
                     paddingTop: '2px',
                     opacity: 0,
-                    transition: 'opacity 0.12s ease',
                 }}
             >
                 <Tooltip title="Add block below">
@@ -145,6 +143,11 @@ export function SortableBlock({
                     number={number}
                     inputRef={setInputRef}
                     onChange={handleChange}
+                    onUpdateProperties={handleUpdateProperties}
+                    onUploadBinary={handleUploadBinary}
+                    isUploadingBinary={isUploadingBinary}
+                    mentionCandidates={mentionCandidates}
+                    workspaceUuid={workspaceUuid}
                     onKeyDown={handleKeyDown}
                     onPaste={(event) => onPaste?.(block.id, event)}
                     onToggleChecked={() => onToggleChecked(block.id)}
@@ -156,7 +159,6 @@ export function SortableBlock({
                 sx={{
                     paddingTop: '2px',
                     opacity: 0,
-                    transition: 'opacity 0.12s ease',
                 }}
             >
                 <Tooltip title="Delete block">

@@ -21,6 +21,7 @@ function FileCreationContent({
         icon,
         coverImage,
         isTemplate,
+        storageQuota,
         errorMessage,
         isSaving,
         blockEditor,
@@ -69,6 +70,7 @@ function FileCreationContent({
                 title={title}
                 errorMessage={errorMessage}
                 blockEditor={blockEditor}
+                storageQuota={storageQuota}
                 icon={icon}
                 coverImage={coverImage}
                 isTemplate={isTemplate}

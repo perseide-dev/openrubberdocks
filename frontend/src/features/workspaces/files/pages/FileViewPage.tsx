@@ -132,6 +132,7 @@ export function FileViewPage() {
                 ) : (
                     <FileViewer
                         blocks={blocks}
+                        workspaceUuid={wsUuid}
                         icon={file?.icon}
                         coverImage={file?.coverImage}
                         isTemplate={file?.isTemplate}

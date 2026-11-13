@@ -1,10 +1,11 @@
-import { Box, Button, Typography } from '@mui/material';
+import type { DragEvent } from 'react';
+import { Box, Button, Paper, Typography } from '@mui/material';
 import { DndContext, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { BlockTypeMenu } from '@features/workspaces/files/components/BlockTypeMenu';
-import { SortableBlock } from '@features/workspaces/files/components/SortableBlock';
-import { BLOCK_SLASH_TRIGGER } from '@features/workspaces/files/constants/block.constants';
-import type { BlockEditorProps } from '@features/workspaces/files/types/block.types';
+import { BlockTypeMenu } from '@features-workspaces/files/components/BlockTypeMenu';
+import { SortableBlock } from '@features-workspaces/files/components/SortableBlock';
+import { BLOCK_SLASH_TRIGGER } from '@features-workspaces/files/constants/block.constants';
+import type { BlockEditorProps } from '@features-workspaces/files/types/block.types';
 
 export function BlockEditor({ blockEditor }: BlockEditorProps) {
     const {
@@ -13,6 +14,7 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         collisionDetection,
         selector,
         addBlock,
+        updateBlockProperties,
         toggleChecked,
         removeBlock,
         handleDragEnd,
@@ -23,6 +25,10 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         handleSelectBlockType,
         selectedBlockIds,
         handleBlockPaste,
+        handleBinaryUpload,
+        isUploadingBinary,
+        mentionCandidates,
+        workspaceUuid,
         handleBlockMouseDown,
         handleBlockMouseEnter,
         handleCanvasMouseDown,
@@ -31,7 +37,24 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
         registerInput,
     } = blockEditor;
 
-    const { setNodeRef, isOver } = useDroppable({ id: 'canvas' });
+    const { setNodeRef } = useDroppable({ id: 'canvas' });
+
+    const handleCanvasFileDrop = (event: DragEvent<HTMLDivElement>) => {
+        const files = event.dataTransfer?.files;
+        if (!files || files.length === 0 || !handleBinaryUpload) return;
+        event.preventDefault();
+        const file = files[0];
+        if (file) {
+            const preferredType = file.type.startsWith('image/') ? 'image' : 'file_attachment';
+            void handleBinaryUpload(file, undefined, preferredType);
+        }
+    };
+
+    const handleCanvasDragOver = (event: DragEvent<HTMLDivElement>) => {
+        if (event.dataTransfer?.types?.includes('Files')) {
+            event.preventDefault();
+        }
+    };
 
     return (
         <DndContext
@@ -50,10 +73,13 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                 }}
                 sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
             >
-                <Box
+                <Paper
                     ref={setNodeRef}
+                    variant="outlined"
                     onMouseDown={handleCanvasMouseDown}
                     onPointerMove={handlePointerMove}
+                    onDrop={handleCanvasFileDrop}
+                    onDragOver={handleCanvasDragOver}
                     onDoubleClick={(e) => {
                         const target = e.target as HTMLElement | null;
                         if (!target?.closest('[data-block="true"]')) {
@@ -65,12 +91,6 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                         display: 'flex',
                         flexDirection: 'column',
                         padding: 1,
-                        border: '1.5px dashed',
-                        borderColor: isOver ? 'primary.main' : 'divider',
-                        transition: 'border-color 0.12s ease',
-                        '&:hover': {
-                            borderColor: isOver ? 'primary.main' : 'text.disabled',
-                        },
                     }}
                 >
                     <SortableContext
@@ -93,7 +113,8 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                                     break;
                                 }
                             }
-                            const number = block.type === 'numbered_list' ? numberedCounter : undefined;
+                            const number =
+                                block.type === 'numbered_list' ? numberedCounter : undefined;
 
                             return (
                                 <SortableBlock
@@ -102,6 +123,16 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                                     number={number}
                                     isSelected={selectedBlockIds.includes(block.id)}
                                     onChange={handleBlockChange}
+                                    onUpdateProperties={updateBlockProperties}
+                                    onUploadBinary={
+                                        handleBinaryUpload
+                                            ? (blockId, file, preferred) =>
+                                                  handleBinaryUpload(file, blockId, preferred)
+                                            : undefined
+                                    }
+                                    isUploadingBinary={isUploadingBinary}
+                                    mentionCandidates={mentionCandidates}
+                                    workspaceUuid={workspaceUuid}
                                     onKeyDown={handleBlockKeyDown}
                                     onPaste={handleBlockPaste}
                                     onMouseDown={handleBlockMouseDown}
@@ -124,20 +155,23 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 gap: 1.5,
-                                textAlign: 'center',
                             }}
                         >
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                Start with a text block, or type {'"'}
+                            <Typography variant="body2" color="text.secondary">
+                                Start with a text block, type {'"'}
                                 {BLOCK_SLASH_TRIGGER}
-                                {'"'} to choose a block type.
+                                {'"'} for blocks, or drop binary files here.
                             </Typography>
-                            <Button variant="outlined" size="small" onClick={() => addBlock('text')}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => addBlock('text')}
+                            >
                                 Add block
                             </Button>
                         </Box>
                     )}
-                </Box>
+                </Paper>
 
                 {blocks.length > 0 && (
                     <Button
@@ -147,7 +181,9 @@ export function BlockEditor({ blockEditor }: BlockEditorProps) {
                             const lastBlock = blocks[blocks.length - 1];
                             const nextType =
                                 lastBlock &&
-                                ['numbered_list', 'bullet_list', 'todo'].includes(lastBlock.type) &&
+                                ['numbered_list', 'bullet_list', 'todo'].includes(
+                                    lastBlock.type,
+                                ) &&
                                 lastBlock.content.trim() !== ''
                                     ? lastBlock.type
                                     : 'text';

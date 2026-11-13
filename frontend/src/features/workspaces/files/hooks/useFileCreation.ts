@@ -1,8 +1,20 @@
 import { useState, useCallback, useMemo, useEffect, useRef, type ChangeEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useCreateFileService, useWorkspaceFilesService } from '@features-workspaces/files/services/file.service';
+import {
+    useCreateFileService,
+    useWorkspaceFilesService,
+} from '@features-workspaces/files/services/file.service';
 import { useWorkspaceDetailService } from '@features-workspaces/manager/services/workspace.service';
-import { useSyncFileBlocksService, useFetchFileBlocksService } from '@features-workspaces/files/services/block.service';
+import {
+    useSyncFileBlocksService,
+    useFetchFileBlocksService,
+} from '@features-workspaces/files/services/block.service';
+import {
+    useUploadStorageAttachmentService,
+    useWorkspaceStorageQuotaService,
+    useWorkspaceTasksMentionsService,
+} from '@features-workspaces/files/services/storage.service';
+import { storageRepository } from '@features-workspaces/files/repositories/storage.repository';
 import { useBlockEditor } from '@features-workspaces/files/hooks/useBlockEditor';
 import { FILE_MESSAGES } from '@features-workspaces/files/constants/file.constants';
 import {
@@ -11,7 +23,9 @@ import {
     clearDraft,
 } from '@features-workspaces/files/utils/draft-storage.utils';
 import type { AppError } from '@http-error/http-error.handler';
+import type { UploadedBinaryDescriptor } from '@features-workspaces/files/types/block.types';
 import type { BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/types/file.types';
+import type { InternalLinkCandidate } from '@features-workspaces/files/types/storage.types';
 
 export function useFileCreationPageData(workspaceUuid: string) {
     const { data: workspace } = useWorkspaceDetailService(workspaceUuid);
@@ -23,10 +37,6 @@ export function useFileCreationPageData(workspaceUuid: string) {
     };
 }
 
-/**
- * Orchestrates the file creation flow: title, media (icon/cover), templates,
- * block canvas and persistence of the file followed by atomic batch block syncing.
- */
 export function useFileCreation(workspaceUuid: string, draftId: string = 'new') {
     const navigate = useNavigate();
     const fetchBlocksByFile = useFetchFileBlocksService();
@@ -35,7 +45,60 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
 
     const createFileMutation = useCreateFileService();
     const syncBlocksMutation = useSyncFileBlocksService();
+    const uploadAttachmentMutation = useUploadStorageAttachmentService();
     const { data: workspaceFiles = [] } = useWorkspaceFilesService(workspaceUuid);
+    const { data: workspaceTasks = [] } = useWorkspaceTasksMentionsService(workspaceUuid);
+    const { data: storageQuota } = useWorkspaceStorageQuotaService(workspaceUuid);
+
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    const mentionCandidates = useMemo<InternalLinkCandidate[]>(() => {
+        const docCandidates: InternalLinkCandidate[] = workspaceFiles.map((f) => ({
+            targetType: 'document',
+            targetUuid: f.uuid,
+            targetTitle: f.title || 'Untitled',
+            subtitle: 'Workspace Document',
+        }));
+        const taskCandidates: InternalLinkCandidate[] = workspaceTasks.map((t) => ({
+            targetType: 'task',
+            targetUuid: t.uuid,
+            targetTitle: t.title,
+            projectUuid: t.projectUuid,
+            subtitle: t.status?.name ? `Task • ${t.status.name}` : 'Workspace Task',
+        }));
+        return [...docCandidates, ...taskCandidates];
+    }, [workspaceFiles, workspaceTasks]);
+
+    const handleUploadBinaryFile = useCallback(
+        async (binaryFile: File): Promise<UploadedBinaryDescriptor> => {
+            try {
+                const attachment = await uploadAttachmentMutation.mutateAsync({
+                    workspaceUuid,
+                    file: binaryFile,
+                });
+                const url = storageRepository.buildAttachmentContentUrl(attachment.uuid);
+                return {
+                    url,
+                    attachmentMeta: {
+                        attachmentUuid: attachment.uuid,
+                        originalName: attachment.originalName,
+                        mimeType: attachment.mimeType,
+                        sizeBytes: attachment.sizeBytes,
+                        url,
+                    },
+                };
+            } catch (err) {
+                const appError = err as AppError;
+                const detail =
+                    appError?.errors?.[0]?.detail ||
+                    appError?.message ||
+                    'Binary upload failed.';
+                setErrorMessage(detail);
+                throw err;
+            }
+        },
+        [uploadAttachmentMutation, workspaceUuid],
+    );
 
     const parentFile = useMemo(() => {
         if (!parentPageUuid) return undefined;
@@ -47,13 +110,23 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
     }, [workspaceFiles]);
 
     const [title, setTitle] = useState(() => loadDraft(workspaceUuid, draftId)?.title || '');
-    const [icon, setIcon] = useState<string | null>(() => loadDraft(workspaceUuid, draftId)?.icon || null);
-    const [coverImage, setCoverImage] = useState<string | null>(() => loadDraft(workspaceUuid, draftId)?.coverImage || null);
-    const [isTemplate, setIsTemplate] = useState<boolean>(() => Boolean(loadDraft(workspaceUuid, draftId)?.isTemplate));
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [icon, setIcon] = useState<string | null>(
+        () => loadDraft(workspaceUuid, draftId)?.icon || null,
+    );
+    const [coverImage, setCoverImage] = useState<string | null>(
+        () => loadDraft(workspaceUuid, draftId)?.coverImage || null,
+    );
+    const [isTemplate, setIsTemplate] = useState<boolean>(() =>
+        Boolean(loadDraft(workspaceUuid, draftId)?.isTemplate),
+    );
 
     const [initialDraftBlocks] = useState(() => loadDraft(workspaceUuid, draftId)?.blocks);
-    const blockEditor = useBlockEditor(initialDraftBlocks);
+    const blockEditor = useBlockEditor(initialDraftBlocks, {
+        workspaceUuid,
+        mentionCandidates,
+        isUploadingBinary: uploadAttachmentMutation.isPending,
+        onUploadFile: handleUploadBinaryFile,
+    });
 
     const activeDraftIdRef = useRef(draftId);
     const isSwitchingDraftRef = useRef(false);
@@ -74,7 +147,6 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
 
     const isInitialMount = useRef(true);
 
-    // Save draft on change
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -90,7 +162,6 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
             return;
         }
 
-        // Only save draft if there is meaningful content
         if (title.trim() || blockEditor.blocks.length > 0 || icon || coverImage) {
             saveDraft(workspaceUuid, draftId, {
                 title,
@@ -108,45 +179,47 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
         setErrorMessage(null);
     }, []);
 
-    const handleApplyTemplate = useCallback(async (template: BuiltInTemplate | WorkspaceFile) => {
-        if ('blocks' in template && Array.isArray(template.blocks)) {
-            // Built-in system preset
-            setTitle(template.title);
-            setIcon(template.icon);
-            setCoverImage(template.coverImage);
-            blockEditor.reset();
-            template.blocks.forEach((b) => {
-                const id = blockEditor.addBlock(b.type);
-                blockEditor.updateBlock(id, b.content);
-                if (b.type === 'todo' && b.checked) {
-                    blockEditor.toggleChecked(id);
-                }
-            });
-        } else {
-            // Workspace template file
-            const fileTmpl = template as WorkspaceFile;
-            setTitle(`${fileTmpl.title} (Template Copy)`);
-            setIcon(fileTmpl.icon || null);
-            setCoverImage(fileTmpl.coverImage || null);
-            try {
-                const blocks = await fetchBlocksByFile(fileTmpl.uuid);
+    const handleApplyTemplate = useCallback(
+        async (template: BuiltInTemplate | WorkspaceFile) => {
+            if ('blocks' in template && Array.isArray(template.blocks)) {
+                setTitle(template.title);
+                setIcon(template.icon);
+                setCoverImage(template.coverImage);
                 blockEditor.reset();
-                const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
-                sorted.forEach((b) => {
+                template.blocks.forEach((b) => {
                     const id = blockEditor.addBlock(b.type);
-                    const props = (b.properties ?? {}) as Record<string, unknown>;
-                    const text = typeof props.text === 'string' ? props.text : '';
-                    const checked = typeof props.checked === 'boolean' ? props.checked : false;
-                    blockEditor.updateBlock(id, text);
-                    if (b.type === 'todo' && checked) {
+                    blockEditor.updateBlock(id, b.content);
+                    if (b.type === 'todo' && b.checked) {
                         blockEditor.toggleChecked(id);
                     }
                 });
-            } catch {
-                // Keep empty blocks if template blocks couldn't be loaded
+            } else {
+                const fileTmpl = template as WorkspaceFile;
+                setTitle(`${fileTmpl.title} (Template Copy)`);
+                setIcon(fileTmpl.icon || null);
+                setCoverImage(fileTmpl.coverImage || null);
+                try {
+                    const blocks = await fetchBlocksByFile(fileTmpl.uuid);
+                    blockEditor.reset();
+                    const sorted = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
+                    sorted.forEach((b) => {
+                        const props = (b.properties ?? {}) as Record<string, unknown>;
+                        const id = blockEditor.addBlock(b.type, undefined, props);
+                        const text = typeof props.text === 'string' ? props.text : '';
+                        const checked =
+                            typeof props.checked === 'boolean' ? props.checked : false;
+                        blockEditor.updateBlock(id, text, props);
+                        if (b.type === 'todo' && checked) {
+                            blockEditor.toggleChecked(id);
+                        }
+                    });
+                } catch {
+                    // Keep empty blocks if template blocks couldn't be loaded
+                }
             }
-        }
-    }, [blockEditor, fetchBlocksByFile]);
+        },
+        [blockEditor, fetchBlocksByFile],
+    );
 
     const handleSave = useCallback(async () => {
         const trimmedTitle = title.trim();
@@ -175,10 +248,13 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
                     payload: {
                         blocks: blocks.map((block, index) => ({
                             type: block.type,
-                            properties:
-                                block.type === 'todo'
-                                    ? { text: block.content, checked: Boolean(block.checked) }
-                                    : { text: block.content },
+                            properties: {
+                                ...(block.properties ?? {}),
+                                text: block.content,
+                                ...(block.type === 'todo'
+                                    ? { checked: Boolean(block.checked) }
+                                    : {}),
+                            },
                             orderIndex: index,
                         })),
                     },
@@ -198,9 +274,20 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
 
             setErrorMessage(errorDetail);
         }
-    }, [title, workspaceUuid, parentPageUuid, icon, coverImage, isTemplate, draftId, createFileMutation, syncBlocksMutation, blockEditor, navigate]);
+    }, [
+        title,
+        workspaceUuid,
+        parentPageUuid,
+        icon,
+        coverImage,
+        isTemplate,
+        draftId,
+        createFileMutation,
+        syncBlocksMutation,
+        blockEditor,
+        navigate,
+    ]);
 
-    // Ctrl+S / Cmd+S shortcut
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -218,6 +305,7 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
         icon,
         coverImage,
         isTemplate,
+        storageQuota: storageQuota ?? null,
         errorMessage,
         isSaving: createFileMutation.isPending || syncBlocksMutation.isPending,
         blockEditor,

@@ -17,6 +17,7 @@ function FileEditContent({ wsUuid, fUuid, workspaceName }: FileEditContentProps)
         coverImage,
         isTemplate,
         workspaceTemplates,
+        storageQuota,
         errorMessage,
         isSaving,
         blockEditor,
@@ -76,6 +77,7 @@ function FileEditContent({ wsUuid, fUuid, workspaceName }: FileEditContentProps)
                     title={title}
                     errorMessage={errorMessage}
                     blockEditor={blockEditor}
+                    storageQuota={storageQuota}
                     icon={icon}
                     coverImage={coverImage}
                     isTemplate={isTemplate}

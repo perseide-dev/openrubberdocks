@@ -1,3 +1,6 @@
+export const DUMMY_BCRYPT_HASH =
+  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iK8O';
+
 export const AUTH_ERRORS_CONSTANTS = {
   INVALID_CREDENTIALS: (): string => 'Incorrect username or password',
   ACCESS_DENIED: (): string => 'Access Denied',

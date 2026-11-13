@@ -7,7 +7,7 @@ import { UpdateTokenDTO, ValidateUserDTO, RefreshTokenDto, GenerateTokenDto } fr
 import * as bcrypt from 'bcrypt';
 import { User } from '@moduleUsers/entities/user.entity';
 import { buildGenerateTokenPayload, buildTokenPayload } from '@moduleAuth/utils/token-payload.util';
-import { AUTH_ERRORS_CONSTANTS } from '@moduleAuth/constants/auth.errors.constants';
+import { AUTH_ERRORS_CONSTANTS, DUMMY_BCRYPT_HASH } from '@moduleAuth/constants/auth.errors.constants';
 import { AuthTokens } from '@moduleAuth/interface/auth.interface';
 import { AuditService } from '@moduleAudit/services/audit.service';
 
@@ -36,7 +36,10 @@ export class AuthService {
       user = null;
     }
 
-    if (user && user.password && (await bcrypt.compare(validateUserDto.pwd, user.password))) {
+    const targetHash = user?.password || DUMMY_BCRYPT_HASH;
+    const isPasswordValid = await bcrypt.compare(validateUserDto.pwd, targetHash);
+
+    if (user && user.password && isPasswordValid) {
       void this.auditService?.logEvent({
         userId: user.id,
         userEmail: user.rubberHandle,

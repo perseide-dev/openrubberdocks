@@ -70,10 +70,12 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException when user handle is not found (preventing enumeration)', async () => {
       usersService.findByRubberHandle.mockRejectedValue(new NotFoundException('User not found'));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(service.validateUser({ rubberHandle: 'nonexistent', pwd: 'wrong' })).rejects.toThrow(
         UnauthorizedException,
       );
+      expect(bcrypt.compare).toHaveBeenCalledTimes(1);
     });
   });
 

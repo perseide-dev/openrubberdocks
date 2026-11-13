@@ -8,6 +8,7 @@ import { AuthModule, UsersModule, WorkspaceModule, McpModule, AuditModule } from
 import { AuthorizationModule } from '@moduleAuthorization/authorization.module';
 import { FilesModule } from '@moduleFiles/manager/files.module';
 import { BlocksModule } from '@moduleFiles/blocks/blocks.module';
+import { StorageModule } from '@moduleFiles/storage/storage.module';
 import { ProjectsModule } from '@moduleProjects/projects.module';
 import { CreateCoreUserCommand } from '@commands/launch.command';
 import { CreateApiKeyCommand } from '@commands/create-api-key.command';
@@ -16,6 +17,7 @@ import { CreateApiKeyCommand } from '@commands/create-api-key.command';
   imports: [
     FilesModule,
     BlocksModule,
+    StorageModule,
     ProjectsModule,
     TypeOrmModule.forRoot(dataSourceOptions),
     ConfigModule.forRoot({

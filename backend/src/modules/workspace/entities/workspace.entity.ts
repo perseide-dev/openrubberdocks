@@ -19,6 +19,17 @@ export class Workspace {
     @Column({ nullable: true })
     description: string;
 
+    @Column({
+        name: 'storage_quota_bytes',
+        type: 'bigint',
+        default: 524288000,
+        transformer: {
+            to: (value?: number) => (value !== undefined && value !== null ? String(value) : '524288000'),
+            from: (value?: string | number) => (value !== undefined && value !== null ? Number(value) : 524288000),
+        },
+    })
+    storageQuotaBytes: number;
+
     @OneToMany(() => WorkspaceMember, (member) => member.workspace)
     members: WorkspaceMember[];
 

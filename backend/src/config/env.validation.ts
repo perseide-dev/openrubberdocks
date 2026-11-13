@@ -43,6 +43,46 @@ class EnviromentVariables {
     @IsOptional()
     @IsString()
     MCP_BASE_PATH?: string;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_DRIVER?: string;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_LOCAL_PATH?: string;
+
+    @IsOptional()
+    @IsNumber()
+    STORAGE_DEFAULT_QUOTA_BYTES?: number;
+
+    @IsOptional()
+    @IsNumber()
+    STORAGE_MAX_FILE_BYTES?: number;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_S3_ENDPOINT?: string;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_S3_REGION?: string;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_S3_BUCKET?: string;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_S3_ACCESS_KEY?: string;
+
+    @IsOptional()
+    @IsString()
+    STORAGE_S3_SECRET_KEY?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    STORAGE_S3_FORCE_PATH_STYLE?: boolean;
 }
 
 export function validate(config: Record<string, unknown>) {

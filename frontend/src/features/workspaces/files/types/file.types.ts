@@ -1,5 +1,6 @@
 import type { ChangeEvent } from 'react';
 import type { BlockType, BlockEditorController, WorkspaceBlock, FileEditorBlock } from '@features-workspaces/files/types/block.types';
+import type { StorageQuotaStatus } from '@features-workspaces/files/types/storage.types';
 
 export interface DocumentDraft {
     title: string;
@@ -147,6 +148,7 @@ export interface FileEditorProps {
     title: string;
     errorMessage: string | null;
     blockEditor: BlockEditorController;
+    storageQuota?: StorageQuotaStatus | null;
     icon?: string | null;
     coverImage?: string | null;
     isTemplate?: boolean;
@@ -160,6 +162,7 @@ export interface FileEditorProps {
 
 export interface FileViewerProps {
     blocks: WorkspaceBlock[];
+    workspaceUuid?: string;
     title?: string;
     icon?: string | null;
     coverImage?: string | null;

@@ -18,6 +18,7 @@ RUN pnpm run build && pnpm prune --prod
 
 FROM base AS production
 ENV NODE_ENV=production
+RUN mkdir -p /var/lib/openrubberdocks/storage && chown -R node:node /var/lib/openrubberdocks/storage
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 COPY --chown=node:node --from=build /app/node_modules ./node_modules
 COPY --chown=node:node --from=build /app/dist ./dist

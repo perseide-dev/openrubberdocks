@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import { PermissionsGuard } from '@commonGuards/permissions.guard';
 import { RequirePermissions } from '@commonDecorators/require-permissions.decorator';
+import { CheckScope } from '@commonDecorators/check-scope.decorator';
 import { JsonApiInterceptor } from '@commonInterceptors/json-api.interceptor';
 import { JsonApiBody } from '@commonDecorators/json-api-body.decorator';
 import { TasksService } from '@moduleProjects/services/tasks.service';
@@ -44,6 +45,14 @@ export class TasksController {
     @RequirePermissions('task:read')
     findAll(@Param('projectUuid') projectUuid: string) {
         return this.tasksService.findAll(projectUuid);
+    }
+
+    @UseInterceptors(new JsonApiInterceptor('tasks'))
+    @Get('workspaces/:workspaceUuid/tasks')
+    @RequirePermissions('task:read')
+    @CheckScope('workspaceUuid')
+    findAllByWorkspace(@Param('workspaceUuid') workspaceUuid: string) {
+        return this.tasksService.findAllByWorkspace(workspaceUuid);
     }
 
     @UseInterceptors(new JsonApiInterceptor('tasks'))

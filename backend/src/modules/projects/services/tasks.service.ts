@@ -134,6 +134,22 @@ export class TasksService {
         });
     }
 
+    async findAllByWorkspace(workspaceUuid: string): Promise<Task[]> {
+        const projects = await this.projectRepository.find({
+            where: { workspaceUuid },
+            select: ['uuid'],
+        });
+        if (projects.length === 0) {
+            return [];
+        }
+        const projectUuids = projects.map((p) => p.uuid);
+        return this.taskRepository.find({
+            where: { projectUuid: In(projectUuids) },
+            relations: ['status', 'type', 'project'],
+            order: { createdAt: 'DESC' },
+        });
+    }
+
     async findOne(taskUuid: string): Promise<Task> {
         const task = await this.taskRepository.findOne({
             where: { uuid: taskUuid },

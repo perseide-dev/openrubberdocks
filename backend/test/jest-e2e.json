@@ -1,0 +1,35 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!@nestjs/mapped-types)"
+  ],
+  "moduleNameMapper": {
+    "^@/(.*)": "<rootDir>/../src/$1",
+    "^@commands/(.*)$": "<rootDir>/../src/commands/$1",
+    "^@common/(.*)$": "<rootDir>/../src/common/$1",
+    "^@commonPipes/(.*)$": "<rootDir>/../src/common/pipes/$1",
+    "^@commonDecorators/(.*)$": "<rootDir>/../src/common/decorators/$1",
+    "^@commonExceptions/(.*)$": "<rootDir>/../src/common/exceptions/$1",
+    "^@commonGuards/(.*)$": "<rootDir>/../src/common/guards/$1",
+    "^@commonInterceptors/(.*)$": "<rootDir>/../src/common/interceptors/$1",
+    "^@commonInterface/(.*)$": "<rootDir>/../src/common/interface/$1",
+    "^@commonUtils/(.*)$": "<rootDir>/../src/common/utils/$1",
+    "^@config/(.*)$": "<rootDir>/../src/config/$1",
+    "^@database/(.*)$": "<rootDir>/../src/database/$1",
+    "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
+    "^@moduleAuth/(.*)$": "<rootDir>/../src/modules/auth/$1",
+    "^@moduleUsers/(.*)$": "<rootDir>/../src/modules/users/$1",
+    "^@moduleWorkspace/(.*)": "<rootDir>/../src/modules/workspace/$1",
+    "^@moduleFiles/(.*)": "<rootDir>/../src/modules/files/$1",
+    "^@moduleAuthorization/(.*)": "<rootDir>/../src/modules/authorization/$1",
+    "^@moduleProjects/(.*)": "<rootDir>/../src/modules/projects/$1",
+    "^@moduleMcp/(.*)": "<rootDir>/../src/modules/mcp/$1",
+    "^@moduleAudit/(.*)": "<rootDir>/../src/modules/audit/$1"
+  }
+}

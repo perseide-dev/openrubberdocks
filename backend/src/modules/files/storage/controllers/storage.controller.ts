@@ -12,6 +12,7 @@ import {
     UploadedFile,
     UseGuards,
     UseInterceptors,
+    ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -37,7 +38,7 @@ export class StorageController {
     )
     async upload(
         @UploadedFile() file: Express.Multer.File,
-        @Body() dto: UploadAttachmentDto,
+        @Body(new ValidationPipe({ transform: true, whitelist: true })) dto: UploadAttachmentDto,
         @Req() req: Request,
     ) {
         return await this.storageService.uploadAttachment(file, dto, req.user);

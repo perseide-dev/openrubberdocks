@@ -50,6 +50,8 @@ coverage/
 docker-data/
 db-data/
 postgres-data/
+storage-data/
+backend/storage-data/
 
 # =========================
 # OS y Editores

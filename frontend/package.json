@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --import ./test-register.mjs --test \"src/**/*.spec.ts\"",
     "preview": "vite preview"
   },
   "dependencies": {

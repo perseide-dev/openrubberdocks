@@ -105,6 +105,24 @@ describe('TasksService', () => {
         });
     });
 
+    describe('findAllByWorkspace', () => {
+        it('should return all tasks across projects in a workspace for internal links', async () => {
+            projectRepo.find = jest.fn().mockResolvedValue([{ uuid: 'proj-123' }]);
+            const result = await service.findAllByWorkspace('ws-123');
+            expect(projectRepo.find).toHaveBeenCalledWith({
+                where: { workspaceUuid: 'ws-123' },
+                select: ['uuid'],
+            });
+            expect(result).toEqual([mockTask]);
+        });
+
+        it('should return empty array when workspace has no projects', async () => {
+            projectRepo.find = jest.fn().mockResolvedValue([]);
+            const result = await service.findAllByWorkspace('ws-empty');
+            expect(result).toEqual([]);
+        });
+    });
+
     describe('move', () => {
         it('should change status and orderIndex', async () => {
             const result = await service.move('task-123', {

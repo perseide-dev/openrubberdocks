@@ -193,5 +193,65 @@ describe('BlocksService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].type).toBe(BlockType.HEADING_1);
     });
+
+    it('should sync all 6 rich technical block types (image, file_attachment, table, callout, mermaid, openapi_spec, internal_link)', async () => {
+      fileRepo.findOne.mockResolvedValue({ id: 7, uuid: 'p-1' });
+      blockRepo.delete = jest.fn().mockResolvedValue({});
+      blockRepo.create.mockImplementation((item: any) => item);
+      blockRepo.save.mockImplementation(async (items: any) => items);
+
+      const richBlocks = [
+        {
+          type: BlockType.IMAGE,
+          properties: { text: '/storage/attachments/att-1/content', attachment: { attachmentUuid: 'att-1' } },
+          orderIndex: 0,
+        },
+        {
+          type: BlockType.FILE_ATTACHMENT,
+          properties: { text: '/storage/attachments/att-2/content', attachment: { originalName: 'logs.tar.gz' } },
+          orderIndex: 1,
+        },
+        {
+          type: BlockType.TABLE,
+          properties: { text: '| A | B |\n| --- | --- |\n| 1 | 2 |', table: { headers: ['A', 'B'], rows: [['1', '2']] } },
+          orderIndex: 2,
+        },
+        {
+          type: BlockType.CALLOUT,
+          properties: { text: 'Strict RBAC enforced', calloutVariant: 'DANGER' },
+          orderIndex: 3,
+        },
+        {
+          type: BlockType.MERMAID,
+          properties: { text: 'flowchart LR\n  A --> B' },
+          orderIndex: 4,
+        },
+        {
+          type: BlockType.OPENAPI_SPEC,
+          properties: { text: 'openapi: 3.0.3\ninfo:\n  title: API\n  version: 1.0.0' },
+          orderIndex: 5,
+        },
+        {
+          type: BlockType.INTERNAL_LINK,
+          properties: {
+            text: 'Architecture Spec',
+            internalLink: { targetType: 'document', targetUuid: 'doc-uuid-1', targetTitle: 'Architecture Spec' },
+          },
+          orderIndex: 6,
+        },
+      ];
+
+      const result = await service.syncFileBlocks('p-1', { blocks: richBlocks }, 'u-1');
+      expect(result).toHaveLength(7);
+      expect(result.map((b: any) => b.type)).toEqual([
+        BlockType.IMAGE,
+        BlockType.FILE_ATTACHMENT,
+        BlockType.TABLE,
+        BlockType.CALLOUT,
+        BlockType.MERMAID,
+        BlockType.OPENAPI_SPEC,
+        BlockType.INTERNAL_LINK,
+      ]);
+    });
   });
 });

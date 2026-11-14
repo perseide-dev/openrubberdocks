@@ -92,7 +92,7 @@ export async function parseHttpError(error: unknown): Promise<AppError> {
 
     return new AppError({
       title,
-      message: error.message || `Request failed with status ${status}`,
+      message: `${title} (HTTP ${status})`,
       status,
     });
   }
@@ -119,4 +119,28 @@ export async function parseHttpError(error: unknown): Promise<AppError> {
     message: 'An unexpected error occurred.',
     status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
   });
+}
+
+/**
+ * Extracts a user-friendly error message from an AppError or unknown error,
+ * stripping raw HTTP method/URL strings if an unparsed network error slips through.
+ */
+export function getFriendlyErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  const appError = error as Partial<AppError> | undefined;
+  const raw =
+    appError?.errors?.[0]?.detail ||
+    appError?.errors?.[0]?.title ||
+    appError?.message ||
+    '';
+
+  if (!raw) return fallback;
+
+  if (/https?:\/\/\S+/i.test(raw) || /^Request failed with status code/i.test(raw)) {
+    return appError?.title || fallback;
+  }
+
+  return raw;
 }

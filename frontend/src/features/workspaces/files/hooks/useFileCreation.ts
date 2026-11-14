@@ -22,7 +22,7 @@ import {
     saveDraft,
     clearDraft,
 } from '@features-workspaces/files/utils/draft-storage.utils';
-import type { AppError } from '@http-error/http-error.handler';
+import { getFriendlyErrorMessage } from '@http-error/http-error.handler';
 import type { UploadedBinaryDescriptor } from '@features-workspaces/files/types/block.types';
 import type { BuiltInTemplate, WorkspaceFile } from '@features-workspaces/files/types/file.types';
 import type { InternalLinkCandidate } from '@features-workspaces/files/types/storage.types';
@@ -88,12 +88,9 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
                     },
                 };
             } catch (err) {
-                const appError = err as AppError;
-                const detail =
-                    appError?.errors?.[0]?.detail ||
-                    appError?.message ||
-                    'Binary upload failed.';
-                setErrorMessage(detail);
+                setErrorMessage(
+                    getFriendlyErrorMessage(err, 'Binary upload failed.'),
+                );
                 throw err;
             }
         },
@@ -265,14 +262,9 @@ export function useFileCreation(workspaceUuid: string, draftId: string = 'new') 
             blockEditor.reset();
             navigate(`/workspaces/${workspaceUuid}/files/${file.uuid}`);
         } catch (err) {
-            const appError = err as AppError;
-            const errorDetail =
-                appError?.errors?.[0]?.detail ||
-                appError?.errors?.[0]?.title ||
-                appError?.message ||
-                FILE_MESSAGES.CREATE_ERROR;
-
-            setErrorMessage(errorDetail);
+            setErrorMessage(
+                getFriendlyErrorMessage(err, FILE_MESSAGES.CREATE_ERROR),
+            );
         }
     }, [
         title,

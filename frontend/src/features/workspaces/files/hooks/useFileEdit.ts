@@ -31,7 +31,7 @@ import {
     getAutosavePreference,
     setAutosavePreference,
 } from '@features-workspaces/files/utils/draft-storage.utils';
-import type { AppError } from '@http-error/http-error.handler';
+import { getFriendlyErrorMessage } from '@http-error/http-error.handler';
 import type {
     FileEditorBlock,
     UploadedBinaryDescriptor,
@@ -124,12 +124,9 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                     },
                 };
             } catch (err) {
-                const appError = err as AppError;
-                const detail =
-                    appError?.errors?.[0]?.detail ||
-                    appError?.message ||
-                    'Binary upload failed.';
-                setErrorMessage(detail);
+                setErrorMessage(
+                    getFriendlyErrorMessage(err, 'Binary upload failed.'),
+                );
                 throw err;
             }
         },
@@ -392,12 +389,9 @@ export function useFileEdit(workspaceUuid: string, fileUuid: string) {
                 navigate(files.view.build(workspaceUuid, fileUuid));
             }
         } catch (err) {
-            const appError = err as AppError;
-            const errorDetail =
-                appError?.errors?.[0]?.detail ||
-                appError?.message ||
-                FILE_MESSAGES.CREATE_ERROR;
-            setErrorMessage(errorDetail);
+            setErrorMessage(
+                getFriendlyErrorMessage(err, FILE_MESSAGES.CREATE_ERROR),
+            );
             setAutosaveStatus('unsaved');
         } finally {
             setIsManualSaving(false);
